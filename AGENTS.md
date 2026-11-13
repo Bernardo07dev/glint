@@ -41,3 +41,35 @@ Um bom plano só funciona quando encontra a agenda real. Por isso, o Glint trans
 Como o Glint conhece a personalidade do usuário, seus horários livres e o que está planejado para cada dia, ele não envia notificações genéricas e robóticas que acabam sendo ignoradas.
 - Os **avisos e lembretes são personalizados** para o jeito da pessoa e disparados exatamente nos horários em que ela realmente pode agir;
 - As mensagens levam em conta o contexto do momento (qual tarefa está prevista para hoje, como foi o progresso nos últimos dias e qual abordagem funciona melhor para motivar aquele perfil específico de usuário).
+
+---
+
+## Identidade Visual e Design (`DESIGN.md`)
+
+As especificações detalhadas de interface e marca ficam documentadas em [`DESIGN.md`](./DESIGN.md):
+- **Estética Geral:** Clara, acolhedora e baseada em tons pastéis vibrantes e solares (zero neon).
+- **Paleta Oficial — Aquarela Viva:**
+  - **Cobalto Pastel (`#5B8DEF`):** Cor primária, estado ativo no calendário e progresso da jornada;
+  - **Pêssego Coral (`#FF9B85`):** Botão de ação principal (CTA da sessão do dia) e destaques do mentor;
+  - **Manteiga Solar (`#FFE07D`):** Brilho (*glint*), faíscas, badges e tags de tempo;
+  - **Pistache Claro (`#95E1B0`):** Etapas e sessões concluídas;
+  - **Nuvem Quente (`#FFFDF8`) e Ardósia Escura (`#2D3142`):** Fundo principal aconchegante e tipografia de alto contraste.
+- **Logo / Avatar:** Em fase de definição.
+
+---
+
+## Estrutura do Projeto
+
+A aplicação Next.js (`app/`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, junto com `AGENTS.md` e `DESIGN.md` (sem subpasta `glint/` aninhada).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+
