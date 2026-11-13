@@ -44,23 +44,27 @@ Como o Glint conhece a personalidade do usuário, seus horários livres e o que 
 
 ---
 
-## Identidade Visual e Design (`DESIGN.md`)
+## Identidade Visual, Logo e Animações (`DESIGN.md` & `ANIMATIONS.md`)
 
-As especificações detalhadas de interface e marca ficam documentadas em [`DESIGN.md`](./DESIGN.md):
+As especificações detalhadas de interface, marca e movimento ficam documentadas em [`DESIGN.md`](./DESIGN.md) e [`ANIMATIONS.md`](./ANIMATIONS.md):
 - **Estética Geral:** Clara, acolhedora e baseada em tons pastéis vibrantes e solares (zero neon).
 - **Paleta Oficial — Aquarela Viva:**
-  - **Cobalto Pastel (`#5B8DEF`):** Cor primária, estado ativo no calendário e progresso da jornada;
-  - **Pêssego Coral (`#FF9B85`):** Botão de ação principal (CTA da sessão do dia) e destaques do mentor;
-  - **Manteiga Solar (`#FFE07D`):** Brilho (*glint*), faíscas, badges e tags de tempo;
-  - **Pistache Claro (`#95E1B0`):** Etapas e sessões concluídas;
+  - **Cobalto Pastel (`#5B8DEF`):** Cor primária, anel superior do `g`, haste do `i`, estado ativo no calendário e progresso da jornada;
+  - **Pêssego Coral (`#FF9B85`):** Botão de ação principal (CTA da sessão do dia), trilha pontilhada inferior do `g`, estrela do `i`, corte do `t` e destaques do mentor;
+  - **Manteiga Solar (`#FFE07D`):** Brilho (*glint*), corpo da abelhinha, faísca inicial do `g`, badges e tags de tempo;
+  - **Pistache Claro (`#95E1B0`):** Asas da abelhinha, etapas e sessões concluídas;
   - **Nuvem Quente (`#FFFDF8`) e Ardósia Escura (`#2D3142`):** Fundo principal aconchegante e tipografia de alto contraste.
-- **Logo / Avatar:** Em fase de definição.
+- **Logo Oficial (`Trilha de Voo em "g"` + `lint` Geométrico Bicolor):**
+  - A abelhinha de perfil voa a partir de uma estrela `#FFE07D`, desenha a cauda do `g` em rastro pontilhado `#FF9B85` e fecha o anel superior do `g` em linha contínua `#5B8DEF`, pousando no topo direito ao lado do sufixo `lint` em hastes geométricas arredondadas bicolores.
+  - Arquivos vetoriais oficiais: [`public/logo.svg`](./public/logo.svg) (logo horizontal), [`public/logo-icon.svg`](./public/logo-icon.svg) (ícone do app) e [`public/mascot-bee.svg`](./public/mascot-bee.svg) (mascote isolada).
+- **Playbook de Animações (`ANIMATIONS.md`):**
+  - Documenta a animação de assinatura (abelhinha voando e desenhando o `g`) e as **6 poses oficiais da abelhinha de perfil**: *1. Perfil Padrão*, *2. Modo Foco (Óculos + Livro)*, *3. Voo Rápido (Streak)*, *4. Comemorando*, *5. Curiosa (`?`)* e *6. Sonolenta (`zZ`)*.
 
 ---
 
 ## Estrutura do Projeto
 
-A aplicação Next.js (`app/`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, junto com `AGENTS.md` e `DESIGN.md` (sem subpasta `glint/` aninhada).
+A aplicação Next.js (`app/`, `public/`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, junto com `AGENTS.md`, `DESIGN.md` e `ANIMATIONS.md` (sem subpasta `glint/` aninhada).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

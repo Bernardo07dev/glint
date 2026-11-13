@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" width="120" height="100" fill="none">
+  <title>Glint Mascot — Profile Bee (Standard Pose)</title>
+  <g transform="translate(60, 54)">
+    <!-- Soft Sunny Butter glow behind tail -->
+    <circle cx="-18" cy="6" r="18" fill="#FFE07D" opacity="0.35"/>
+    <!-- 4-point Glint Sparkle at tail tip -->
+    <path d="M -36 2 L -34 -3 L -29 -5 L -34 -7 L -36 -12 L -38 -7 L -43 -5 L -38 -3 Z" fill="#FF9B85"/>
+    <!-- Pistachio Wings -->
+    <ellipse cx="-8" cy="-22" rx="18" ry="10.5" transform="rotate(-16 -8 -22)" fill="#95E1B0"/>
+    <ellipse cx="7" cy="-20" rx="14" ry="8.5" transform="rotate(14 7 -20)" fill="#95E1B0" opacity="0.8"/>
+    <!-- Pill Body in Sunny Butter -->
+    <rect x="-26" y="-14" width="52" height="36" rx="18" fill="#FFE07D"/>
+    <!-- Pastel Cobalt Stripes -->
+    <path d="M -9 -13.5 L -9 21.5 M 4 -13.5 L 4 21.5" stroke="#5B8DEF" stroke-width="6.5"/>
+    <!-- Profile Eye + Catchlight -->
+    <circle cx="16.5" cy="0.5" r="4.2" fill="#2D3142"/>
+    <circle cx="18" cy="-1" r="1.5" fill="#FFFDF8"/>
+    <!-- Peach Coral Cheek & Smile -->
+    <ellipse cx="14.5" cy="7.5" rx="4" ry="2.4" fill="#FF9B85"/>
+    <path d="M 21 5.5 Q 24.5 7.5 26 4.5" stroke="#2D3142" stroke-width="2" stroke-linecap="round"/>
+    <!-- Antenna with Peach Coral tip -->
+    <path d="M 18 -11 Q 25 -24 33 -20" stroke="#2D3142" stroke-width="2.8" stroke-linecap="round"/>
+    <circle cx="34" cy="-20" r="3.8" fill="#FF9B85"/>
+  </g>
+</svg>
