@@ -67,8 +67,8 @@ O logo oficial do Glint une narrativa visual e geometria limpa em três elemento
    - **`t`:** Haste vertical em **Ardósia Escura (`#2D3142`)** + corte horizontal em cápsula **Pêssego Coral (`#FF9B85`)**.
 
 ### 4.2. Fontes da Interface (`next/font/google`)
-- **Títulos e Destaques (Display):** `Fredoka` (pesos `600`/`700`) ou `Quicksand` (`700`), acompanhando as terminações redondas do wordmark.
-- **Interface, Calendário e Leitura (Sans):** `Plus Jakarta Sans` (pesos `400`, `500`, `600`, `700`).
+- **Títulos e Destaques (Display / Editorial):** **`Fraunces`** (pesos `400`, `500`, `600`, com suporte a itálico) — serifada editorial orgânica e calorosa, que traz personalidade literária aos títulos e conversa com as curvas da abelhinha sem cair no visual genérico de SaaS.
+- **Interface, Calendário e Leitura (Sans):** **`Plus Jakarta Sans`** (pesos `400`, `500`, `600`, `700`, com `tabular-nums` para horários e contadores) — limpa, legível e confortável para blocos de estudo e notas do mentor.
 
 ### 4.3. Arquivos Oficiais de Marca (SVG)
 - [`public/logo.svg`](./public/logo.svg) — Logo horizontal completo (Trilha de Voo em `g` + Abelhinha de Perfil + `lint` Geométrico Bicolor).

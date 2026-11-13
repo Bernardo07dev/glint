@@ -57,6 +57,9 @@ As especificações detalhadas de interface, marca e movimento ficam documentada
 - **Logo Oficial (`Trilha de Voo em "g"` + `lint` Geométrico Bicolor):**
   - A abelhinha de perfil voa a partir de uma estrela `#FFE07D`, desenha a cauda do `g` em rastro pontilhado `#FF9B85` e fecha o anel superior do `g` em linha contínua `#5B8DEF`, pousando no topo direito ao lado do sufixo `lint` em hastes geométricas arredondadas bicolores.
   - Arquivos vetoriais oficiais: [`public/logo.svg`](./public/logo.svg) (logo horizontal), [`public/logo-icon.svg`](./public/logo-icon.svg) (ícone do app) e [`public/mascot-bee.svg`](./public/mascot-bee.svg) (mascote isolada).
+- **Tipografia Oficial (`next/font/google`):**
+  - **Títulos e Destaques (Display / Editorial):** **`Fraunces`** (`400`, `500`, `600`) — serifada editorial orgânica que dá personalidade autoral aos títulos.
+  - **Interface, Calendário e Leitura (Sans):** **`Plus Jakarta Sans`** (`400`, `500`, `600`, `700`, com `tabular-nums` para horários).
 - **Playbook de Animações (`ANIMATIONS.md`):**
   - Documenta a animação de assinatura (abelhinha voando e desenhando o `g`) e as **6 poses oficiais da abelhinha de perfil**: *1. Perfil Padrão*, *2. Modo Foco (Óculos + Livro)*, *3. Voo Rápido (Streak)*, *4. Comemorando*, *5. Curiosa (`?`)* e *6. Sonolenta (`zZ`)*.
 
