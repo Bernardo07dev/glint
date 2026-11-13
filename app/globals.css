@@ -1,1 +1,98 @@
 @import "tailwindcss";
+@import "@heroui/styles";
+
+@theme inline {
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-fraunces), Georgia, serif;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  summary,
+  select {
+    cursor: pointer;
+  }
+}
+
+@keyframes wingBeat {
+  0%, 100% {
+    transform: rotate(-14deg) scaleY(1);
+  }
+  50% {
+    transform: rotate(-4deg) scaleY(0.62);
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3.5px);
+  }
+}
+
+@keyframes starPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.22);
+    opacity: 0.85;
+  }
+}
+
+@keyframes questionTilt {
+  0%, 100% {
+    transform: translateY(0px) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(6deg);
+  }
+}
+
+.animate-wing-beat {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: wingBeat 180ms ease-in-out infinite;
+}
+
+.animate-gentle-float {
+  animation: gentleFloat 2.4s ease-in-out infinite;
+}
+
+.animate-star-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: starPulse 1.6s ease-in-out infinite;
+}
+
+.animate-question-tilt {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: questionTilt 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-wing-beat,
+  .animate-gentle-float,
+  .animate-star-pulse,
+  .animate-question-tilt {
+    animation: none !important;
+  }
+}

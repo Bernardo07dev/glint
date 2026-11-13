@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@gravity-ui/icons": "^2.23.1",
+    "@heroicons/react": "^2.2.0",
+    "@heroui/react": "^3.2.7",
+    "@heroui/styles": "^3.2.7",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"

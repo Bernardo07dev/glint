@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 6 96 96" fill="none">
+  <title>Glint</title>
+
+  <!-- Initial 4-point Glint Sparkle -->
+  <path d="M 32 79 L 34.5 85 L 40.5 87.5 L 34.5 90 L 32 96 L 29.5 90 L 23.5 87.5 L 29.5 85 Z" fill="#FFE07D"/>
+
+  <!-- Lower 'g' descender in Peach Coral dots -->
+  <path d="M 68 50 C 68 74, 69 96, 46 96 C 32 96, 27 87, 33 80" stroke="#FF9B85" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="1 10"/>
+
+  <!-- Upper 'g' loop in Pastel Cobalt -->
+  <path d="M 68 50 C 68 67, 32 69, 32 50 C 32 32, 64 31, 68 47" stroke="#5B8DEF" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Larger Profile Bee Mascot -->
+  <g transform="translate(68, 34) rotate(-14) scale(1.45)">
+    <ellipse cx="-6" cy="-11" rx="11" ry="6.5" transform="rotate(-12 -6 -11)" fill="#95E1B0"/>
+    <ellipse cx="4" cy="-10" rx="8.5" ry="5" transform="rotate(14 4 -10)" fill="#95E1B0" opacity="0.82"/>
+    <rect x="-15" y="-8" width="30" height="21" rx="10.5" fill="#FFE07D"/>
+    <path d="M -5 -7.5 L -5 12.5 M 2.5 -7.5 L 2.5 12.5" stroke="#5B8DEF" stroke-width="3.8"/>
+    <circle cx="9.5" cy="0.5" r="2.4" fill="#2D3142"/>
+    <circle cx="10.3" cy="-0.3" r="0.9" fill="#FFFDF8"/>
+    <ellipse cx="8.5" cy="4.5" rx="2.3" ry="1.4" fill="#FF9B85"/>
+    <path d="M 11 -6 Q 15 -13 19 -11" stroke="#2D3142" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="19.5" cy="-11" r="2.2" fill="#FF9B85"/>
+  </g>
+</svg>

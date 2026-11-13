@@ -6,9 +6,31 @@
 
 ---
 
-## 1. Direção Visual Geral
+## 1. Diretrizes Principais de Estilo e UI/UX (Regra de Ouro)
 
-O Glint transmite a sensação de um **mentor caloroso, claro e encorajador**. A estética foge de tons escuros pesados ou cores neon agressivas, priorizando **tons pastéis vibrantes, luminosos e acolhedores** que convidam o usuário a estudar com leveza todos os dias.
+O Glint transmite a sensação de um **mentor caloroso, claro e encorajador**. A estética foge de tons escuros pesados, cores neon ou aparência de template genérico de IA, priorizando **tons pastéis vibrantes, luminosos e acolhedores** com escolhas deliberadas de composição.
+
+### 1.1. Ponto Focal Único (Anti-Dashboard Genérico)
+- **Hierarquia centrada na jornada real:** O elemento principal de cada tela deve refletir a essência do Glint (a **Sessão de Hoje**, o **Calendário Vivo** ou a **Conversa com o Mentor**).
+- **Proibido o clichê de KPIs:** Evite abrir telas com a clássica fileira genérica de 3–4 cards de estatísticas (*número grande + label pequeno + gradiente decorativo*). Métricas (como *streak* ou semanas concluídas) devem viver integradas ao contexto do calendário ou do cabeçalho.
+- **Moderação e Foco:** Concentre o impacto visual em um único ponto marcante por visualização; mantenha os elementos ao redor limpos, funcionais e sem decorações supérfluas.
+
+### 1.2. Higiene Tipográfica e Ritmo de Leitura
+- **Contraste de Personalidade:** Use estritamente a dupla oficial — **`Fraunces`** (editorial orgânica para títulos e falas de destaque do mentor) e **`Plus Jakarta Sans`** (funcional para interface, calendário e leitura).
+- **Largura e Entrelinha:** Mantenha blocos de leitura, explicações e notas do mentor abaixo de **`75ch`–`80ch`**. Títulos e trechos em `Fraunces` devem ter *line-height* ligeiramente mais generoso e *tracking* suave.
+- **Vícios de Layout Proibidos:**
+  - **Não** destaque uma palavra aleatória no meio do título com cor ou itálico sem propósito semântico real;
+  - **Não** use *eyebrow badges* ou etiquetas desnecessárias acima de todo título principal;
+  - **Evite** excesso de rótulos em caixa alta (*ALL CAPS*) espalhados pela interface.
+
+### 1.3. Estrutura Visual e Superfícies (Sem "Mar de Cards Iguais")
+- **Hierarquia por Superfície, não por Sombras:** Evite layouts SaaS genéricos onde tudo é um card com o mesmo `border-radius` e sombra cinza espalhada sem hierarquia. Diferencie regiões combinando o fundo Nuvem Quente (`#FFFDF8`), superfícies secundárias Areia Suave (`#F3EFE6`), Lavanda Gelo (`#E8F0FE`), Creme Pêssego (`#FFF0E5`) e branco (`#FFFFFF`).
+- **Informação Real em Bordas e Números:** Bordas, divisores, *outlines* e contadores (`tabular-nums`) devem codificar estado e hierarquia real (ex.: sessão concluída em `#95E1B0`, sessão ativa do dia em `#5B8DEF`, nota do mentor em `#FF9B85`), nunca servir como enfeite vazio.
+
+### 1.4. Movimento, Interatividade e Microinterações Intencionais
+- **Cursor Pointer Obrigatório (`cursor-pointer`):** Todo elemento clicável ou interativo habilitado — botões (`<button>`, `Button`), links (`<a>`), abas, toggles de visibilidade, cards selecionáveis e controles com `onClick`/`onPress` — **deve obrigatoriamente ter `cursor: pointer` (`cursor-pointer`)**. Nunca deixe botões ou ações clicáveis com o cursor padrão de seta/texto (especialmente no Tailwind v4, onde `<button>` não aplica `pointer` por padrão).
+- **Propósito Funcional:** Use animações e transições para responder a ações reais do usuário (iniciar sessão, concluir bloco, expandir dia do calendário) ou dar vida pontual à mascote Abelhinha conforme [`ANIMATIONS.md`](./ANIMATIONS.md).
+- **Sem *Scroll-Fade* Repetitivo:** Evite transições genéricas de *fade-and-slide* repetidas em todos os cards e seções ao carregar ou rolar a página.
 
 ---
 
@@ -77,3 +99,27 @@ O logo oficial do Glint une narrativa visual e geometria limpa em três elemento
 
 ### 4.4. Expressões e Animações (`ANIMATIONS.md`)
 As 6 poses oficiais da abelhinha de perfil (**1. Perfil Padrão**, **2. Modo Foco**, **3. Voo Rápido**, **4. Comemorando**, **5. Curiosa**, **6. Sonolenta**) e a animação da abelhinha desenhando o `g` estão especificadas no playbook [`ANIMATIONS.md`](./ANIMATIONS.md).
+
+---
+
+## 5. Ícones e Convenções HeroUI
+
+> **Regra Obrigatória para Agentes:** Sempre utilize os **ícones do ecossistema HeroUI** (`@gravity-ui/icons` — biblioteca padrão adotada pelo HeroUI v3 — ou `@heroicons/react`) em toda a interface. **Nunca** desenhe `<svg>` manuais/improvisados para ícones de UI (como setas, calendário, relógio, check, notificações ou configurações); SVGs autorais são exclusivos do logo e da mascote Abelhinha.
+
+### Diretrizes de Uso de Ícones
+1. **Padronização com HeroUI:**
+   - Todos os ícones de interface, navegação, blocos do calendário, botões e feedbacks devem vir da biblioteca de ícones do HeroUI.
+   - Em botões e controles do HeroUI (`Button`, `Chip`, `Input`, `Tabs`, `Dropdown`), componha os ícones diretamente nos slots/partes exportadas pelos componentes.
+2. **Geometria e Peso Visual:**
+   - Priorize ícones com traços arredondados (`stroke-linecap="round"`, `stroke-linejoin="round"`) que conversem com a geometria amigável do wordmark `lint` e da Abelhinha.
+   - Tamanhos padrão alinhados ao ritmo de `4px`: `size-4` (`16px` em badges/tags de horário), `size-5` (`20px` padrão em botões e itens de calendário) e `size-6` (`24px` em cabeçalhos de seção).
+3. **Cores Semânticas nos Ícones (Paleta Aquarela Viva):**
+   - **Ícones de ação principal / mentor:** `#FF9B85` (Pêssego Coral) ou `#FFFDF8` quando sobre fundo coral sólido;
+   - **Ícones de estado ativo / calendário do dia:** `#5B8DEF` (Cobalto Pastel) sobre superfície `#E8F0FE` (Lavanda Gelo);
+   - **Ícones de conclusão / check:** `#95E1B0` (Pistache Claro);
+   - **Ícones de tempo / streak / brilho:** `#FFE07D` (Manteiga Solar);
+   - **Ícones secundários / metadados:** `#646B82` (Ardósia Suave).
+4. **Acessibilidade e Interação (Padrão HeroUI):**
+   - Botões apenas com ícone (*icon-only controls*) devem ter área mínima de toque/clique adequada e sempre incluir `aria-label` descritivo.
+   - Não use ícones em excesso como mera decoração; cada ícone deve reforçar rapidamente o significado da ação ou do bloco de estudo.
+
