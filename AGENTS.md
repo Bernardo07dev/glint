@@ -73,9 +73,10 @@ As especificações detalhadas de interface, marca e movimento ficam documentada
 
 ---
 
-## Estrutura do Projeto
+## Estrutura do Projeto e Stack Técnica (`SPEC.md`)
 
-A aplicação Next.js (`app/`, `public/`, `proxy.ts`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, junto com `AGENTS.md`, `DESIGN.md` e `ANIMATIONS.md` (sem subpasta `glint/` aninhada).
+A aplicação Next.js (`app/`, `public/`, `prisma/`, `proxy.ts`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, junto com `AGENTS.md`, `SPEC.md`, `DESIGN.md` e `ANIMATIONS.md` (sem subpasta `glint/` aninhada).
+- **Especificação Técnica (`SPEC.md`):** Documenta a stack base oficial (**Next.js 16 + Prisma ORM + Supabase PostgreSQL/Auth**), variáveis de ambiente e links para as documentações de referência de cada tecnologia.
 - **Fluxo de Entrada:** `proxy.ts` redireciona `/` diretamente para `/login` (`app/login/page.tsx`).
 - **Componentes de Marca (`app/components/`):** `animated-logo.tsx` (animação de assinatura do voo em `g`) e `mascot-bee.tsx` (poses oficiais da Abelhinha de Perfil).
 
