@@ -1,0 +1,29 @@
+{
+    "refinedGoal": "Construir e fazer deploy de um micro-SaaS usando fluxos agênticos no Claude Code",
+    "steps": [
+      {
+        "id": "tech_baseline",
+        "questionGoal": "Descobrir stack atual (TS/Python/Git) e se já usou ferramentas de CLI AI",
+        "criteriaForJev": "Deve deixar claro o nível de programação e familiaridade com terminal",
+        "value": null,
+        "jevConfidence": 0.0,
+        "status": "pending"
+      },
+      {
+        "id": "target_project",
+        "questionGoal": "Definir qual projeto concreto será construído durante as semanas",
+        "criteriaForJev": "Deve ter um escopo de projeto claro que caiba no horizonte do plano",
+        "value": null,
+        "jevConfidence": 0.0,
+        "status": "pending"
+      },
+      {
+        "id": "routine_and_slots",
+        "questionGoal": "Mapear dias da semana e duração exata disponível para cada sessão",
+        "criteriaForJev": "Deve conter dias específicos da semana e minutos/horas por sessão",
+        "value": null,
+        "jevConfidence": 0.0,
+        "status": "pending"
+      }
+    ]
+  }

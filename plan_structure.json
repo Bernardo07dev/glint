@@ -1,0 +1,112 @@
+{
+  "planId": "plan_01j9x8k2m",
+  "status": "active",
+
+  "objective": {
+    "rawInput": "Quero aprender Claude Code",
+    "clearGoal": "Construir e colocar em produção uma CLI de automação de PRs usando Claude Code",
+    "successCriteria": [
+      "Configurar CLAUDE.md e permissões sem expor segredos",
+      "Criar 3 slash commands customizados para o projeto",
+      "Integrar 1 servidor MCP e publicar o projeto funcional"
+    ]
+  },
+
+  "routineContract": {
+    "timezone": "America/Sao_Paulo",
+    "totalWeeks": 3,
+    "weeklyHours": 3.0,
+    "slots": [
+      { "dayOfWeek": "tuesday", "startTime": "20:00", "maxMinutes": 45, "energyLevel": "medium" },
+      { "dayOfWeek": "thursday", "startTime": "20:00", "maxMinutes": 45, "energyLevel": "medium" },
+      { "dayOfWeek": "saturday", "startTime": "10:00", "maxMinutes": 90, "energyLevel": "high" }
+    ]
+  },
+
+  "tasks": [
+    {
+      "taskId": "task_01",
+      "order": 1,
+      "title": "Instalação do Claude Code, autenticação e anatomia do CLAUDE.md",
+      "whyItMatters": "Sem um CLAUDE.md bem calibrado, o agente gasta o dobro de tokens e erra convenções do repositório.",
+
+      "schedule": {
+        "date": "2026-11-17",
+        "dayOfWeek": "tuesday",
+        "startTime": "20:00",
+        "durationMinutes": 45,
+        "timeBreakdown": {
+          "consumeMinutes": 15,
+          "practiceMinutes": 30
+        }
+      },
+
+      "lockState": {
+        "isLocked": false,
+        "unlockAt": "2026-11-17T00:00:00-03:00"
+      },
+
+      "pedagogy": {
+        "taskType": "concept_and_setup",
+        "requiredTools": ["youtube_video", "practice_checklist"]
+      },
+
+      "backgroundWorker": {
+        "enrichmentStatus": "completed",
+        "searchQueryUsed": "Claude Code CLI tutorial setup CLAUDE.md best practices",
+        "jevAlignmentScore": 0.94
+      },
+
+      "content": {
+        "video": {
+          "youtubeId": "dQw4w9WgXcQ",
+          "title": "Claude Code Full Setup & CLAUDE.md Guide",
+          "channel": "AI Engineering",
+          "watchStartSeconds": 75,
+          "watchEndSeconds": 920,
+          "transcriptSummary": "Explica instalação via npm, comando /init e como estruturar regras de estilo no CLAUDE.md."
+        },
+        "steps": [
+          "Assista ao trecho selecionado (01:15 até 15:20) focando em como o comando /init escaneia o projeto.",
+          "Rode `npm install -g @anthropic-ai/claude-code` no terminal e autentique sua conta.",
+          "Execute `/init` no seu repositório e adicione 3 regras específicas da sua stack no CLAUDE.md gerado."
+        ]
+      }
+    },
+    {
+      "taskId": "task_02",
+      "order": 2,
+      "title": "Modo Plan vs. Auto-Accept e controle de contexto com /compact",
+      "whyItMatters": "Aprender a separar planejamento arquitetural de execução de código evita que o agente quebre múltiplos arquivos.",
+
+      "schedule": {
+        "date": "2026-11-19",
+        "dayOfWeek": "thursday",
+        "startTime": "20:00",
+        "durationMinutes": 45,
+        "timeBreakdown": {
+          "consumeMinutes": 15,
+          "practiceMinutes": 30
+        }
+      },
+
+      "lockState": {
+        "isLocked": true,
+        "unlockAt": "2026-11-19T00:00:00-03:00"
+      },
+
+      "pedagogy": {
+        "taskType": "hands_on_practice",
+        "requiredTools": ["youtube_video", "code_sandbox"]
+      },
+
+      "backgroundWorker": {
+        "enrichmentStatus": "queued",
+        "searchQueryUsed": "Claude Code Plan Mode Shift Tab workflow tutorial",
+        "jevAlignmentScore": null
+      },
+
+      "content": null
+    }
+  ]
+}

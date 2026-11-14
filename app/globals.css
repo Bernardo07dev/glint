@@ -30,19 +30,19 @@
 
 @keyframes wingBeat {
   0%, 100% {
-    transform: rotate(-14deg) scaleY(1);
+    transform: rotate(-13deg) scaleY(1);
   }
   50% {
-    transform: rotate(-4deg) scaleY(0.62);
+    transform: rotate(-5deg) scaleY(0.68);
   }
 }
 
 @keyframes gentleFloat {
   0%, 100% {
-    transform: translateY(0px);
+    transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: translateY(-3.5px);
+    transform: translateY(-2.8px) rotate(-1.5deg);
   }
 }
 
@@ -69,11 +69,13 @@
 .animate-wing-beat {
   transform-box: fill-box;
   transform-origin: center bottom;
-  animation: wingBeat 180ms ease-in-out infinite;
+  animation: wingBeat 210ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .animate-gentle-float {
-  animation: gentleFloat 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gentleFloat 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .animate-star-pulse {

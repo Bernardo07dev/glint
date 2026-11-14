@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 interface AnimatedLogoProps {
   className?: string;
@@ -9,10 +9,14 @@ interface AnimatedLogoProps {
 /**
  * Logo oficial do Glint com a animação de assinatura:
  * a abelhinha de perfil parte da estrela #FFE07D, desenha a cauda pontilhada (#FF9B85)
- * e fecha o anel superior (#5B8DEF) em 1550ms antes de pousar no topo do "g".
+ * e fecha o anel superior (#5B8DEF) em um voo contínuo, orgânico e leve antes de pousar no topo do "g".
  */
 export function AnimatedLogo({ className = "h-12 w-auto" }: AnimatedLogoProps) {
+  const uid = useId().replace(/:/g, "");
+  const lowerMaskId = `lower-trail-mask-${uid}`;
+
   const lowerPathRef = useRef<SVGPathElement>(null);
+  const lowerMaskPathRef = useRef<SVGPathElement>(null);
   const upperPathRef = useRef<SVGPathElement>(null);
   const beeGroupRef = useRef<SVGGElement>(null);
   const [landed, setLanded] = useState(false);
@@ -23,82 +27,150 @@ export function AnimatedLogo({ className = "h-12 w-auto" }: AnimatedLogoProps) {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const lowerPath = lowerPathRef.current;
+    const lowerMaskPath = lowerMaskPathRef.current;
     const upperPath = upperPathRef.current;
     const beeGroup = beeGroupRef.current;
 
-    if (!lowerPath || !upperPath || !beeGroup) return;
+    if (!lowerPath || !lowerMaskPath || !upperPath || !beeGroup) return;
 
     const lowerLen = lowerPath.getTotalLength();
     const upperLen = upperPath.getTotalLength();
+    const totalLen = lowerLen + upperLen;
 
     if (prefersReducedMotion) {
-      lowerPath.style.strokeDashoffset = "0";
+      lowerMaskPath.style.strokeDasharray = `${lowerLen}`;
+      lowerMaskPath.style.strokeDashoffset = "0";
+      upperPath.style.strokeDasharray = `${upperLen}`;
       upperPath.style.strokeDashoffset = "0";
       beeGroup.setAttribute("transform", "translate(80, 31) rotate(-16)");
       setLanded(true);
       return;
     }
 
-    // Estado inicial antes do voo
+    // Estado inicial antes do voo: rastro pontilhado e anel superior ocultos
+    lowerMaskPath.style.strokeDasharray = `${lowerLen}`;
+    lowerMaskPath.style.strokeDashoffset = `${lowerLen}`;
     upperPath.style.strokeDasharray = `${upperLen}`;
     upperPath.style.strokeDashoffset = `${upperLen}`;
-    lowerPath.style.opacity = "0";
 
-    const duration = 1550;
+    const duration = 1850;
     let startTime: number | null = null;
+    let lastTime: number | null = null;
     let rafId = 0;
 
-    const easeInOutCubic = (t: number) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // Estado amortecido (low-pass filter) para evitar chicotes bruscos na curvatura
+    let smoothX = 40;
+    let smoothY = 83;
+    let smoothAngle = 42;
+    let initialized = false;
+
+    // Curva orgânica com partida gentil e pouso desacelerado (quintic out + sine blend)
+    const easeFluidFlight = (t: number) => {
+      if (t < 0.35) {
+        return 0.5 * (1 - Math.cos(Math.PI * t));
+      }
+      const u = (t - 0.35) / 0.65;
+      const base = 0.5 * (1 - Math.cos(Math.PI * 0.35));
+      const quintOut = 1 - Math.pow(1 - u, 3.2);
+      return base + (1 - base) * quintOut;
+    };
+
+    const normalizeAngleDelta = (target: number, current: number) => {
+      let delta = ((target - current + 540) % 360) - 180;
+      if (delta < -180) delta += 360;
+      return delta;
+    };
+
+    const samplePointAndAngle = (distAlongFlight: number) => {
+      const clamped = Math.max(0, Math.min(totalLen, distAlongFlight));
+      const lookWindow = 5.5;
+
+      const getCoords = (d: number) => {
+        if (d <= lowerLen) {
+          // lowerPath é definido do meio (80,46) até a base (40,83); percorremos do fim para o começo
+          return lowerPath.getPointAtLength(Math.max(0, lowerLen - d));
+        }
+        return upperPath.getPointAtLength(
+          Math.min(upperLen, d - lowerLen)
+        );
+      };
+
+      const pt = getCoords(clamped);
+      const backPt = getCoords(Math.max(0, clamped - lookWindow));
+      const frontPt = getCoords(Math.min(totalLen, clamped + lookWindow));
+      const rawAngle =
+        (Math.atan2(frontPt.y - backPt.y, frontPt.x - backPt.x) * 180) /
+        Math.PI;
+
+      // Limita inclinações extremas de ponta-cabeça para manter a postura leve da abelhinha
+      const softAngle = Math.max(-72, Math.min(68, rawAngle * 0.62));
+
+      return { x: pt.x, y: pt.y, angle: softAngle };
+    };
 
     const tick = (now: number) => {
-      if (startTime === null) startTime = now;
-      const rawProgress = Math.min((now - startTime) / duration, 1);
-      const progress = easeInOutCubic(rawProgress);
-
-      if (progress < 0.08) {
-        // 0% - 8%: Ignição na estrela inicial
-        beeGroup.setAttribute("transform", "translate(38, 86) rotate(-25)");
-      } else if (progress < 0.42) {
-        // 8% - 42%: Cauda pontilhada em Pêssego Coral
-        const localT = (progress - 0.08) / 0.34;
-        lowerPath.style.opacity = `${Math.min(localT * 1.4, 1)}`;
-        // Percorre do final (base esquerda) até o encontro com o anel superior
-        const dist = lowerLen * (1 - localT);
-        const pt = lowerPath.getPointAtLength(dist);
-        const nextPt = lowerPath.getPointAtLength(Math.max(dist - 2, 0));
-        const angle =
-          (Math.atan2(nextPt.y - pt.y, nextPt.x - pt.x) * 180) / Math.PI;
-        beeGroup.setAttribute(
-          "transform",
-          `translate(${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}) rotate(${angle.toFixed(1)})`
-        );
-      } else {
-        // 42% - 100%: Anel superior contínuo em Cobalto Pastel
-        lowerPath.style.opacity = "1";
-        const localT = (progress - 0.42) / 0.58;
-        upperPath.style.strokeDashoffset = `${upperLen * (1 - localT)}`;
-        const dist = upperLen * localT;
-        const pt = upperPath.getPointAtLength(dist);
-        const nextPt = upperPath.getPointAtLength(Math.min(dist + 2, upperLen));
-        const tangentAngle =
-          (Math.atan2(nextPt.y - pt.y, nextPt.x - pt.x) * 180) / Math.PI;
-
-        // Blend suave para -16deg nos últimos 12%
-        const blend = localT > 0.88 ? (localT - 0.88) / 0.12 : 0;
-        const finalAngle = tangentAngle * (1 - blend) + -16 * blend;
-        const finalX = pt.x * (1 - blend) + 80 * blend;
-        const finalY = pt.y * (1 - blend) + 31 * blend;
-
-        beeGroup.setAttribute(
-          "transform",
-          `translate(${finalX.toFixed(2)}, ${finalY.toFixed(2)}) rotate(${finalAngle.toFixed(1)})`
-        );
+      if (startTime === null) {
+        startTime = now;
+        lastTime = now;
       }
+      const dt = Math.min((now - (lastTime ?? now)) / 1000, 0.05);
+      lastTime = now;
+
+      const rawProgress = Math.min((now - startTime) / duration, 1);
+      const flightProgress = easeFluidFlight(rawProgress);
+      const currentDist = flightProgress * totalLen;
+
+      // Revela progressivamente a cauda pontilhada e depois o anel contínuo em velocidade uniforme de arco
+      if (currentDist <= lowerLen) {
+        lowerMaskPath.style.strokeDashoffset = `${lowerLen - currentDist}`;
+        upperPath.style.strokeDashoffset = `${upperLen}`;
+      } else {
+        lowerMaskPath.style.strokeDashoffset = "0";
+        const upperDist = currentDist - lowerLen;
+        upperPath.style.strokeDashoffset = `${Math.max(0, upperLen - upperDist)}`;
+      }
+
+      const sampled = samplePointAndAngle(currentDist);
+
+      // Nos últimos 26% do trajeto, faz transição contínua (smoothstep) para o pouso em (80, 31) a -16°
+      const landingWindow = Math.max(0, (flightProgress - 0.74) / 0.26);
+      const landingBlend =
+        landingWindow * landingWindow * (3 - 2 * landingWindow);
+
+      // Oscilação leve de voo que diminui suavemente conforme ela pousa
+      const hoverWave =
+        Math.sin(rawProgress * Math.PI * 3.5) * 1.6 * (1 - landingBlend);
+
+      const targetX = sampled.x * (1 - landingBlend) + 80 * landingBlend;
+      const targetY =
+        (sampled.y + hoverWave) * (1 - landingBlend) + 31 * landingBlend;
+      const targetAngle =
+        sampled.angle * (1 - landingBlend) + -16 * landingBlend;
+
+      if (!initialized) {
+        smoothX = targetX;
+        smoothY = targetY;
+        smoothAngle = targetAngle;
+        initialized = true;
+      } else {
+        const posFactor = 1 - Math.exp(-22 * dt);
+        const rotFactor = 1 - Math.exp(-14 * dt);
+        smoothX += (targetX - smoothX) * posFactor;
+        smoothY += (targetY - smoothY) * posFactor;
+        smoothAngle +=
+          normalizeAngleDelta(targetAngle, smoothAngle) * rotFactor;
+      }
+
+      beeGroup.setAttribute(
+        "transform",
+        `translate(${smoothX.toFixed(2)}, ${smoothY.toFixed(2)}) rotate(${smoothAngle.toFixed(2)})`
+      );
 
       if (rawProgress < 1) {
         rafId = requestAnimationFrame(tick);
       } else {
+        lowerMaskPath.style.strokeDashoffset = "0";
+        upperPath.style.strokeDashoffset = "0";
         beeGroup.setAttribute("transform", "translate(80, 31) rotate(-16)");
         setLanded(true);
       }
@@ -117,6 +189,20 @@ export function AnimatedLogo({ className = "h-12 w-auto" }: AnimatedLogoProps) {
       aria-label="Glint"
       role="img"
     >
+      <defs>
+        {/* Máscara que revela o pontilhado da cauda no sentido exato do voo (da estrela até o anel) */}
+        <mask id={lowerMaskId}>
+          <path
+            ref={lowerMaskPathRef}
+            d="M 40 83 C 33 91, 39 101, 55 101 C 81 101, 80 74, 80 46"
+            stroke="#FFFFFF"
+            strokeWidth="12"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </mask>
+      </defs>
+
       {/* Estrela inicial de 4 pontas em Manteiga Solar */}
       <path
         d="M 38 80 L 40.8 86.5 L 47.3 89.3 L 40.8 92.1 L 38 98.6 L 35.2 92.1 L 28.7 89.3 L 35.2 86.5 Z"
@@ -124,7 +210,7 @@ export function AnimatedLogo({ className = "h-12 w-auto" }: AnimatedLogoProps) {
         className={landed ? "" : "animate-star-pulse"}
       />
 
-      {/* Cauda pontilhada do 'g' em Pêssego Coral */}
+      {/* Cauda pontilhada do 'g' em Pêssego Coral revelada progressivamente */}
       <path
         ref={lowerPathRef}
         d="M 80 46 C 80 74, 81 101, 55 101 C 39 101, 33 91, 40 83"
@@ -132,6 +218,7 @@ export function AnimatedLogo({ className = "h-12 w-auto" }: AnimatedLogoProps) {
         strokeWidth="5.5"
         strokeLinecap="round"
         strokeDasharray="1 10"
+        mask={`url(#${lowerMaskId})`}
       />
 
       {/* Anel superior do 'g' em Cobalto Pastel */}
@@ -207,4 +294,5 @@ export function AnimatedLogo({ className = "h-12 w-auto" }: AnimatedLogoProps) {
     </svg>
   );
 }
+
 

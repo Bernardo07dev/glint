@@ -11,16 +11,18 @@ A arquitetura fundacional do **Glint** utiliza uma stack full-stack TypeScript m
 
 | Camada | Tecnologia | Papel no Projeto |
 | :--- | :--- | :--- |
-| **Framework Full-Stack** | **Next.js 16 (App Router + TypeScript)** | Renderização híbrida (Server/Client Components), Route Handlers (`app/api/`), Server Actions e roteamento via `proxy.ts`. |
-| **Banco de Dados & BaaS** | **Supabase (PostgreSQL)** | Banco de dados PostgreSQL gerenciado, Autenticação (`@supabase/ssr` / `@supabase/supabase-js`), Storage e Row Level Security (RLS). |
-| **ORM & Migrations** | **Prisma ORM (`prisma` + `@prisma/client`)** | Modelagem declarativa do banco (`prisma/schema.prisma`), tipagem estática ponta a ponta em TypeScript e controle de migrações SQL. |
+| **Framework Full-Stack** | **Next.js 16 (`16.4.6`, App Router + TypeScript)** | Renderização híbrida (Server/Client Components), Route Handlers (`app/api/`), Server Actions e roteamento via `proxy.ts`. |
+| **Banco de Dados & BaaS** | **Supabase (`@supabase/supabase-js` `2.119.0`, `@supabase/ssr` `0.12.7`)** | Banco de dados PostgreSQL gerenciado, Autenticação SSR, Storage e Row Level Security (RLS). |
+| **ORM & Migrations** | **Prisma ORM 7 (`prisma` / `@prisma/client` `7.10.1`)** | Modelagem declarativa do banco (`prisma/schema.prisma`), configuração de datasource em `prisma.config.ts`, tipagem estática e migrações SQL. |
+| **UI & Estilização** | **HeroUI v3 (`3.2.7`) + Tailwind CSS v4 (`4.3.3`)** | Componentes acessíveis (`@heroui/react`, `@heroui/styles`), ícones `@gravity-ui/icons` e tokens visuais de `DESIGN.md`. |
 
 ---
 
 ## 2. Como Prisma e Supabase Operam Juntos no Next.js
 
-1. **Modelagem e Tipagem (`Prisma`):**
-   - Toda a estrutura relacional da aplicação é declarada em [`prisma/schema.prisma`](./prisma/schema.prisma).
+1. **Modelagem e Tipagem (`Prisma 7`):**
+   - Toda a estrutura relacional da aplicação é declarada em [`prisma/schema.prisma`](./prisma/schema.prisma) (apenas `provider = "postgresql"`, sem `url`/`directUrl` no schema).
+   - A URL de conexão para CLI/migrations (`DIRECT_URL`) é configurada em [`prisma.config.ts`](./prisma.config.ts) usando `defineConfig` de `prisma/config`.
    - O **Prisma Client** é utilizado exclusivamente no **servidor** (Server Components, Server Actions e Route Handlers em `app/api/`) através de uma instância singleton em `lib/prisma.ts`, garantindo queries fortemente tipadas e evitando exaustão de conexões em ambiente de desenvolvimento (Hot Reload).
 2. **Conexão com Connection Pooling (`Supabase Supavisor`):**
    - `DATABASE_URL`: Usa a string de conexão com **Transaction Pooler** do Supabase (porta `6543` com `?pgbouncer=true`) para queries em runtime serverless/edge.
@@ -54,8 +56,9 @@ DIRECT_URL="postgresql://postgres.[SEU-PROJECT-REF]:[SUA-SENHA]@aws-0-[REGIAO].p
 - **Documentação Oficial Web:** [https://nextjs.org/docs](https://nextjs.org/docs)
 - **App Router & Route Handlers:** [https://nextjs.org/docs/app](https://nextjs.org/docs/app)
 
-### Prisma ORM
+### Prisma ORM 7 (`7.10.1`)
 - **Documentação Oficial do Prisma:** [https://www.prisma.io/docs](https://www.prisma.io/docs)
+- **Configuração de Datasource no Prisma 7 (`prisma.config.ts`):** [https://pris.ly/d/config-datasource](https://pris.ly/d/config-datasource)
 - **Guia Oficial Prisma + Supabase:** [https://www.prisma.io/docs/orm/overview/databases/supabase](https://www.prisma.io/docs/orm/overview/databases/supabase)
 - **Guia Oficial Prisma + Next.js (Singleton Best Practices):** [https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices](https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices)
 - **Referência do `schema.prisma`:** [https://www.prisma.io/docs/orm/reference/prisma-schema-reference](https://www.prisma.io/docs/orm/reference/prisma-schema-reference)

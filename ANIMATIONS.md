@@ -36,12 +36,14 @@
 
 Usada no *onboarding*, abertura do app e transições de criação do Plano de Estudos.
 
-- **Duração Total:** `1550ms` (curva *ease-in-out cubic*).
-- **Trajetória (`#flight-motion-path`):**
-  1. **`0% – 8%` (Ignição):** A estrela de 4 pontas em **Manteiga Solar (`#FFE07D`)** pulsa na base esquerda do `g` (`x: 42, y: 95`).
-  2. **`8% – 42%` (Cauda Pontilhada):** A abelhinha parte da estrela, mergulha pela curva inferior e sobe revelando o rastro pontilhado em **Pêssego Coral (`#FF9B85`, `stroke-dasharray="1 10"`)**.
-  3. **`42% – 100%` (Anel Superior Contínuo):** A abelhinha contorna o anel superior do `g` desenhando a linha sólida em **Cobalto Pastel (`#5B8DEF`, `stroke-dashoffset: totalLen -> 0`)** até pousar no topo direito (`translate(80, 31) rotate(-16)`).
-- **Orientação Dinâmica:** Durante o voo, a rotação da abelha acompanha a tangente da curva (`Math.atan2(dy, dx)`) e, nos últimos `12%` do percurso, faz *blend* suave para o ângulo final de pouso (`-16°`).
+- **Duração Total:** `1850ms` (curva orgânica contínua por comprimento de arco real `lowerLen + upperLen`, com partida suave em seno e pouso desacelerado *quintic-out*).
+- **Trajetória Contínua (`lowerPath` + `upperPath`):**
+  1. **Partida na Estrela (`#FFE07D`):** A estrela de 4 pontas pulsa na base esquerda do `g` (`x: 38, y: 89`) enquanto a abelhinha inicia o voo sem saltos de posição.
+  2. **Cauda Pontilhada Progressiva (`0 -> lowerLen`):** A abelhinha mergulha pela curva inferior e sobe revelando ponto a ponto o rastro em **Pêssego Coral (`#FF9B85`, `stroke-dasharray="1 10"`)** através de uma `<mask>` SVG animada no sentido do voo.
+  3. **Anel Superior Contínuo (`lowerLen -> totalLen`):** Sem quebra de velocidade na junção `(80, 46)`, a abelhinha contorna o anel superior desenhando a linha sólida em **Cobalto Pastel (`#5B8DEF`, `stroke-dashoffset: upperLen -> 0`)** até pousar suavemente no topo direito (`translate(80, 31) rotate(-16)`).
+- **Orientação e Amortecimento (Fluidez e Leveza):**
+  - A inclinação da abelha usa uma janela de tangente suavizada (`±5.5px`), atenuada (`0.62x`, limitada a `[-72°, 68°]`) para que ela nunca vire de ponta-cabeça no topo do loop.
+  - Posição (`x, y`) e rotação passam por amortecimento exponencial (*spring/low-pass filter*) e uma leve ondulação senoidal de voo (`hoverWave`), fazendo *smoothstep blend* nos últimos `26%` do trajeto até o pouso em `-16°`.
 
 ---
 

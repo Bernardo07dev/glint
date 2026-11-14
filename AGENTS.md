@@ -78,7 +78,11 @@ As especificações detalhadas de interface, marca e movimento ficam documentada
 A aplicação Next.js (`app/`, `public/`, `prisma/`, `proxy.ts`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, junto com `AGENTS.md`, `SPEC.md`, `DESIGN.md` e `ANIMATIONS.md` (sem subpasta `glint/` aninhada).
 - **Especificação Técnica (`SPEC.md`):** Documenta a stack base oficial (**Next.js 16 + Prisma ORM + Supabase PostgreSQL/Auth**), variáveis de ambiente e links para as documentações de referência de cada tecnologia.
 - **Fluxo de Entrada:** `proxy.ts` redireciona `/` diretamente para `/login` (`app/login/page.tsx`).
-- **Componentes de Marca (`app/components/`):** `animated-logo.tsx` (animação de assinatura do voo em `g`) e `mascot-bee.tsx` (poses oficiais da Abelhinha de Perfil).
+- **Componentes de Marca (`app/components/`):** `animated-logo.tsx` (animação de assinatura do voo em `g`, com trajetória unificada por comprimento de arco, máscara progressiva da cauda pontilhada e amortecimento exponencial de rotação/pouso) e `mascot-bee.tsx` (poses oficiais da Abelhinha de Perfil).
+- **Arquitetura de Criação do Plano ([`PLAN_CREATION.md`](./PLAN_CREATION.md), [`executable.json`](./executable.json) e [`plan_structure.json`](./plan_structure.json)):**
+  1. **Refinamento do Objetivo:** Recebe a query inicial + `System Prompt Base` + `Knowledge Graph` (se existir) e itera com validação do **Jev Judge** até extrair um objetivo concreto e executável (`refinedGoal`).
+  2. **Meta-Plano ("Plano pro Plano" — [`executable.json`](./executable.json)):** Gera os `steps` investigativos específicos do domínio com `criteriaForJev` vazios e itera sobre eles (com *cross-filling* e avaliação de confiança pelo **Jev Judge**) até preencher todas as lacunas.
+  3. **Esqueleto do Plano e Workers de Task ([`plan_structure.json`](./plan_structure.json)):** Compila a lista direta de `tasks` casadas com os minutos reais de cada dia (`consumeMinutes` + `practiceMinutes`), bloqueadas até a data (`lockState`), onde cada task define suas `requiredTools` (`youtube_video`, `practice_checklist`, `markdown_math`, `code_sandbox`) e é enriquecida isoladamente em background (`for` sobre `tasks` passando apenas `objective` + `routineContract` + `task`).
 
 <!-- BEGIN:nextjs-agent-rules -->
 
