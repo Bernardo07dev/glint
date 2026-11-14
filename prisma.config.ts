@@ -1,15 +1,13 @@
-import { defineConfig, env } from "prisma/config";
+import { existsSync } from "node:fs";
+import { defineConfig } from "prisma/config";
 
-try {
+if (existsSync(".env")) {
   process.loadEnvFile();
-} catch (error) {
-  console.error("Erro ao carregar .env:", error);
 }
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: env("DIRECT_URL"),
+    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "",
   },
 });
-
