@@ -123,3 +123,27 @@ As 6 poses oficiais da abelhinha de perfil (**1. Perfil Padrão**, **2. Modo Foc
    - Botões apenas com ícone (*icon-only controls*) devem ter área mínima de toque/clique adequada e sempre incluir `aria-label` descritivo.
    - Não use ícones em excesso como mera decoração; cada ícone deve reforçar rapidamente o significado da ação ou do bloco de estudo.
 
+---
+
+## 6. Diretrizes Unslop (Qualidade Visual e Anti-Slop)
+
+Baseado nos conceitos da skill **Unslop** (por Damir Sokolovsky, `@heydamir`, CC BY 4.0), aplicados à identidade do Glint para garantir que cada tela pareça intencionalmente desenhada e nunca um template genérico de IA:
+
+1. **Chrome Silencioso, Riqueza no Momento Certo:**
+   - Navegação, botões secundários, bordas e textos usam neutros da paleta e no máximo um destaque.
+   - A riqueza visual fica concentrada em **um ponto focal** por tela (ex.: o card da Sessão de Hoje, o Calendário ou a Abelhinha), sem espalhar brilhos, sombras coloridas ou gradientes decorativos pelo restante da interface.
+2. **Grid Estrito de `4px`:**
+   - Margens, paddings, gaps e alturas fixas seguem múltiplos de `4px` (`16`, `20`, `24`, `32`). Evite valores avulsos que quebram o ritmo (como `mt-[13px]` ou `py-[11px]`).
+   - Espaço dentro de um grupo deve ser menor que o espaço entre grupos; itens equivalentes compartilham a mesma altura e alinhamento.
+3. **Higiene de Copy (Texto Limpo e Direto):**
+   - **Sem pontos de exclamação (`!`)** em textos de interface, botões ou mensagens de erro.
+   - **Sem palavras de hype** (*revolucione, desbloqueie, mágico, superpoderes, turbinado*) e sem badges decorativos como `Novo ✨` ou `Beta 🚀`.
+   - **Sem ponto final** em títulos, subtítulos, labels, botões e legendas curtas (apenas parágrafos com múltiplas frases mantêm ponto final).
+   - **Sentence case** em toda a interface: evite `ALL CAPS` com tracking largo em rótulos.
+4. **Ícones e Hierarquia Tipográfica:**
+   - Nunca use emojis como ícones de interface ou decoração de rótulos; use sempre `@gravity-ui/icons` / `@heroicons/react` em tamanho consistente (`16px` ou `18px`).
+   - Hierarquia vem de **tamanho e cor** (máximo de 3 papéis de texto: principal `#2D3142`, secundário `#646B82`, e destaque `#5B8DEF`), não de pesos extremos (`700`–`900`).
+5. **Bordas e Superfícies Contidas:**
+   - Bordas são linhas sutis (*hairlines*) usando `#F3EFE6` ou `#2D3142` com baixa opacidade (`6%`–`10%`).
+   - Proibido gradientes de matiz em superfícies, texto com gradiente, *glows* coloridos, *blobs* radiais atrás do conteúdo e bordas neon.
+

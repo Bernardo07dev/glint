@@ -86,3 +86,20 @@ npx prisma migrate dev --name nome_da_mudanca
 # Abrir o Prisma Studio para visualizar e editar os dados localmente
 npx prisma studio
 ```
+
+---
+
+## 6. Padrão de Arquitetura e Código (Next.js App Router)
+
+1. **Server Component Wrapper (`page.tsx`):**
+   - Toda rota (`app/<rota>/page.tsx`) deve ser um **Server Component** por padrão.
+   - Quando a página precisar ler sessão/cookies (`createClient()` de `lib/supabase/server.ts`), envolva o subcomponente `async` em `<Suspense>` para não bloquear o prerender estático da rota.
+   - Passe dados iniciais e Server Actions via props para os Client Components filhos.
+2. **Client Components (`*-form.tsx`, componentes interativos):**
+   - Use `"use client"` apenas nos componentes que realmente precisam de estado, eventos ou hooks (`useState`, `useActionState`).
+3. **Server Actions (`app/actions/`):**
+   - Mutações e formulários usam **Server Actions** (`"use server"`) diretamente — **não** crie API routes (`app/api/*`) para fluxos de formulário.
+   - Estilo direto e legível: `(prevState: any, formData: FormData)`, validação clara com `if`, `try/catch` e retorno padronizado `{ success: true/false, error?, message? }`.
+4. **Supabase Auth + Prisma:**
+   - **Supabase Auth (`@supabase/ssr`):** cuida de autenticação (`signUp`, `signInWithPassword`), hash de senha e sessão em cookies HTTP-only (`lib/supabase/server.ts` e `lib/supabase/client.ts`).
+   - **Prisma (`lib/prisma.ts`):** cuida dos dados de produto (`User`, planos, rotina, tasks), vinculando `User.id` ao UUID do Supabase Auth.

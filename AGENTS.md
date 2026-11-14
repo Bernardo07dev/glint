@@ -44,14 +44,14 @@ Como o Glint conhece a personalidade do usuário, seus horários livres e o que 
 
 ---
 
-## Identidade Visual, Logo e Animações (`DESIGN.md` & `ANIMATIONS.md`)
+## Identidade Visual, Logo e Animações (`steering/DESIGN.md` & `steering/ANIMATIONS.md`)
 
-As especificações detalhadas de interface, marca e movimento ficam documentadas em [`DESIGN.md`](./DESIGN.md) e [`ANIMATIONS.md`](./ANIMATIONS.md):
+As especificações detalhadas de interface, marca e movimento ficam documentadas em [`steering/DESIGN.md`](./steering/DESIGN.md) e [`steering/ANIMATIONS.md`](./steering/ANIMATIONS.md):
 - **Diretrizes Principais de UI/UX (Anti-Template / Regra de Ouro):**
   - **Ponto Focal Único:** O centro gravitacional é a Sessão de Hoje, o Calendário ou o Mentor — nunca fileiras genéricas de cards de KPIs (*número grande + label pequeno*).
   - **Higiene Tipográfica:** Textos de leitura `< 75ch–80ch`; proibido pintar/italizar palavras soltas em títulos sem função semântica, abusar de `ALL CAPS` ou colocar *eyebrow badges* acima de todo título.
   - **Superfícies com Propósito:** Construir hierarquia contrastando as superfícies da paleta (`#FFFDF8`, `#F3EFE6`, `#E8F0FE`, `#FFF0E5`, `#FFFFFF`) em vez de empilhar cards idênticos com sombras cinzas; bordas e cores sempre codificam estado real.
-  - **Movimento e Interatividade Intencionais:** Todo elemento clicável (botões, links, toggles, controles interativos) deve obrigatoriamente usar `cursor-pointer`; sem *fade-and-slide* repetitivo em listas/cards; animações restritas a feedbacks de ação e às expressões da Abelhinha (`ANIMATIONS.md`).
+  - **Movimento e Interatividade Intencionais:** Todo elemento clicável (botões, links, toggles, controles interativos) deve obrigatoriamente usar `cursor-pointer`; sem *fade-and-slide* repetitivo em listas/cards; animações restritas a feedbacks de ação e às expressões da Abelhinha (`steering/ANIMATIONS.md`).
 - **Estética Geral:** Clara, acolhedora e baseada em tons pastéis vibrantes e solares (zero neon).
 - **Paleta Oficial — Aquarela Viva:**
   - **Cobalto Pastel (`#5B8DEF`):** Cor primária, anel superior do `g`, haste do `i`, estado ativo no calendário e progresso da jornada;
@@ -66,17 +66,17 @@ As especificações detalhadas de interface, marca e movimento ficam documentada
   - **Títulos e Destaques (Display / Editorial):** **`Fraunces`** (`400`, `500`, `600`) — serifada editorial orgânica que dá personalidade autoral aos títulos.
   - **Interface, Calendário e Leitura (Sans):** **`Plus Jakarta Sans`** (`400`, `500`, `600`, `700`, com `tabular-nums` para horários).
 - **Ícones e Componentes (HeroUI):**
-  - Siga [`DESIGN.md`](./DESIGN.md) para todas as decisões visuais e de interação.
+  - Siga [`steering/DESIGN.md`](./steering/DESIGN.md) para todas as decisões visuais e de interação.
   - **Sempre utilize ícones do ecossistema HeroUI** (`@gravity-ui/icons` / `@heroicons/react`) em toda a interface; nunca crie `<svg>` manuais/improvisados para ícones de UI (SVGs customizados são exclusivos do logo e da mascote Abelhinha).
-- **Playbook de Animações (`ANIMATIONS.md`):**
+- **Playbook de Animações (`steering/ANIMATIONS.md`):**
   - Documenta a animação de assinatura (abelhinha voando e desenhando o `g`) e as **6 poses oficiais da abelhinha de perfil**: *1. Perfil Padrão*, *2. Modo Foco (Óculos + Livro)*, *3. Voo Rápido (Streak)*, *4. Comemorando*, *5. Curiosa (`?`)* e *6. Sonolenta (`zZ`)*.
 
 ---
 
-## Estrutura do Projeto e Stack Técnica (`SPEC.md`)
+## Estrutura do Projeto e Stack Técnica (`steering/SPEC.md`)
 
-A aplicação Next.js (`app/`, `public/`, `prisma/`, `proxy.ts`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, junto com `AGENTS.md`, `SPEC.md`, `DESIGN.md` e `ANIMATIONS.md` (sem subpasta `glint/` aninhada).
-- **Especificação Técnica (`SPEC.md`):** Documenta a stack base oficial (**Next.js 16 + Prisma ORM + Supabase PostgreSQL/Auth**), variáveis de ambiente e links para as documentações de referência de cada tecnologia.
+A aplicação Next.js (`app/`, `public/`, `prisma/`, `proxy.ts`, `package.json`, `tsconfig.json`, `next.config.ts`) fica diretamente na **raiz do repositório**, e os documentos de especificação e design ficam na pasta `steering/` ([`steering/SPEC.md`](./steering/SPEC.md), [`steering/DESIGN.md`](./steering/DESIGN.md) e [`steering/ANIMATIONS.md`](./steering/ANIMATIONS.md)).
+- **Especificação Técnica ([`steering/SPEC.md`](./steering/SPEC.md)):** Documenta a stack base oficial (**Next.js 16 + Prisma ORM + Supabase PostgreSQL/Auth**), o **padrão de arquitetura e código** (Server Component wrapper em `page.tsx`, `<Suspense>` para `cookies()`, Client Components filhos, Server Actions em `app/actions/` sem API routes para formulários), variáveis de ambiente e links de referência.
 - **Fluxo de Entrada:** `proxy.ts` redireciona `/` diretamente para `/login` (`app/login/page.tsx`).
 - **Componentes de Marca (`app/components/`):** `animated-logo.tsx` (animação de assinatura do voo em `g`, com trajetória unificada por comprimento de arco, máscara progressiva da cauda pontilhada e amortecimento exponencial de rotação/pouso) e `mascot-bee.tsx` (poses oficiais da Abelhinha de Perfil).
 - **Arquitetura de Criação do Plano ([`PLAN_CREATION.md`](./PLAN_CREATION.md), [`executable.json`](./executable.json) e [`plan_structure.json`](./plan_structure.json)):**
