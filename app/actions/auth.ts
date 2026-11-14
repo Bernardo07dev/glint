@@ -1,7 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { encrypt } from "@/lib/auth";
 
 export async function registerAction(prevState: any, formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
@@ -21,28 +23,40 @@ export async function registerAction(prevState: any, formData: FormData) {
   }
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
     });
 
-    if (error || !data.user) {
-      return { success: false, error: error?.message ?? "Não foi possível criar sua conta" };
+    if (existingUser) {
+      return { success: false, error: "Já existe uma conta com este e-mail" };
     }
 
-    const user = await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: { name, email },
-      create: {
-        id: data.user.id,
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const newUser = await prisma.user.create({
+      data: {
         name,
         email,
+        passwordHash,
       },
     });
 
-    return { success: true, message: `Conta criada para ${user.name}` };
+    const sessionToken = await encrypt({
+      userId: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+    });
+
+    const cookieStore = await cookies();
+    cookieStore.set("glint-session", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+
+    return { success: true, message: `Conta criada para ${newUser.name}` };
   } catch (error: any) {
     console.error("Erro ao criar usuário:", error);
     return { success: false, error: "Não foi possível criar sua conta agora" };
@@ -58,23 +72,40 @@ export async function loginAction(prevState: any, formData: FormData) {
   }
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const user = await prisma.user.findUnique({
+      where: { email },
     });
 
-    if (error || !data.user) {
+    if (!user || !user.passwordHash) {
       return { success: false, error: "E-mail ou senha incorretos" };
     }
 
-    const user = await prisma.user.update({
-      where: { id: data.user.id },
-      data: { lastActiveAt: new Date() },
-      select: { name: true },
-    }).catch(() => null);
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
-    return { success: true, message: `Bem-vindo, ${user?.name ?? data.user.email}` };
+    if (!isPasswordValid) {
+      return { success: false, error: "E-mail ou senha incorretos" };
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastActiveAt: new Date() },
+    });
+
+    const sessionToken = await encrypt({
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+    });
+
+    const cookieStore = await cookies();
+    cookieStore.set("glint-session", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+
+    return { success: true, message: `Bem-vindo, ${user.name}` };
   } catch (error: any) {
     console.error("Erro ao autenticar usuário:", error);
     return { success: false, error: "Não foi possível entrar agora" };

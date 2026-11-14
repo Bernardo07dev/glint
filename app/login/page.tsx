@@ -1,18 +1,27 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { Calendar, Clock } from "@gravity-ui/icons";
 import { AnimatedLogo } from "../components/animated-logo";
 import { MascotBee } from "../components/mascot-bee";
-import { createClient } from "@/lib/supabase/server";
+import { decrypt } from "@/lib/auth";
 import { loginAction } from "../actions/auth";
 import { LoginForm } from "./login-form";
 
 async function LoginContent() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("glint-session")?.value;
+  let initialUserEmail: string | null = null;
 
-  return <LoginForm action={loginAction} initialUserEmail={user?.email} />;
+  if (sessionCookie) {
+    try {
+      const session = await decrypt(sessionCookie);
+      initialUserEmail = session.email ?? null;
+    } catch {
+      initialUserEmail = null;
+    }
+  }
+
+  return <LoginForm action={loginAction} initialUserEmail={initialUserEmail} />;
 }
 
 export default function LoginPage() {

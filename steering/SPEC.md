@@ -100,6 +100,6 @@ npx prisma studio
 3. **Server Actions (`app/actions/`):**
    - Mutações e formulários usam **Server Actions** (`"use server"`) diretamente — **não** crie API routes (`app/api/*`) para fluxos de formulário.
    - Estilo direto e legível: `(prevState: any, formData: FormData)`, validação clara com `if`, `try/catch` e retorno padronizado `{ success: true/false, error?, message? }`.
-4. **Supabase Auth + Prisma:**
-   - **Supabase Auth (`@supabase/ssr`):** cuida de autenticação (`signUp`, `signInWithPassword`), hash de senha e sessão em cookies HTTP-only (`lib/supabase/server.ts` e `lib/supabase/client.ts`).
-   - **Prisma (`lib/prisma.ts`):** cuida dos dados de produto (`User`, planos, rotina, tasks), vinculando `User.id` ao UUID do Supabase Auth.
+4. **Autenticação JWT + Prisma:**
+   - **`lib/auth.ts` (`jose`):** assina e verifica o JWT (`encrypt` / `decrypt`) salvo no cookie HTTP-only `glint-session` usando `JWT_SECRET`.
+   - **`app/actions/auth.ts` (`bcryptjs` + `Prisma`):** faz hash de senha com `bcryptjs` e salva tudo diretamente na tabela `User` do Prisma (`lib/prisma.ts`).
