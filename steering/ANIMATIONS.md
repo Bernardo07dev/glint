@@ -8,9 +8,10 @@
 ## 1. Princípios Gerais de Movimento
 
 1. **Leveza de Aquarela:** Nenhum movimento deve ser brusco ou robótico. Todas as transições usam curvas suaves (`cubic-bezier(0.4, 0, 0.2, 1)` ou `ease-in-out`).
-2. **Dois Loops Base Reutilizáveis:**
-   - **Batida de Asas (`wingBeat`):** Ciclo rápido (`160ms–180ms`) alternando `scaleY(1) -> scaleY(0.6)` com leve rotação nas asas Pistache (`#95E1B0`).
-   - **Flutuação Suave (`gentleFloat`):** Ciclo respiratório (`2.4s`) movendo o corpo em `translateY(0px -> -3.5px)` para dar vida sem distrair a leitura.
+2. **Loops Base Reutilizáveis:**
+   - **Batida de Asas (`wingBeat`):** Ciclo rápido (`160ms–210ms`) alternando `scaleY(1) -> scaleY(0.68)` com leve rotação nas asas Pistache (`#95E1B0`).
+   - **Flutuação Suave (`gentleFloat`):** Ciclo respiratório (`2.8s`) movendo o corpo em `translateY(0px -> -2.8px)` para dar vida sem distrair a leitura.
+   - **Piscada Natural (`beeBlink`):** Ciclo orgânico (`4.2s`) comprimindo os olhos verticalmente (`scaleY(1 -> 0.12 -> 1)` entre `92%` e `100%`).
 3. **Respeito à Acessibilidade:** Em ambientes com `prefers-reduced-motion: reduce`, pausar loops infinitos de voo e exibir o frame final estático (`public/logo.svg`).
 
 ```css
@@ -44,6 +45,14 @@ Usada no *onboarding*, abertura do app e transições de criação do Plano de E
 - **Orientação e Amortecimento (Fluidez e Leveza):**
   - A inclinação da abelha usa uma janela de tangente suavizada (`±5.5px`), atenuada (`0.62x`, limitada a `[-72°, 68°]`) para que ela nunca vire de ponta-cabeça no topo do loop.
   - Posição (`x, y`) e rotação passam por amortecimento exponencial (*spring/low-pass filter*) e uma leve ondulação senoidal de voo (`hoverWave`), fazendo *smoothstep blend* nos últimos `26%` do trajeto até o pouso em `-16°`.
+
+### 2.1. Animação de Loading em Voo Contínuo (`app/components/bee-loader.tsx` & `app/loading.tsx`)
+Usada em transições de rota do App Router, `<Suspense>` fallbacks e processamento da pipeline de IA:
+- **Onda Física Real (`requestAnimationFrame`):** A abelhinha de perfil voa em oscilação senoidal (`y = centerY + sin(phase) * amplitude`) com inclinação acompanhando a derivada vertical (`-6° + cos(phase) * 13°`).
+- **Trilha Dupla com Máscara de Dissipação:**
+  - **Fita Contínua (`#5B8DEF`):** Emana diretamente da cauda acompanhando a fase exata da onda.
+  - **Rastro Pontilhado (`#FF9B85`, `stroke-dasharray="1 10"`):** Os pontos caminham fisicamente para trás na velocidade da onda (`strokeDashoffset` sincronizado com `waveSpeed`) e desaparecem gradualmente via `<mask>` com gradiente linear.
+  - **Estrelas Flutuantes (`#FFE07D` e `#FF9B85`):** Duas estrelas de 4 pontas acompanham a fase atrasada da onda pulsando suavemente.
 
 ---
 
@@ -104,15 +113,15 @@ A abelhinha é sempre desenhada **de perfil** (corpo cápsula `52x36` em `#FFE07
 ---
 
 ### Pose 5 — **Curiosa / Pensativa (Entrevista Inicial & Perguntas do Mentor)**
-- **Quando usar:** Na etapa **1. Escolha do Tema e Entrevista Inicial**, quando a IA está formulando perguntas estratégicas ou aguardando a resposta do usuário, e nos cards de reflexão do mentor.
-- **Geometria e Detalhes:**
+- **Quando usar:** Na etapa **1. Escolha do Tema e Entrevista Inicial** (`/primeiro-plano` e `/cadastro`), quando a IA está formulando perguntas estratégicas ou aguardando a resposta do usuário, e nos cards de reflexão do mentor.
+- **Geometria, Modificadores (`glasses`, `lookAtUser`) e Detalhes:**
   - Inclinação base: `+4°` (levemente inclinada para trás, observando).
-  - Pupila deslocada para o alto (`cy="-1"`, `cy="-2.6"` no brilho) olhando para o ponto de interrogação.
-  - Boquinha em pequeno "o" curioso (`circle r="2"`).
+  - **Modo Perfil Puro (`lookAtUser={false}`):** Pupila deslocada para o alto (`cy="-0.5"`), boquinha lateral em "o" curioso (`circle r="2"`) e aro único quando `glasses={true}`.
+  - **Modo Olhando para o Usuário (`lookAtUser={true}`):** Mantém o corpo em cápsula de perfil, mas gira o rosto em **perspectiva 3/4** voltado para quem está na tela — exibe dois olhos com `beeBlink` (olho próximo `r="3.6"` e olho distante em perspectiva `rx="2.8" ry="3.4"`), duas bochechas `#FF9B85`, boquinha centralizada e, quando `glasses={true}`, óculos com duas lentes em perspectiva (`#FF9B85` com reflexo `#FFFDF8`), ponte central e haste lateral indo para trás.
   - **Símbolo `?` em Cobalto Pastel (`#5B8DEF`)** flutuando à frente da antena.
 - **Comportamento Animado:**
   - O `?` flutua e inclina suavemente (`rotate(-6deg -> 6deg)` a cada `1.8s`).
-  - A antena faz um leve movimento de "sondagem" (`rotate(-4deg -> 4deg)` com origem na cabeça).
+  - Os olhos piscam naturalmente a cada `4.2s` (`animate-bee-blink`).
 
 ---
 

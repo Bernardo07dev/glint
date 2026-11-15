@@ -1,0 +1,61 @@
+import { Suspense } from "react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ArrowRightFromSquare } from "@gravity-ui/icons";
+import { AnimatedLogo } from "../components/animated-logo";
+import { decrypt } from "@/lib/auth";
+import { logoutAction } from "../actions/auth";
+import { BeeLoader } from "../components/bee-loader";
+import { PrimeiroPlanoForm } from "./primeiro-plano-form";
+
+async function PrimeiroPlanoSession() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("glint-session")?.value;
+
+  if (!sessionCookie) {
+    redirect("/login");
+  }
+
+  let userName: string | null = null;
+
+  try {
+    const session = await decrypt(sessionCookie);
+    userName = session.name ?? null;
+  } catch {
+    redirect("/login");
+  }
+
+  return <PrimeiroPlanoForm userName={userName} />;
+}
+
+export default function PrimeiroPlanoPage() {
+  return (
+    <main className="min-h-screen flex flex-col justify-between bg-[#FFFDF8] font-sans text-[#2D3142] px-6 py-6 sm:px-10">
+      <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between">
+        <AnimatedLogo className="h-11 w-auto" />
+
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] hover:bg-[#F3EFE6] transition-colors cursor-pointer"
+          >
+            <ArrowRightFromSquare className="size-4" />
+            <span>Sair</span>
+          </button>
+        </form>
+      </header>
+
+      <Suspense
+        fallback={
+          <div className="my-auto py-8 flex items-center justify-center">
+            <BeeLoader label="Preparando sua jornada" />
+          </div>
+        }
+      >
+        <PrimeiroPlanoSession />
+      </Suspense>
+
+      <div aria-hidden="true" className="h-4" />
+    </main>
+  );
+}

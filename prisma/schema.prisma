@@ -12,18 +12,67 @@ enum Plan {
 }
 
 model User {
-  id                  String    @id @default(uuid())
+  id                  String         @id @default(uuid())
   name                String
-  email               String    @unique
+  email               String         @unique
   emailVerifiedAt     DateTime?
   passwordHash        String?
   avatarUrl           String?
-  plan                Plan      @default(FREE)
+  plan                Plan           @default(FREE)
   planExpiresAt       DateTime?
   billingCustomerId   String?
-  timezone            String    @default("America/Sao_Paulo")
-  onboardingCompleted Boolean   @default(false)
+  timezone            String         @default("America/Sao_Paulo")
+  onboardingCompleted Boolean        @default(false)
   lastActiveAt        DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  learningPlans       LearningPlan[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+enum PlanStage {
+  REFINING_GOAL
+  INTERVIEWING_STEPS
+  GENERATING_TASKS
+  ENRICHING_TASKS
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model LearningPlan {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isFirstPlan    Boolean       @default(false)
+  stage          PlanStage     @default(REFINING_GOAL)
+  rawInput       String
+  refinedGoal    String?
+  executableMeta Json?
+  planStructure  Json?
+  currentStepId  String?
+  totalTasks     Int           @default(0)
+  completedTasks Int           @default(0)
+  messages       PlanMessage[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId, stage])
+}
+
+model PlanMessage {
+  id        String       @id @default(uuid())
+  planId    String
+  plan      LearningPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  stage     PlanStage
+  stepId    String?
+  content   String
+  createdAt DateTime     @default(now())
+
+  @@index([planId, stage, stepId, createdAt])
 }

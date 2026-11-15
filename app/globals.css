@@ -66,6 +66,15 @@
   }
 }
 
+@keyframes beeBlink {
+  0%, 92%, 100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.12);
+  }
+}
+
 .animate-wing-beat {
   transform-box: fill-box;
   transform-origin: center bottom;
@@ -90,6 +99,12 @@
   animation: questionTilt 1.8s ease-in-out infinite;
 }
 
+.animate-bee-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: beeBlink 4.2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-wing-beat,
   .animate-gentle-float,
@@ -97,4 +112,30 @@
   .animate-question-tilt {
     animation: none !important;
   }
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #f3efe6;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #dfd9cc;
+}
+
+.glint-scrollbar::-webkit-scrollbar {
+  width: 4px;
 }

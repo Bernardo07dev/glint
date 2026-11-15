@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { encrypt } from "@/lib/auth";
 
@@ -55,12 +56,12 @@ export async function registerAction(prevState: any, formData: FormData) {
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
-
-    return { success: true, message: `Conta criada para ${newUser.name}` };
   } catch (error: any) {
     console.error("Erro ao criar usuário:", error);
     return { success: false, error: "Não foi possível criar sua conta agora" };
   }
+
+  redirect("/primeiro-plano");
 }
 
 export async function loginAction(prevState: any, formData: FormData) {
@@ -104,10 +105,17 @@ export async function loginAction(prevState: any, formData: FormData) {
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
-
-    return { success: true, message: `Bem-vindo, ${user.name}` };
   } catch (error: any) {
     console.error("Erro ao autenticar usuário:", error);
     return { success: false, error: "Não foi possível entrar agora" };
   }
+
+  redirect("/primeiro-plano");
 }
+
+export async function logoutAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete("glint-session");
+  redirect("/login");
+}
+

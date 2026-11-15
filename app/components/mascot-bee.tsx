@@ -2,6 +2,8 @@
 
 interface MascotBeeProps {
   pose?: "standard" | "curious";
+  glasses?: boolean;
+  lookAtUser?: boolean;
   className?: string;
 }
 
@@ -9,9 +11,13 @@ interface MascotBeeProps {
  * Mascote Abelhinha de Perfil (ANIMATIONS.md):
  * - standard (Pose 1): saudação e estados neutros
  * - curious (Pose 5): entrevista inicial e convite de novos alunos (?)
+ * - glasses: óculos redondos para foco / investigação
+ * - lookAtUser: corpo de perfil com o rosto em 3/4 olhando para o usuário
  */
 export function MascotBee({
   pose = "standard",
+  glasses = false,
+  lookAtUser = false,
   className = "h-20 w-24",
 }: MascotBeeProps) {
   const isCurious = pose === "curious";
@@ -74,33 +80,132 @@ export function MascotBee({
             strokeWidth="6.5"
           />
 
-          {/* Olho de perfil */}
-          <circle
-            cx="16.5"
-            cy={isCurious ? -1 : 0.5}
-            r="4.2"
-            fill="#2D3142"
-          />
-          <circle
-            cx="18"
-            cy={isCurious ? -2.6 : -1}
-            r="1.5"
-            fill="#FFFDF8"
-          />
+          {lookAtUser ? (
+            <>
+              {/* Rosto em 3/4: corpo de perfil, olhar voltado para o usuário */}
+              <g className="animate-bee-blink">
+                <circle cx="10.5" cy="0" r="3.6" fill="#2D3142" />
+                <circle cx="11.6" cy="-1.3" r="1.3" fill="#FFFDF8" />
+                <ellipse cx="21" cy="-0.3" rx="2.8" ry="3.4" fill="#2D3142" />
+                <circle cx="21.8" cy="-1.5" r="1.1" fill="#FFFDF8" />
+              </g>
 
-          {/* Bochecha */}
-          <ellipse cx="14.5" cy="7.5" rx="4" ry="2.4" fill="#FF9B85" />
+              {glasses && (
+                <g stroke="#FF9B85" strokeLinecap="round">
+                  {/* Haste lateral indo para trás */}
+                  <line x1="5" y1="-1" x2="-2" y2="-2.5" strokeWidth="2.2" />
+                  {/* Lente próxima */}
+                  <circle
+                    cx="10.5"
+                    cy="0"
+                    r="5.5"
+                    fill="#FFFDF8"
+                    fillOpacity="0.35"
+                    strokeWidth="2.2"
+                  />
+                  {/* Ponte */}
+                  <path d="M 15.6 -1.6 Q 16.4 -3 17.2 -1.6" strokeWidth="1.8" fill="none" />
+                  {/* Lente distante (em perspectiva) */}
+                  <ellipse
+                    cx="21"
+                    cy="-0.3"
+                    rx="4.2"
+                    ry="5.2"
+                    fill="#FFFDF8"
+                    fillOpacity="0.35"
+                    strokeWidth="2.2"
+                  />
+                  {/* Reflexo na lente */}
+                  <path
+                    d="M 7.5 -3.2 Q 9 -4.6 11 -4.2"
+                    stroke="#FFFDF8"
+                    strokeWidth="1.3"
+                    opacity="0.9"
+                    fill="none"
+                  />
+                </g>
+              )}
 
-          {/* Expressão da boca: sorriso lateral (Pose 1) ou "o" curioso (Pose 5) */}
-          {isCurious ? (
-            <circle cx="22.5" cy="6" r="2" fill="#2D3142" />
+              {/* Bochechas */}
+              <ellipse cx="7.5" cy="7" rx="3" ry="1.8" fill="#FF9B85" />
+              <ellipse cx="23.5" cy="6.6" rx="1.9" ry="1.5" fill="#FF9B85" />
+
+              {/* Boca centralizada no rosto */}
+              {isCurious ? (
+                <circle cx="15.8" cy="8.2" r="1.8" fill="#2D3142" />
+              ) : (
+                <path
+                  d="M 13 7.5 Q 15.8 10.2 18.6 7.5"
+                  stroke="#2D3142"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                />
+              )}
+            </>
           ) : (
-            <path
-              d="M 21 5.5 Q 24.5 7.5 26 4.5"
-              stroke="#2D3142"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
+            <>
+              {/* Olho de perfil com piscada natural */}
+              <g className="animate-bee-blink">
+                <circle
+                  cx="16.5"
+                  cy={isCurious ? -0.5 : 0.5}
+                  r="4.2"
+                  fill="#2D3142"
+                />
+                <circle
+                  cx="18.2"
+                  cy={isCurious ? -1.8 : -1}
+                  r="1.6"
+                  fill="#FFFDF8"
+                />
+              </g>
+
+              {/* Óculos redondos de perfil */}
+              {glasses && (
+                <g>
+                  <line
+                    x1="1"
+                    y1="-1"
+                    x2="9"
+                    y2="-1"
+                    stroke="#FF9B85"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                  <circle
+                    cx="16.5"
+                    cy={isCurious ? -0.8 : 0.5}
+                    r="7.5"
+                    fill="#FFFDF8"
+                    fillOpacity="0.4"
+                    stroke="#FF9B85"
+                    strokeWidth="2.4"
+                  />
+                  <path
+                    d="M 12.5 -4.5 Q 14.5 -6 17 -5"
+                    stroke="#FFFDF8"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    opacity="0.85"
+                  />
+                </g>
+              )}
+
+              {/* Bochecha */}
+              <ellipse cx="14.5" cy="7.5" rx="4" ry="2.4" fill="#FF9B85" />
+
+              {/* Expressão da boca: sorriso lateral (Pose 1) ou "o" curioso (Pose 5) */}
+              {isCurious ? (
+                <circle cx="22.5" cy="6" r="2" fill="#2D3142" />
+              ) : (
+                <path
+                  d="M 21 5.5 Q 24.5 7.5 26 4.5"
+                  stroke="#2D3142"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              )}
+            </>
           )}
 
           {/* Antena com ponta Pêssego Coral */}
