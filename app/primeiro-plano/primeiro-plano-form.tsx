@@ -105,7 +105,7 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
   }
 
   return (
-    <div className="my-auto py-8 w-full max-w-[620px] mx-auto">
+    <div className="mt-2 sm:my-auto py-2 sm:py-8 w-full max-w-[620px] mx-auto">
       {/* Presença do Mentor + Saudação Contextual */}
       <div className="flex flex-col items-start gap-0 sm:flex-row sm:items-center sm:gap-1 sm:-ml-3 mb-2 sm:mb-0">
         <MascotBee
