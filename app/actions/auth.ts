@@ -6,6 +6,26 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { encrypt } from "@/lib/auth";
 
+export async function checkEmailExistsAction(
+  email: string,
+): Promise<{ exists: boolean; error?: string }> {
+  const normalized = email?.trim().toLowerCase();
+  if (!normalized || !normalized.includes("@")) {
+    return { exists: false, error: "Digite um e-mail válido" };
+  }
+
+  try {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalized },
+      select: { id: true },
+    });
+    return { exists: Boolean(existingUser) };
+  } catch (error) {
+    console.error("Erro ao verificar e-mail:", error);
+    return { exists: false, error: "Não foi possível verificar o e-mail agora" };
+  }
+}
+
 export async function registerAction(prevState: any, formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   const email = (formData.get("email") as string)?.trim().toLowerCase();

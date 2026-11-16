@@ -36,7 +36,6 @@ enum PlanStage {
   ENRICHING_TASKS
   ACTIVE
   COMPLETED
-  ARCHIVED
 }
 
 enum MessageRole {

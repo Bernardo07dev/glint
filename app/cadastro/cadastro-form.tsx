@@ -12,6 +12,7 @@ import {
   Lock,
   Person,
 } from "@gravity-ui/icons";
+import { checkEmailExistsAction } from "../actions/auth";
 type Step = 1 | 2 | 3;
 
 const TOTAL_STEPS = 3;
@@ -27,6 +28,7 @@ export function CadastroForm({ action }: CadastroFormProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [state, formAction, isPending] = useActionState(action, {});
 
@@ -35,7 +37,7 @@ export function CadastroForm({ action }: CadastroFormProps) {
     setStep((prev) => (prev > 1 ? ((prev - 1) as Step) : prev));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setClientError(null);
 
@@ -53,6 +55,21 @@ export function CadastroForm({ action }: CadastroFormProps) {
         setClientError("Digite um e-mail válido");
         return;
       }
+
+      setIsCheckingEmail(true);
+      const result = await checkEmailExistsAction(email);
+      setIsCheckingEmail(false);
+
+      if (result.error) {
+        setClientError(result.error);
+        return;
+      }
+
+      if (result.exists) {
+        setClientError("Já existe uma conta com este e-mail");
+        return;
+      }
+
       setStep(3);
       return;
     }
@@ -79,6 +96,9 @@ export function CadastroForm({ action }: CadastroFormProps) {
 
   const progressPercent = (step / TOTAL_STEPS) * 100;
   const errorMessage = clientError ?? state.error;
+  const inputBorderClass = errorMessage
+    ? "border-[#C85A54] focus-within:border-[#C85A54]"
+    : "border-[#F3EFE6] focus-within:border-[#5B8DEF]";
 
   return (
     <div className="my-auto py-10 w-full max-w-[384px] mx-auto">
@@ -130,7 +150,7 @@ export function CadastroForm({ action }: CadastroFormProps) {
               <Label className="font-sans text-sm font-medium text-[#2D3142]">
                 Seu nome
               </Label>
-              <InputGroup className="h-11 rounded-xl bg-[#FFFFFF] border border-[#F3EFE6] focus-within:border-[#5B8DEF] transition-colors px-3 flex items-center gap-2.5">
+              <InputGroup className={`h-11 rounded-xl bg-[#FFFFFF] border ${inputBorderClass} transition-colors px-3 flex items-center gap-2.5`}>
                 <InputGroup.Prefix className="text-[#646B82]">
                   <Person className="size-4" />
                 </InputGroup.Prefix>
@@ -167,7 +187,7 @@ export function CadastroForm({ action }: CadastroFormProps) {
               <Label className="font-sans text-sm font-medium text-[#2D3142]">
                 E-mail
               </Label>
-              <InputGroup className="h-11 rounded-xl bg-[#FFFFFF] border border-[#F3EFE6] focus-within:border-[#5B8DEF] transition-colors px-3 flex items-center gap-2.5">
+              <InputGroup className={`h-11 rounded-xl bg-[#FFFFFF] border ${inputBorderClass} transition-colors px-3 flex items-center gap-2.5`}>
                 <InputGroup.Prefix className="text-[#646B82]">
                   <Envelope className="size-4" />
                 </InputGroup.Prefix>
@@ -205,7 +225,7 @@ export function CadastroForm({ action }: CadastroFormProps) {
               <Label className="font-sans text-sm font-medium text-[#2D3142]">
                 Senha
               </Label>
-              <InputGroup className="h-11 rounded-xl bg-[#FFFFFF] border border-[#F3EFE6] focus-within:border-[#5B8DEF] transition-colors px-3 flex items-center gap-2.5">
+              <InputGroup className={`h-11 rounded-xl bg-[#FFFFFF] border ${inputBorderClass} transition-colors px-3 flex items-center gap-2.5`}>
                 <InputGroup.Prefix className="text-[#646B82]">
                   <Lock className="size-4" />
                 </InputGroup.Prefix>
@@ -243,7 +263,7 @@ export function CadastroForm({ action }: CadastroFormProps) {
               <Label className="font-sans text-sm font-medium text-[#2D3142]">
                 Confirmar senha
               </Label>
-              <InputGroup className="h-11 rounded-xl bg-[#FFFFFF] border border-[#F3EFE6] focus-within:border-[#5B8DEF] transition-colors px-3 flex items-center gap-2.5">
+              <InputGroup className={`h-11 rounded-xl bg-[#FFFFFF] border ${inputBorderClass} transition-colors px-3 flex items-center gap-2.5`}>
                 <InputGroup.Prefix className="text-[#646B82]">
                   <Lock className="size-4" />
                 </InputGroup.Prefix>
@@ -258,7 +278,7 @@ export function CadastroForm({ action }: CadastroFormProps) {
         )}
 
         {errorMessage && (
-          <p role="alert" className="font-sans text-xs font-medium text-[#C85A54]">
+          <p role="alert" className="-mt-4 font-sans text-xs font-medium text-[#C85A54]">
             {errorMessage}
           </p>
         )}

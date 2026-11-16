@@ -134,3 +134,31 @@ Diferente do Sonnet 5.5 e do GPT-6.1 Terra (que usam `generateText` / `generateO
 ```
 O endpoint já devolve a decisão booleana acompanhada da probabilidade/confiança calibrada (`0.0` a `1.0`), que preenche diretamente o campo `jevConfidence` do [`executable.json`](./executable.json).
 
+---
+
+## 5. Arquitetura de Execução (`POST /api/plan` — Router, Agentes & Streaming UI)
+
+Para manter a experiência do usuário única e fluida sem acoplar lógica de LLM ao frontend, a execução segue um ciclo **Frontend Typeform ↔ Router Endpoint ↔ Agentes**:
+
+### 5.1. Experiência na Tela (`/criacao/[id]`)
+- **Fluxo único estilo Typeform:** A interface exibe **apenas uma pergunta por vez** (sem poluição de chat longo).
+- **Renderização por objeto em stream:** O agente faz streaming de um payload estruturado contendo a pergunta e o **tipo de input** esperado (ex.: `chips` / múltipla escolha, `text` descritivo, seletor de horários). A UI apenas renderiza o componente correspondente.
+- **Ciclo de turno:** Quando o usuário responde, o frontend envia a resposta (e contexto da sessão) para `POST /api/plan` e aguarda o stream da próxima pergunta.
+
+### 5.2. O Endpoint como Router Determinístico (`POST /api/plan`)
+- O `route.ts` **não** usa LLM para decidir qual agente chamar: ele lê `LearningPlan.stage` no Postgres (`REFINING_GOAL`, `INTERVIEWING_STEPS`, `GENERATING_TASKS`, `ENRICHING_TASKS`, `ACTIVE`, `COMPLETED`) e faz o roteamento determinístico (`switch`/`if`) para o agente daquela fase.
+- **Preservação de Estado & Retomada (`Continuar plano`):** O enum `PlanStage` **não** possui estado `ARCHIVED`, pois sobrescrever o `stage` apagaria em qual etapa da criação o usuário parou. Qualquer plano que não esteja `COMPLETED` (ou `ACTIVE`) mantém seu `stage` real preservado no banco. Ao clicar em **Continuar plano**, a plataforma redireciona para uma URL específica de retomada que sinaliza ao backend para injetar no `system prompt` que o usuário está continuando o plano de onde parou, seguindo exatamente o mesmo fluxo de router e agentes.
+- Após um agente concluir uma fase (ex.: `REFINING_GOAL` aprovado pelo Jev), o próprio fluxo já avança o `stage` no banco e encadeia o próximo agente no mesmo request para devolver a primeira pergunta da fase seguinte.
+
+### 5.3. Responsabilidades Dentro de Cada Agente
+Cada agente encapsula as chamadas de LLM, validação e persistência da sua etapa:
+1. **Contexto enxuto:** Recebe apenas o necessário para a etapa (`rawInput`/`refinedGoal`, `executableMeta` atual e `PlanMessage`s filtradas pelo `stage`).
+2. **Validação com Jev (`checkWithJev`):** Decide se o objetivo ou `step` atual atingiu o critério (`criteriaForJev`).
+3. **Atualização do Banco:** Persiste `PlanMessage`, atualiza `executableMeta` (em `LearningPlan`), `currentStepId`, `refinedGoal` ou `planStructure`, e avança `stage` quando a etapa fecha.
+4. **Streaming da Próxima Pergunta:** Define o próximo passo e streama o objeto estruturado (`pergunta + tipo de input`) de volta para a interface.
+
+### 5.4. Divisão de Modelos nos Agentes
+- **Claude Sonnet 5.5 (`models.architect`):** Planejamento e estruturação de alta complexidade — gera o JSON de steps em `executableMeta` (Etapa 2) e compila o esqueleto final `planStructure` (Etapa 4).
+- **GPT-6.1 Terra (`models.fast`):** Conversa rápida e baixa latência — conduz o refinamento (Etapa 1), a entrevista passo a passo com extração de respostas e streaming de pergunta/tipo de input (Etapa 3), além dos workers de enriquecimento de tasks (Etapa 5).
+- **Jev 1.14 (`models.jev` / `checkWithJev`):** Gatekeeper determinístico nas validações de clareza do objetivo, conclusão de steps e aderência de conteúdo/vídeos.
+

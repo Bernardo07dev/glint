@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#FFFDF8] font-sans text-[#2D3142]">
       {/* Coluna Esquerda: Acesso (~40% da largura) */}
-      <section className="lg:col-span-5 flex flex-col justify-between px-6 py-6 sm:px-8 border-b lg:border-b-0 lg:border-r border-[#F3EFE6]">
+      <section className="lg:col-span-5 flex flex-col justify-between px-6 py-6 sm:px-8 lg:border-r border-[#F3EFE6]">
         <header>
           <AnimatedLogo className="h-11 w-auto" />
         </header>
@@ -39,7 +39,7 @@ export default function LoginPage() {
       </section>
 
       {/* Coluna Direita: Ponto Focal Único (~60% da largura) */}
-      <aside className="lg:col-span-7 bg-[#F3EFE6] px-6 py-10 sm:px-12 lg:px-16 flex items-center justify-center">
+      <aside className="hidden lg:flex lg:col-span-7 bg-[#F3EFE6] px-6 py-10 sm:px-12 lg:px-16 items-center justify-center">
         <div className="w-full max-w-[460px] space-y-5">
           {/* Cabeçalho contextual da jornada */}
           <div className="space-y-2.5">

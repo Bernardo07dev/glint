@@ -1,9 +1,13 @@
 "use client";
 
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+
 interface MascotBeeProps {
   pose?: "standard" | "curious";
   glasses?: boolean;
   lookAtUser?: boolean;
+  dynamic?: boolean;
+  reactionTrigger?: number;
   className?: string;
 }
 
@@ -18,25 +22,104 @@ export function MascotBee({
   pose = "standard",
   glasses = false,
   lookAtUser = false,
+  dynamic = false,
+  reactionTrigger = 0,
   className = "h-20 w-24",
 }: MascotBeeProps) {
-  const isCurious = pose === "curious";
+  const [dynamicPose, setDynamicPose] = useState<"standard" | "curious">(pose);
+  const [motion, setMotion] = useState({ x: 0, y: 0, rotate: 0 });
+  const [isReacting, setIsReacting] = useState(false);
+  const reactionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerReaction = () => {
+    if (reactionTimeoutRef.current) {
+      clearTimeout(reactionTimeoutRef.current);
+    }
+    setIsReacting(true);
+    setDynamicPose((prev) => (prev === "curious" ? "standard" : "curious"));
+    reactionTimeoutRef.current = setTimeout(() => {
+      setIsReacting(false);
+    }, 650);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      triggerReaction();
+    }
+  };
+
+  useEffect(() => {
+    if (reactionTrigger > 0) {
+      triggerReaction();
+    }
+  }, [reactionTrigger]);
+
+  useEffect(() => {
+    return () => {
+      if (reactionTimeoutRef.current) {
+        clearTimeout(reactionTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!dynamic) {
+      setDynamicPose(pose);
+      setMotion({ x: 0, y: 0, rotate: 0 });
+      return;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const scheduleNext = () => {
+      const delay = 1200 + Math.random() * 1100;
+      timeoutId = setTimeout(() => {
+        setDynamicPose((prev) =>
+          Math.random() > 0.35 ? (prev === "curious" ? "standard" : "curious") : prev,
+        );
+        setMotion({
+          x: Math.round((Math.random() - 0.5) * 10),
+          y: Math.round((Math.random() - 0.5) * 10),
+          rotate: Math.round((Math.random() - 0.5) * 20),
+        });
+        scheduleNext();
+      }, delay);
+    };
+
+    scheduleNext();
+    return () => clearTimeout(timeoutId);
+  }, [dynamic, pose]);
+
+  const isCurious = (dynamic ? dynamicPose : pose) === "curious";
+  const baseX = (isCurious ? 58 : 60) + motion.x;
+  const baseY = 56 + motion.y;
+  const baseRotate = (isCurious ? 4 : 0) + motion.rotate;
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 132 104"
       fill="none"
-      className={className}
-      aria-hidden="true"
+      role="button"
+      tabIndex={0}
+      aria-label="Interagir com a abelhinha"
+      onClick={triggerReaction}
+      onKeyDown={handleKeyDown}
+      className={`${className} cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-[#5B8DEF] rounded-full`}
     >
       <g
         transform={
-          isCurious
-            ? "translate(58, 56) rotate(4)"
-            : "translate(60, 56) rotate(0)"
+          isReacting
+            ? `translate(${baseX}, ${baseY - 7}) rotate(${baseRotate - 18}) scale(1.14)`
+            : `translate(${baseX}, ${baseY}) rotate(${baseRotate})`
         }
-        className="transition-transform duration-300 ease-out"
+        className={
+          isReacting
+            ? "transition-transform duration-300 ease-out"
+            : dynamic
+              ? "transition-transform duration-700 ease-in-out"
+              : "transition-transform duration-300 ease-out"
+        }
       >
         <g className="animate-gentle-float">
           {/* Brilho suave Manteiga Solar atrás da cauda */}
@@ -48,6 +131,14 @@ export function MascotBee({
             fill="#FF9B85"
             className="animate-star-pulse"
           />
+
+          {isReacting && (
+            <g fill="#5B8DEF" className="animate-star-pulse">
+              <path d="M 36 -18 L 38 -23 L 43 -25 L 38 -27 L 36 -32 L 34 -27 L 29 -25 L 34 -23 Z" />
+              <path d="M -32 -24 L -30.5 -28 L -26.5 -29.5 L -30.5 -31 L -32 -35 L -33.5 -31 L -37.5 -29.5 L -33.5 -28 Z" />
+              <path d="M 38 14 L 39.5 10.5 L 43 9 L 39.5 7.5 L 38 4 L 36.5 7.5 L 33 9 L 36.5 10.5 Z" />
+            </g>
+          )}
 
           {/* Asas Pistache */}
           <ellipse
