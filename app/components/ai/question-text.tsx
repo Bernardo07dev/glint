@@ -85,8 +85,8 @@ export function QuestionText({
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-4">
-        <span className="font-sans text-xs text-[#646B82]">
+      <div className="flex items-center justify-end sm:justify-between gap-4">
+        <span className="hidden sm:inline font-sans text-xs text-[#646B82]">
           Enter para enviar, Shift + Enter para quebrar linha
         </span>
 

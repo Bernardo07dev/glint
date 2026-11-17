@@ -75,7 +75,6 @@ const MOCK_QUESTIONS: QuestionPayload[] = [
 ];
 
 export default function PreviewAiPage() {
-  const [viewMode, setViewMode] = useState<"flow" | "all">("flow");
   const [stepIndex, setStepIndex] = useState(0);
   const [lastAnswer, setLastAnswer] = useState<QuestionAnswer | null>(null);
 
@@ -85,88 +84,35 @@ export default function PreviewAiPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FFFDF8] text-[#2D3142] px-4 py-8 sm:py-12">
-      <div className="max-w-3xl mx-auto space-y-10">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#2D3142]/10">
-          <div className="space-y-0.5">
-            <p className="font-sans text-xs font-medium text-[#646B82]">
-              Preview de componentes AI
-            </p>
-            <h2 className="font-display text-lg font-medium text-[#2D3142]">
-              Entrevista de criação de plano
-            </h2>
-          </div>
+    <main className="min-h-screen bg-[#FFFDF8] text-[#2D3142] px-4 py-8 sm:py-12 sm:flex sm:flex-col sm:justify-center">
+      <div className="w-full max-w-3xl mx-auto space-y-10">
+        <div className="space-y-8">
+          <QuestionRenderer
+            question={MOCK_QUESTIONS[stepIndex]}
+            progress={{
+              current: stepIndex + 1,
+              total: MOCK_QUESTIONS.length,
+            }}
+            onSubmit={handleFlowSubmit}
+          />
 
-          <div className="inline-flex rounded-xl bg-[#F3EFE6] p-1 gap-1">
-            <button
-              type="button"
-              onClick={() => setViewMode("flow")}
-              className={`px-3 py-1.5 rounded-lg font-sans text-xs font-semibold transition-colors cursor-pointer ${
-                viewMode === "flow"
-                  ? "bg-[#FFFFFF] text-[#5B8DEF]"
-                  : "text-[#646B82] hover:text-[#2D3142]"
-              }`}
-            >
-              Modo Typeform
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("all")}
-              className={`px-3 py-1.5 rounded-lg font-sans text-xs font-semibold transition-colors cursor-pointer ${
-                viewMode === "all"
-                  ? "bg-[#FFFFFF] text-[#5B8DEF]"
-                  : "text-[#646B82] hover:text-[#2D3142]"
-              }`}
-            >
-              Ver todos juntos
-            </button>
-          </div>
-        </div>
-
-        {viewMode === "flow" ? (
-          <div className="space-y-8">
-            <QuestionRenderer
-              question={MOCK_QUESTIONS[stepIndex]}
-              progress={{
-                current: stepIndex + 1,
-                total: MOCK_QUESTIONS.length,
-              }}
-              onSubmit={handleFlowSubmit}
-            />
-
-            <div className="flex items-center justify-center gap-2 pt-2">
-              {MOCK_QUESTIONS.map((q, idx) => (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => setStepIndex(idx)}
-                  className={`px-3 py-1.5 rounded-lg font-sans text-xs font-medium transition-colors cursor-pointer ${
-                    idx === stepIndex
-                      ? "bg-[#E8F0FE] text-[#5B8DEF]"
-                      : "bg-[#F3EFE6] text-[#646B82] hover:text-[#2D3142]"
-                  }`}
-                >
-                  {q.inputType}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-16">
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
             {MOCK_QUESTIONS.map((q, idx) => (
-              <div
+              <button
                 key={q.id}
-                className="pt-8 first:pt-0 border-t first:border-t-0 border-[#2D3142]/10"
+                type="button"
+                onClick={() => setStepIndex(idx)}
+                className={`px-3 py-1.5 rounded-lg font-sans text-xs font-medium transition-colors cursor-pointer ${
+                  idx === stepIndex
+                    ? "bg-[#E8F0FE] text-[#5B8DEF]"
+                    : "bg-[#F3EFE6] text-[#646B82] hover:text-[#2D3142]"
+                }`}
               >
-                <QuestionRenderer
-                  question={q}
-                  progress={{ current: idx + 1, total: MOCK_QUESTIONS.length }}
-                  onSubmit={(answer) => setLastAnswer(answer)}
-                />
-              </div>
+                {q.inputType}
+              </button>
             ))}
           </div>
-        )}
+        </div>
 
         {lastAnswer && (
           <aside className="rounded-2xl bg-[#F3EFE6] border border-[#2D3142]/10 p-4 space-y-2">
