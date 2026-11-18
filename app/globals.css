@@ -105,11 +105,99 @@
   animation: beeBlink 4.2s ease-in-out infinite;
 }
 
+@keyframes questionEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-question-enter {
+  animation: questionEnter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes phraseIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-phrase-in {
+  animation: phraseIn 320ms ease-out both;
+}
+
+@keyframes metronomeBeat {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(12deg);
+  }
+}
+
+@keyframes metronomeCritical {
+  0%, 100% {
+    transform: translate(0, 0) scale(1.12) rotate(-8deg);
+  }
+  25% {
+    transform: translate(-1px, 1px) scale(1.28) rotate(10deg);
+  }
+  50% {
+    transform: translate(1px, -1px) scale(1.18) rotate(-6deg);
+  }
+  75% {
+    transform: translate(1px, 1px) scale(1.32) rotate(12deg);
+  }
+}
+
+@keyframes ringExpand {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+.animate-metronome-beat {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: metronomeBeat var(--metronome-dur, 1.8s) cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.animate-metronome-critical {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: metronomeCritical 0.48s ease-in-out infinite;
+}
+
+.animate-ring-expand {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ringExpand var(--metronome-dur, 1.8s) ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-wing-beat,
   .animate-gentle-float,
   .animate-star-pulse,
-  .animate-question-tilt {
+  .animate-question-tilt,
+  .animate-question-enter,
+  .animate-phrase-in,
+  .animate-metronome-beat,
+  .animate-metronome-critical,
+  .animate-ring-expand {
     animation: none !important;
   }
 }

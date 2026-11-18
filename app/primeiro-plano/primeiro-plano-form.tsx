@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  startTransition,
+  useActionState,
   useEffect,
   useRef,
   useState,
@@ -8,12 +10,8 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Button } from "@heroui/react";
-import {
-  ArrowRight,
-  Calendar,
-  Clock,
-  Comment,
-} from "@gravity-ui/icons";
+import { ArrowRight } from "@gravity-ui/icons";
+import { createPlanAction } from "../actions/plan";
 import { MascotBee } from "../components/mascot-bee";
 import { BeeLoader } from "../components/bee-loader";
 
@@ -37,11 +35,12 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
     const id = setTimeout(() => setShowTip(true), 120);
     return () => clearTimeout(id);
   }, []);
-  const [isLoading, setIsLoading] = useState(false);
+  const [state, formAction, isPending] = useActionState(createPlanAction, {});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const firstName = userName?.trim().split(" ")[0] || null;
   const MAX_TEXTAREA_HEIGHT = 224;
+  const errorMessage = clientError ?? state.error ?? null;
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -54,24 +53,21 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
       el.scrollHeight > MAX_TEXTAREA_HEIGHT ? "auto" : "hidden";
   }, [goal]);
 
-  const submitGoal = async () => {
+  const submitGoal = () => {
     setClientError(null);
 
-    if (!goal.trim() || goal.trim().length < 3) {
+    const trimmedGoal = goal.trim();
+    if (!trimmedGoal || trimmedGoal.length < 3) {
       setClientError("Conte um pouco mais sobre o que você quer aprender");
       return;
     }
 
-    setIsLoading(true);
-    try {
-      await fetch("/api/plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal: goal.trim() }),
-      });
-    } catch {
-      setIsLoading(false);
-    }
+    const formData = new FormData();
+    formData.set("goal", trimmedGoal);
+
+    startTransition(() => {
+      formAction(formData);
+    });
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -92,7 +88,7 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
     textareaRef.current?.focus();
   };
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="my-auto py-12 w-full max-w-[620px] mx-auto flex flex-col items-center justify-center">
         <BeeLoader
@@ -172,12 +168,12 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
           </aside>
         </div>
 
-        {clientError && (
+        {errorMessage && (
           <p
             role="alert"
             className="font-sans text-xs font-medium text-[#C85A54]"
           >
-            {clientError}
+            {errorMessage}
           </p>
         )}
 

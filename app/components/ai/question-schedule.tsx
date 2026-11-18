@@ -90,7 +90,27 @@ export function QuestionSchedule({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="rounded-2xl bg-[#FFFFFF] border border-[#2D3142]/10 p-4 space-y-4">
+      <div className="relative rounded-2xl bg-[#FFFFFF] border border-[#2D3142]/10 p-4 space-y-4">
+        {slots.length > 0 && (
+          <span
+            key={formattedTotal}
+            className="absolute -top-3 right-4 inline-flex items-center rounded-md bg-[#E8F0FE] border border-[#5B8DEF]/10 px-3 py-1 font-sans text-xs font-semibold text-[#5B8DEF] tabular-nums shadow-sm animate-[glint-pop_200ms_cubic-bezier(0.22,1,0.36,1)]"
+          >
+            {formattedTotal}/semana
+          </span>
+        )}
+        <style jsx>{`
+          @keyframes glint-pop {
+            0% {
+              opacity: 0;
+              transform: translateY(4px) scale(0.92);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}</style>
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-[#646B82]">
             <Calendar className="size-4 text-[#5B8DEF]" />
@@ -124,13 +144,10 @@ export function QuestionSchedule({
 
         {slots.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-[#2D3142]/8">
-            <div className="flex items-center justify-between text-[#646B82]">
+            <div className="flex items-center text-[#646B82]">
               <span className="inline-flex items-center gap-1.5 py-2 pt-3 text-xs font-semibold">
                 <Clock className="size-3.5 text-[#5B8DEF]" />
                 Horário e duração de cada sessão
-              </span>
-              <span className="font-sans text-xs font-semibold text-[#5B8DEF] tabular-nums">
-                {formattedTotal}/semana
               </span>
             </div>
 

@@ -32,3 +32,14 @@ export type QuestionAnswer =
   | { inputType: "single_choice"; value: string; customText?: string }
   | { inputType: "multi_choice"; values: string[]; customText?: string }
   | { inputType: "schedule_picker"; slots: ScheduleSlot[] };
+
+export interface StepProgressItem {
+  id: string;
+  status: "completed" | "current" | "pending";
+}
+
+export interface StepProgress {
+  completedSteps: number;
+  totalSteps: number;
+  steps: StepProgressItem[];
+}

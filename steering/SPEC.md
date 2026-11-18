@@ -103,3 +103,5 @@ npx prisma studio
 4. **Autenticação JWT + Prisma:**
    - **`lib/auth.ts` (`jose`):** assina e verifica o JWT (`encrypt` / `decrypt`) salvo no cookie HTTP-only `glint-session` usando `JWT_SECRET`.
    - **`app/actions/auth.ts` (`bcryptjs` + `Prisma`):** faz hash de senha com `bcryptjs` e salva tudo diretamente na tabela `User` do Prisma (`lib/prisma.ts`).
+5. **Agentes de IA (`lib/agents/`):**
+   - Os agentes responsáveis pelas etapas do plano ficam organizados em `lib/agents/`, consumindo a camada centralizada de modelos em `lib/llm.ts` e sendo orquestrados pelo router determinístico em `app/api/plan/route.ts`.
