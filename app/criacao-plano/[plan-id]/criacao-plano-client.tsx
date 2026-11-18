@@ -328,13 +328,45 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
     };
   }, [applyApiResponse, requestNextStep]);
 
+  const renderCriteriaButton = (visibilityClassName: string) => {
+    if (!planStructure) return null;
+
+    return (
+      <button
+        type="button"
+        aria-expanded={isCriteriaPopupOpen}
+        onClick={() => setIsCriteriaPopupOpen((prev) => !prev)}
+        className={`${visibilityClassName} items-center gap-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F5FCF7] border border-[#95E1B0] shadow-[0_2px_0_0_#95E1B0] hover:shadow-[0_3px_0_0_#82D9A1] hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none px-3 py-1.5 font-sans text-xs font-semibold text-[#2D3142] transition-all cursor-pointer shrink-0`}
+      >
+        <span className="size-4 rounded-full bg-[#95E1B0]/45 flex items-center justify-center">
+          <Check className="size-3 text-green-600" />
+        </span>
+        <span className="text-[#2D3142]/70">
+          {planStructure.objective.successCriteria.length} metas do plano
+        </span>
+        <ChevronDown
+          className={`size-3.5 text-[#646B82] transition-transform duration-200 ${
+            isCriteriaPopupOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+    );
+  };
+
   const header = (
-    <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between gap-4">
+    <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between gap-3">
       <AnimatedLogo className="h-11 w-auto" />
 
       {question && stepProgress && stepProgress.totalSteps > 0 && (
         <StepFlightTrail stepProgress={stepProgress} />
       )}
+
+      {planStructure &&
+        !isAdjustingPlan &&
+        !question &&
+        !isLoading &&
+        !isSubmitting &&
+        renderCriteriaButton("inline-flex sm:hidden")}
     </header>
   );
 
@@ -413,7 +445,7 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
     return (
       <>
         {header}
-        <div className="mt-2 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-6 animate-question-enter">
+        <div className="mt-2 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-3 sm:space-y-5 animate-question-enter">
           <QuestionRenderer
             question={ADJUST_PLAN_QUESTION}
             isSubmitting={isSubmitting}
@@ -492,26 +524,9 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
     return (
       <>
         {header}
-        <div className="mt-2 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-6 animate-question-enter">
+        <div className="mt-2 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-3 sm:space-y-5 animate-question-enter">
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              aria-expanded={isCriteriaPopupOpen}
-              onClick={() => setIsCriteriaPopupOpen((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F5FCF7] border border-[#95E1B0] shadow-[0_2px_0_0_#95E1B0] hover:shadow-[0_3px_0_0_#82D9A1] hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none px-3 py-1.5 font-sans text-xs font-semibold text-[#2D3142] transition-all cursor-pointer"
-            >
-              <span className="size-4 rounded-full bg-[#95E1B0]/45 flex items-center justify-center">
-                <Check className="size-3 text-green-600" />
-              </span>
-              <span className="text-[#2D3142]/70">
-                {planStructure.objective.successCriteria.length} metas do plano
-              </span>
-              <ChevronDown
-                className={`size-3.5 text-[#646B82] transition-transform duration-200 ${
-                  isCriteriaPopupOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+            {renderCriteriaButton("hidden sm:inline-flex")}
             <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#E8F0FE] px-3 py-1.5 font-sans text-xs font-medium text-[#5B8DEF] tabular-nums">
               <Calendar className="size-3.5" />
               <span className="font-semibold">
@@ -543,12 +558,12 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
             </div>
           </header>
 
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-row items-center gap-2.5 sm:gap-3 pt-1">
           <Button
             type="button"
             isDisabled={isSubmitting}
             onPress={() => setIsAdjustingPlan(true)}
-            className="h-11 px-5 rounded-xl bg-[#F3EFE6] hover:bg-[#e8e2d5] font-sans text-[#2D3142] font-semibold text-sm transition-colors inline-flex items-center justify-center cursor-pointer"
+            className="flex-1 sm:flex-initial h-11 px-4 sm:px-5 rounded-xl bg-[#F3EFE6] hover:bg-[#e8e2d5] font-sans text-[#2D3142] font-semibold text-xs sm:text-sm transition-colors inline-flex items-center justify-center cursor-pointer"
           >
             Recusar e ajustar
           </Button>
@@ -557,7 +572,7 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
             type="button"
             isDisabled={isSubmitting}
             onPress={() => void handleAcceptPlan()}
-            className="h-11 px-6 rounded-xl bg-[#FF9B85] hover:bg-[#ff8a70] font-sans text-[#FFFFFF] font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 sm:flex-initial h-11 px-4 sm:px-6 rounded-xl bg-[#FF9B85] hover:bg-[#ff8a70] font-sans text-[#FFFFFF] font-semibold text-xs sm:text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Aceitar plano</span>
             <ArrowRight className="size-4" />
@@ -616,7 +631,7 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
           <aside
             role="dialog"
             aria-label="Metas do plano"
-            className="fixed bottom-4 left-4 right-4 sm:left-auto sm:top-20 sm:bottom-auto sm:right-8 sm:w-96 z-50 rounded-2xl bg-[#FFFFFF] border-2 border-[#5B8DEF]/30 shadow-lg p-5 space-y-3 max-h-[75vh] overflow-y-auto animate-question-enter"
+            className="fixed top-20 left-4 right-4 sm:left-auto sm:top-20 sm:right-8 sm:w-96 z-50 rounded-2xl bg-[#FFFFFF] border-2 border-[#5B8DEF]/30 shadow-lg p-5 space-y-3 max-h-[75vh] overflow-y-auto animate-question-enter"
           >
             <div className="flex items-center justify-between gap-2">
               <h2 className="font-display text-sm font-medium text-[#2D3142]">
