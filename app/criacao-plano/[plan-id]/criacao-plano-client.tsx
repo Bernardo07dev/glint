@@ -336,7 +336,7 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
         type="button"
         aria-expanded={isCriteriaPopupOpen}
         onClick={() => setIsCriteriaPopupOpen((prev) => !prev)}
-        className={`${visibilityClassName} items-center gap-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F5FCF7] border border-[#95E1B0] shadow-[0_2px_0_0_#95E1B0] hover:shadow-[0_3px_0_0_#82D9A1] hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none px-3 py-1.5 font-sans text-xs font-semibold text-[#2D3142] transition-all cursor-pointer shrink-0`}
+        className={`${visibilityClassName} items-center gap-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F5FCF7] border border-[#95E1B0] shadow-[0_2px_0_0_#95E1B0] hover:shadow-[0_3px_0_0_#82D9A1] hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none px-3 sm:py-1.5 py-2 font-sans text-xs font-semibold text-[#2D3142] transition-all cursor-pointer shrink-0`}
       >
         <span className="size-4 rounded-full bg-[#95E1B0]/45 flex items-center justify-center">
           <Check className="size-3 text-green-600" />
@@ -445,7 +445,7 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
     return (
       <>
         {header}
-        <div className="mt-2 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-3 sm:space-y-5 animate-question-enter">
+        <div className="mt-6 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-3 sm:space-y-5 animate-question-enter">
           <QuestionRenderer
             question={ADJUST_PLAN_QUESTION}
             isSubmitting={isSubmitting}
@@ -524,22 +524,26 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
     return (
       <>
         {header}
-        <div className="mt-2 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-3 sm:space-y-5 animate-question-enter">
-          <div className="flex flex-wrap items-center gap-2">
-            {renderCriteriaButton("hidden sm:inline-flex")}
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#E8F0FE] px-3 py-1.5 font-sans text-xs font-medium text-[#5B8DEF] tabular-nums">
-              <Calendar className="size-3.5" />
-              <span className="font-semibold">
-                {planStructure.routineContract.totalWeeks}{" "}
-                {planStructure.routineContract.totalWeeks === 1
-                  ? "semana"
-                  : "semanas"}
+        <div className="mt-6 sm:my-auto py-2 sm:py-8 w-full max-w-2xl mx-auto space-y-3 sm:space-y-5 animate-question-enter">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#E8F0FE] px-3 py-1.5 font-sans text-xs font-medium text-[#5B8DEF] tabular-nums">
+                <Calendar className="size-3.5" />
+                <span className="font-semibold">
+                  {planStructure.routineContract.totalWeeks}{" "}
+                  {planStructure.routineContract.totalWeeks === 1
+                    ? "semana"
+                    : "semanas"}
+                </span>
               </span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#FFF0E5] px-3 py-1.5 font-sans text-xs font-medium text-[#2D3142]/60 tabular-nums">
-              <Clock className="size-3.5 text-[#FF9B85]" />
-              <span className="font-semibold">{planStructure.routineContract.weeklyHours}h por semana</span>
-            </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#FFF0E5] px-3 py-1.5 font-sans text-xs font-medium text-[#2D3142]/60 tabular-nums">
+                <Clock className="size-3.5 text-[#FF9B85]" />
+                <span className="font-semibold">
+                  {planStructure.routineContract.weeklyHours}h por semana
+                </span>
+              </span>
+            </div>
+            {renderCriteriaButton("hidden sm:inline-flex")}
           </div>
 
           <header className="flex flex-col sm:flex-row items-start sm:items-center gap-0 sm:gap-3">
