@@ -73,11 +73,11 @@ app/
 #### Layout Responsivo
 - **Mobile:** Coluna única com respiro (`px-4 pb-24 pt-5`), na ordem:
   1. Banner de plano em criação (condicional)
-  2. **Hero da Próxima Task**
-  3. **Faixa Semanal (7 dias)**
+  2. **Faixa Semanal (7 dias)**
+  3. **Hero da Próxima Task**
   4. **Resumo de contexto** (ritmo da semana + progresso do plano + link *"Imprevisto hoje?"*)
 - **Desktop:** Grid assimétrico centralizado (`max-w-[1120px] mx-auto grid-cols-[minmax(0,1fr)_340px] gap-8`):
-  - **Coluna Esquerda (~65%):** Banner (condicional) → **Hero da Próxima Task** → **Faixa Semanal (7 dias)**.
+  - **Coluna Esquerda (~65%):** Banner (condicional) → **Faixa Semanal (7 dias)** → **Hero da Próxima Task**.
   - **Coluna Direita (~35%):** **Painel de Contexto** (superfície `#F3EFE6`/`#FFF0E5`, sem cara de card de KPI):
     - Ritmo semanal: *"2 de 3 sessões esta semana"* com marcadores visuais em `#95E1B0` / `#5B8DEF`.
     - Progresso do plano da próxima task: barra fina (`completedTasks / totalTasks`) + semana atual.

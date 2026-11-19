@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { House, Layers, Person } from "@gravity-ui/icons";
@@ -86,7 +85,7 @@ export function PlatformShell({ userName, children }: PlatformShellProps) {
       {/* Bottom Tab Bar (Mobile < md) */}
       <nav
         aria-label="Navegação mobile"
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-[#FFFDF8]/95 backdrop-blur border-t border-[#F3EFE6] pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden  py-2 fixed bottom-0 inset-x-0 z-30 bg-[#FFFDF8]/95 backdrop-blur border-t border-[#F3EFE6] pb-[env(safe-area-inset-bottom)]"
       >
         <div className="grid grid-cols-3 h-16 max-w-md mx-auto px-3 items-center">
           {NAV_ITEMS.map((item) => {
@@ -97,17 +96,17 @@ export function PlatformShell({ userName, children }: PlatformShellProps) {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className="flex flex-col items-center justify-center gap-1 py-1 cursor-pointer"
+                className="flex flex-col items-center justify-center gap-0.5 cursor-pointer"
               >
                 <span
-                  className={`inline-flex items-center justify-center rounded-full px-4 py-1 transition-colors ${
+                  className={`inline-flex items-center justify-center rounded-full px-2 py-2 transition-colors ${
                     active ? "bg-[#E8F0FE] text-[#5B8DEF]" : "text-[#646B82]"
                   }`}
                 >
                   <Icon className="size-5" />
                 </span>
                 <span
-                  className={`text-[11px] font-medium ${
+                  className={`text-[11px] font-semibold ${
                     active ? "text-[#5B8DEF]" : "text-[#646B82]"
                   }`}
                 >

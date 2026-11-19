@@ -67,13 +67,13 @@ export function HomeClient({
             </div>
           )}
 
+          <WeekStrip days={weekDays} />
+
           <NextTaskHero
             nextTask={nextTask}
             completedToday={completedToday}
             onStartSession={() => setIsFocusMode(true)}
           />
-
-          <WeekStrip days={weekDays} />
         </div>
 
         {/* Coluna Direita */}
