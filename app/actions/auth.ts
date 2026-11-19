@@ -125,7 +125,18 @@ export async function loginAction(prevState: any, formData: FormData) {
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
+
+    const planCount = await prisma.learningPlan.count({
+      where: { userId: user.id },
+    });
+
+    if (planCount > 0) {
+      redirect("/home");
+    }
   } catch (error: any) {
+    if (error?.digest?.startsWith?.("NEXT_REDIRECT")) {
+      throw error;
+    }
     console.error("Erro ao autenticar usuário:", error);
     return { success: false, error: "Não foi possível entrar agora" };
   }

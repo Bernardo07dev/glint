@@ -118,7 +118,7 @@ Contratos de referência: [`executable.json`](../executable.json) (Meta-Plano) e
 
 ### 7.2. Camada de Modelos (`lib/llm.ts`) e Stack de IA
 Toda a orquestração roda via **OpenRouter** (`@openrouter/ai-sdk-provider`) e **Vercel AI SDK v7** (`generateText` + `Output.object` com schemas Zod em `lib/agents/types.ts`):
-- **`models.architect` (`anthropic/claude-sonnet-5.5`):** Estruturação pedagógica de alta complexidade — gera o Meta-Plano (Etapa 2) e compila o esqueleto final do plano (Etapa 4).
+- **`models.architect` (`google/gemini-4-hydrogen`):** Estruturação pedagógica de alta complexidade — gera o Meta-Plano (Etapa 2) e compila o esqueleto final do plano (Etapa 4).
 - **`models.fast` (`openai/gpt-6.1-terra`):** Diálogo rápido, extração de respostas e consolidação de objetivo (Etapas 1 e 3).
 - **`models.jev` / `checkWithJev` (`typesafe/jev-1.14`):** Modelo de decisão booleana na Decisions API (`threshold: 0.70`) que atua como gatekeeper determinístico da clareza do objetivo e da conclusão de cada step.
 

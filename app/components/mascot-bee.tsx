@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
+export type MascotBeePose = "standard" | "curious" | "focus" | "sleepy" | "celebrating";
+
 interface MascotBeeProps {
-  pose?: "standard" | "curious";
+  pose?: MascotBeePose;
   glasses?: boolean;
   lookAtUser?: boolean;
   dynamic?: boolean;
@@ -14,9 +16,10 @@ interface MascotBeeProps {
 /**
  * Mascote Abelhinha de Perfil (ANIMATIONS.md):
  * - standard (Pose 1): saudação e estados neutros
+ * - focus (Pose 2): óculos redondos para foco / estudo ativo
+ * - celebrating (Pose 4): comemorando sessão concluída
  * - curious (Pose 5): entrevista inicial e convite de novos alunos (?)
- * - glasses: óculos redondos para foco / investigação
- * - lookAtUser: corpo de perfil com o rosto em 3/4 olhando para o usuário
+ * - sleepy (Pose 6): sonolenta aguardando próxima sessão (zZ)
  */
 export function MascotBee({
   pose = "standard",
@@ -26,7 +29,7 @@ export function MascotBee({
   reactionTrigger = 0,
   className = "h-20 w-24",
 }: MascotBeeProps) {
-  const [dynamicPose, setDynamicPose] = useState<"standard" | "curious">(pose);
+  const [dynamicPose, setDynamicPose] = useState<MascotBeePose>(pose);
   const [motion, setMotion] = useState({ x: 0, y: 0, rotate: 0 });
   const [isReacting, setIsReacting] = useState(false);
   const reactionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,10 +93,15 @@ export function MascotBee({
     return () => clearTimeout(timeoutId);
   }, [dynamic, pose]);
 
-  const isCurious = (dynamic ? dynamicPose : pose) === "curious";
+  const activePose = dynamic ? dynamicPose : pose;
+  const isCurious = activePose === "curious";
+  const isFocus = activePose === "focus";
+  const isSleepy = activePose === "sleepy";
+  const isCelebrating = activePose === "celebrating";
+  const showGlasses = glasses || isFocus;
   const baseX = (isCurious ? 58 : 60) + motion.x;
-  const baseY = 56 + motion.y;
-  const baseRotate = (isCurious ? 4 : 0) + motion.rotate;
+  const baseY = (isCelebrating ? 52 : 56) + motion.y;
+  const baseRotate = (isCurious ? 4 : isCelebrating ? -8 : isSleepy ? 6 : 0) + motion.rotate;
 
   return (
     <svg
@@ -132,8 +140,8 @@ export function MascotBee({
             className="animate-star-pulse"
           />
 
-          {isReacting && (
-            <g fill="#5B8DEF" className="animate-star-pulse">
+          {(isReacting || isCelebrating) && (
+            <g fill={isCelebrating ? "#FFE07D" : "#5B8DEF"} className="animate-star-pulse">
               <path d="M 36 -18 L 38 -23 L 43 -25 L 38 -27 L 36 -32 L 34 -27 L 29 -25 L 34 -23 Z" />
               <path d="M -32 -24 L -30.5 -28 L -26.5 -29.5 L -30.5 -31 L -32 -35 L -33.5 -31 L -37.5 -29.5 L -33.5 -28 Z" />
               <path d="M 38 14 L 39.5 10.5 L 43 9 L 39.5 7.5 L 38 4 L 36.5 7.5 L 33 9 L 36.5 10.5 Z" />
@@ -181,7 +189,7 @@ export function MascotBee({
                 <circle cx="21.8" cy="-1.5" r="1.1" fill="#FFFDF8" />
               </g>
 
-              {glasses && (
+              {showGlasses && (
                 <g stroke="#FF9B85" strokeLinecap="round">
                   {/* Haste lateral indo para trás */}
                   <line x1="5" y1="-1" x2="-2" y2="-2.5" strokeWidth="2.2" />
@@ -235,24 +243,42 @@ export function MascotBee({
             </>
           ) : (
             <>
-              {/* Olho de perfil com piscada natural */}
-              <g className="animate-bee-blink">
-                <circle
-                  cx="16.5"
-                  cy={isCurious ? -0.5 : 0.5}
-                  r="4.2"
-                  fill="#2D3142"
+              {/* Olho de perfil */}
+              {isSleepy ? (
+                <path
+                  d="M 12.5 1 Q 16.5 4.5 20.5 1"
+                  stroke="#2D3142"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  fill="none"
                 />
-                <circle
-                  cx="18.2"
-                  cy={isCurious ? -1.8 : -1}
-                  r="1.6"
-                  fill="#FFFDF8"
+              ) : isCelebrating ? (
+                <path
+                  d="M 12.5 2 Q 16.5 -3 20.5 2"
+                  stroke="#2D3142"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  fill="none"
                 />
-              </g>
+              ) : (
+                <g className="animate-bee-blink">
+                  <circle
+                    cx="16.5"
+                    cy={isCurious ? -0.5 : 0.5}
+                    r="4.2"
+                    fill="#2D3142"
+                  />
+                  <circle
+                    cx="18.2"
+                    cy={isCurious ? -1.8 : -1}
+                    r="1.6"
+                    fill="#FFFDF8"
+                  />
+                </g>
+              )}
 
               {/* Óculos redondos de perfil */}
-              {glasses && (
+              {showGlasses && (
                 <g>
                   <line
                     x1="1"
@@ -319,6 +345,28 @@ export function MascotBee({
                 fill="none"
               />
               <circle cx="0" cy="6.5" r="2" fill="#5B8DEF" />
+            </g>
+          )}
+
+          {/* Símbolo zZ em Cobalto Pastel para a Pose 6 Sonolenta */}
+          {isSleepy && (
+            <g transform="translate(42, -22)" className="animate-gentle-float">
+              <path
+                d="M -6 -2 L 1 -2 L -6 5 L 1 5"
+                stroke="#5B8DEF"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              <path
+                d="M 5 -12 L 14 -12 L 5 -3 L 14 -3"
+                stroke="#5B8DEF"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
             </g>
           )}
         </g>

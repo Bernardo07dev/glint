@@ -1,7 +1,7 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 export const MODEL_IDS = {
-  architect: "anthropic/claude-sonnet-5.5",
+  architect: "google/gemini-4-hydrogen",
   fast: "openai/gpt-6.1-terra",
   jev: "typesafe/jev-1.14",
 } as const;
