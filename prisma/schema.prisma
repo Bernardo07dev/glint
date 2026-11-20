@@ -48,6 +48,7 @@ model LearningPlan {
   userId         String
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   isFirstPlan    Boolean       @default(false)
+  complete       Boolean       @default(false)
   stage          PlanStage     @default(REFINING_GOAL)
   rawInput       String
   refinedGoal    String?

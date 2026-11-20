@@ -42,6 +42,7 @@ async function CriacaoPlanoSession({ params }: CriacaoPlanoPageProps) {
     },
     select: {
       id: true,
+      complete: true,
       stage: true,
       rawInput: true,
       refinedGoal: true,
@@ -50,6 +51,10 @@ async function CriacaoPlanoSession({ params }: CriacaoPlanoPageProps) {
 
   if (!plan) {
     redirect("/primeiro-plano");
+  }
+
+  if (plan.complete) {
+    redirect(`/planos/${plan.id}`);
   }
 
   return <CriacaoPlanoClient plan={plan} />;

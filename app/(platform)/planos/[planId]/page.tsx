@@ -22,12 +22,7 @@ async function PlanDetailContent({ planId }: { planId: string }) {
     notFound();
   }
 
-  if (
-    plan.stage === "REFINING_GOAL" ||
-    plan.stage === "INTERVIEWING_STEPS" ||
-    plan.stage === "GENERATING_TASKS" ||
-    plan.stage === "ENRICHING_TASKS"
-  ) {
+  if (!plan.complete) {
     redirect(`/criacao-plano/${plan.id}`);
   }
 

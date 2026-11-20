@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (action === "accept_plan") {
       await prisma.learningPlan.update({
         where: { id: plan.id },
-        data: { stage: "ACTIVE" },
+        data: { stage: "ACTIVE", complete: true },
       });
 
       return NextResponse.json({
