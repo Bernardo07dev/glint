@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import {
+  ArrowLeft,
   ArrowRight,
   ArrowRotateRight,
   Calendar,
@@ -449,18 +450,19 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
           <QuestionRenderer
             question={ADJUST_PLAN_QUESTION}
             isSubmitting={isSubmitting}
+            secondaryAction={
+              <Button
+                type="button"
+                isDisabled={isSubmitting}
+                onPress={() => setIsAdjustingPlan(false)}
+                className="h-9 px-4 rounded-lg bg-[#F3EFE6] hover:bg-[#e8e2d5] font-sans text-[#2D3142]/80 font-semibold text-xs transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <ArrowLeft className="size-3.5" />
+                <span>Voltar para o plano</span>
+              </Button>
+            }
             onSubmit={(answer) => void handleAdjustPlanSubmit(answer)}
           />
-
-          <div className="flex justify-start">
-            <button
-              type="button"
-              onClick={() => setIsAdjustingPlan(false)}
-              className="font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] transition-colors cursor-pointer"
-            >
-              Voltar para o plano
-            </button>
-          </div>
         </div>
       </>
     );
@@ -655,12 +657,12 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
               {planStructure.objective.successCriteria.map((criterion) => (
                 <li
                   key={criterion}
-                  className="flex items-start gap-2.5 font-sans text-xs leading-relaxed text-[#2D3142]"
+                  className="flex items-start gap-2.5 font-sans font-medium text-xs leading-relaxed text-[#2D3142]/80"
                 >
                   <span className="mt-0.5 size-5 rounded-full bg-[#95E1B0]/35 flex items-center justify-center shrink-0">
                     <Check className="size-3.5 text-[#2D3142]" />
                   </span>
-                  <span className="font-medium">{criterion}</span>
+                  <span>{criterion}</span>
                 </li>
               ))}
             </ul>

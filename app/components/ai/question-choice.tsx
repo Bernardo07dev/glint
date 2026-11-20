@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@heroui/react";
 import { ArrowRight, Check } from "@gravity-ui/icons";
 import type { QuestionAnswer, QuestionOption } from "./types";
@@ -10,6 +10,7 @@ interface QuestionChoiceProps {
   options: QuestionOption[];
   allowCustom?: boolean;
   isSubmitting?: boolean;
+  secondaryAction?: ReactNode;
   onOptionSelect?: () => void;
   onSubmit: (answer: QuestionAnswer) => void;
 }
@@ -19,6 +20,7 @@ export function QuestionChoice({
   options,
   allowCustom = false,
   isSubmitting = false,
+  secondaryAction,
   onOptionSelect,
   onSubmit,
 }: QuestionChoiceProps) {
@@ -195,10 +197,13 @@ export function QuestionChoice({
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-4 pt-1">
-        <span className="font-sans text-xs text-[#646B82]">
-          {isSingle ? "Escolha uma opção" : "Selecione uma ou mais opções"}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex flex-wrap items-center gap-3">
+          {secondaryAction}
+          <span className="font-sans text-xs text-[#646B82]">
+            {isSingle ? "Escolha uma opção" : "Selecione uma ou mais opções"}
+          </span>
+        </div>
 
         <Button
           type="submit"

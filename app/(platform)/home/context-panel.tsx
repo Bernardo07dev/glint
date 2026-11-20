@@ -11,21 +11,15 @@ interface ContextPanelProps {
   onOpenReschedule: () => void;
 }
 
-export function ContextPanel({
-  rhythm,
+export function MentorNote({
   nextTask,
   completedToday,
-  onOpenReschedule,
-}: ContextPanelProps) {
-  const canReschedule = Boolean(
-    nextTask && nextTask.isTodayOrPast && nextTask.nextReschedulePreview,
-  );
-
-  const progressPct =
-    nextTask && nextTask.planTotalTasks > 0
-      ? Math.round((nextTask.planCompletedTasks / nextTask.planTotalTasks) * 100)
-      : 0;
-
+  className = "",
+}: {
+  nextTask: ResolvedNextTask | null;
+  completedToday: boolean;
+  className?: string;
+}) {
   let mentorPose: MascotBeePose = "standard";
   let mentorNote = "Um passo curto por dia vale mais que maratonas esporádicas.";
 
@@ -41,8 +35,40 @@ export function ContextPanel({
   }
 
   return (
-    <aside className="rounded-3xl bg-[#F3EFE6]/75 border border-[#F3EFE6] p-5 sm:p-6 space-y-6">
-      {/* Ritmo Semanal */}
+    <div className={`flex items-center gap-2.5 px-1 ${className}`}>
+      <MascotBee pose={mentorPose} className="h-12 w-12 shrink-0" />
+      <div className="relative flex-1 rounded-2xl bg-white border border-[#FF9B85]/25 px-3.5 py-2.5">
+        <span
+          aria-hidden="true"
+          className="absolute -left-1.5 top-1/2 -translate-y-1/2 size-3 rotate-45 bg-white border-l border-b border-[#FF9B85]/25"
+        />
+        <p className="relative font-sans font-medium text-xs leading-relaxed text-[#2D3142]/80">
+          {mentorNote}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function ContextPanel({
+  rhythm,
+  nextTask,
+  completedToday,
+  onOpenReschedule,
+}: ContextPanelProps) {
+  const canReschedule = Boolean(
+    nextTask && nextTask.isTodayOrPast && nextTask.nextReschedulePreview,
+  );
+
+  const progressPct =
+    nextTask && nextTask.planTotalTasks > 0
+      ? Math.round((nextTask.planCompletedTasks / nextTask.planTotalTasks) * 100)
+      : 0;
+
+  return (
+    <aside className="space-y-4">
+      <div className="rounded-3xl bg-[#F3EFE6]/75 border border-[#F3EFE6] p-5 sm:p-6 space-y-6">
+        {/* Ritmo Semanal */}
       <div className="space-y-2.5">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="font-display text-base font-medium text-[#2D3142]">
@@ -95,14 +121,6 @@ export function ContextPanel({
         </div>
       )}
 
-      {/* Recado do Mentor */}
-      <div className="rounded-2xl bg-[#FFF0E5]/80 p-4 flex items-center gap-3">
-        <MascotBee pose={mentorPose} className="h-14 w-16 shrink-0" />
-        <p className="text-xs sm:text-[13px] leading-relaxed text-[#2D3142]">
-          {mentorNote}
-        </p>
-      </div>
-
       {/* Ação secundária: Imprevisto hoje? */}
       {canReschedule && (
         <div className="pt-2 border-t border-[#2D3142]/8">
@@ -116,6 +134,14 @@ export function ContextPanel({
           </button>
         </div>
       )}
+      </div>
+
+      {/* Recado do Mentor (desktop) */}
+      <MentorNote
+        nextTask={nextTask}
+        completedToday={completedToday}
+        className="hidden lg:flex"
+      />
     </aside>
   );
 }

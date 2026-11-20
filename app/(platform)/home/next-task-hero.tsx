@@ -78,7 +78,7 @@ export function NextTaskHero({
               <span>Sessão de hoje concluída</span>
             </div>
             <h1 className="font-display text-2xl font-medium text-[#2D3142]">
-              Excelente ritmo hoje!
+              Excelente ritmo hoje
             </h1>
             <p className="text-sm text-[#646B82] max-w-[56ch]">
               Sua próxima sessão já está reservada no calendário. Descanse e volte no próximo horário.
@@ -112,31 +112,44 @@ export function NextTaskHero({
   // Estado 3: Próxima sessão futura (bloqueada)
   if (!isTodayOrPast || !isUnlocked) {
     return (
-      <section className="rounded-3xl bg-[#F3EFE6] border border-[#2D3142]/8 px-6 py-7 sm:px-8 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
-          <div className="space-y-3 min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#646B82]">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[#2D3142] tabular-nums">
-                <Lock className="size-3.5 text-[#646B82]" />
-                <span>
-                  Desbloqueia {formatWeekdayAndDatePt(task.schedule.date)} às {task.schedule.startTime}
-                </span>
+      <section className="rounded-3xl bg-white border border-[#5B8DEF]/25 overflow-hidden">
+        <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2.5 min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2.5 text-xs tabular-nums">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#E8F0FE] px-3 py-1.5 font-semibold text-[#5B8DEF]">
+                <Lock className="size-3.5" />
+                <span>Agendada</span>
               </span>
-              <span className="tabular-nums">{duration} min</span>
+              <span className="font-semibold text-[#646B82]/90">
+                {formatWeekdayAndDatePt(task.schedule.date)} às {task.schedule.startTime} · {duration} min
+              </span>
             </div>
 
-            <p className="text-xs font-medium text-[#646B82] truncate">{planTitle}</p>
-
-            <h1 className="font-display text-2xl sm:text-[28px] leading-snug font-medium text-[#2D3142]">
+            <h1 className="font-display text-xl sm:text-[22px] leading-snug font-medium text-[#2D3142]">
               {task.title}
             </h1>
 
-            <p className="text-sm sm:text-[15px] leading-relaxed text-[#646B82] max-w-[65ch]">
+            <p className="font-sans font-medium text-xs sm:text-sm leading-relaxed text-[#2D3142]/70 max-w-[60ch]">
               {task.whyItMatters}
             </p>
           </div>
 
-          <MascotBee pose="sleepy" className="h-20 w-24 shrink-0 self-center sm:self-start" />
+          <MascotBee
+            pose="sleepy"
+            className="hidden sm:block h-20 w-24 shrink-0"
+          />
+        </div>
+
+        <div className="bg-[#F3EFE6]/55 border-t border-[#5B8DEF]/15 px-6 py-3.5 sm:px-8 flex items-center justify-between gap-4">
+          <p className="font-sans font-medium text-xs text-[#2D3142]/65 truncate">
+            {planTitle}
+          </p>
+          <Link
+            href={`/planos/${planId}`}
+            className="font-sans text-xs font-semibold text-[#5B8DEF] hover:underline shrink-0 cursor-pointer"
+          >
+            Ver plano
+          </Link>
         </div>
       </section>
     );
@@ -145,40 +158,45 @@ export function NextTaskHero({
   // Estado 2: Preparando conteúdo (hoje, mas enriquecimento ainda não concluído)
   if (!isEnriched) {
     return (
-      <section className="rounded-3xl bg-white border border-[#5B8DEF]/25 px-6 py-7 sm:px-8 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
-          <div className="space-y-3 min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] text-[#5B8DEF] px-3 py-1 tabular-nums">
+      <section className="rounded-3xl bg-white border border-[#5B8DEF]/25 overflow-hidden">
+        <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2.5 min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2.5 text-xs tabular-nums">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#E8F0FE] px-3 py-1.5 font-semibold text-[#5B8DEF]">
                 <Clock className="size-3.5" />
-                <span>
-                  Hoje às {task.schedule.startTime} · {duration} min
-                </span>
+                <span>Hoje</span>
+              </span>
+              <span className="font-semibold text-[#646B82]/90">
+                às {task.schedule.startTime} · {duration} min
               </span>
             </div>
 
-            <p className="text-xs font-medium text-[#646B82] truncate">{planTitle}</p>
-
-            <h1 className="font-display text-2xl sm:text-[28px] leading-snug font-medium text-[#2D3142]">
+            <h1 className="font-display text-xl sm:text-[22px] leading-snug font-medium text-[#2D3142]">
               {task.title}
             </h1>
 
-            <p className="text-sm sm:text-[15px] leading-relaxed text-[#646B82] max-w-[65ch]">
+            <p className="font-sans font-medium text-xs sm:text-sm leading-relaxed text-[#2D3142]/70 max-w-[60ch]">
               {task.whyItMatters}
             </p>
-
-            <div className="pt-2">
-              <button
-                type="button"
-                disabled
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#F3EFE6] text-[#646B82] font-semibold text-sm px-6 py-3.5 cursor-not-allowed"
-              >
-                Preparando sua sessão...
-              </button>
-            </div>
           </div>
 
-          <MascotBee pose="curious" className="h-20 w-24 shrink-0 self-center sm:self-start" />
+          <MascotBee
+            pose="curious"
+            className="hidden sm:block h-20 w-24 shrink-0"
+          />
+        </div>
+
+        <div className="bg-[#F3EFE6]/55 border-t border-[#5B8DEF]/15 px-6 py-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="font-sans font-medium text-xs text-[#2D3142]/65 truncate">
+            {planTitle}
+          </p>
+          <button
+            type="button"
+            disabled
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3EFE6] text-[#646B82] font-semibold text-xs sm:text-sm px-5 py-2.5 cursor-not-allowed shrink-0"
+          >
+            Preparando sua sessão...
+          </button>
         </div>
       </section>
     );
@@ -186,35 +204,31 @@ export function NextTaskHero({
 
   // Estado 1: Sessão de hoje (pronta)
   return (
-    <section className="rounded-3xl bg-white border border-[#5B8DEF]/25 px-6 py-7 sm:px-8 sm:py-8">
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-        <div className="space-y-3.5 min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] text-[#5B8DEF] px-3 py-1 tabular-nums">
+    <section className="rounded-3xl bg-white border border-[#5B8DEF]/25 overflow-hidden">
+      <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="space-y-3 min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2.5 text-xs tabular-nums">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#E8F0FE] text-[#5B8DEF] font-semibold px-3 py-1.5">
               <Clock className="size-3.5" />
-              <span>
-                Hoje às {task.schedule.startTime} · {duration} min
-              </span>
+              <span>Hoje às {task.schedule.startTime} · {duration} min</span>
             </span>
             {typeof consumeMin === "number" && typeof practiceMin === "number" && (
-              <span className="text-[#646B82] tabular-nums">
+              <span className="font-semibold text-[#646B82]/90">
                 {consumeMin} min consumo · {practiceMin} min prática
               </span>
             )}
           </div>
 
-          <p className="text-xs font-medium text-[#646B82] truncate">{planTitle}</p>
-
-          <h1 className="font-display text-2xl sm:text-[30px] leading-snug font-medium text-[#2D3142]">
+          <h1 className="font-display text-xl sm:text-[22px] leading-snug font-medium text-[#2D3142]">
             {task.title}
           </h1>
 
-          <p className="text-sm sm:text-[15px] leading-relaxed text-[#646B82] max-w-[65ch]">
+          <p className="font-sans font-medium text-xs sm:text-sm leading-relaxed text-[#2D3142]/70 max-w-[60ch]">
             {task.whyItMatters}
           </p>
 
           {tools.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               {tools.map((tool) => {
                 const meta = TOOL_LABELS[tool];
                 if (!meta) return null;
@@ -222,7 +236,7 @@ export function NextTaskHero({
                 return (
                   <span
                     key={tool}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#F3EFE6]/80 px-2.5 py-1 text-xs font-medium text-[#2D3142]"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3EFE6]/70 px-2.5 py-1 text-xs font-medium text-[#2D3142]/80"
                   >
                     <ToolIcon className="size-3.5 text-[#5B8DEF]" />
                     <span>{meta.label}</span>
@@ -231,20 +245,26 @@ export function NextTaskHero({
               })}
             </div>
           )}
-
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={onStartSession}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-sm sm:text-base px-7 py-3.5 transition-colors cursor-pointer"
-            >
-              <Play className="size-4" />
-              <span>Começar sessão</span>
-            </button>
-          </div>
         </div>
 
-        <MascotBee pose="focus" className="h-24 w-28 shrink-0 self-center sm:self-start" />
+        <MascotBee
+          pose="focus"
+          className="hidden sm:block h-24 w-28 shrink-0"
+        />
+      </div>
+
+      <div className="bg-[#F3EFE6]/55 border-t border-[#5B8DEF]/15 px-6 py-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="font-sans font-medium text-xs text-[#2D3142]/65 truncate">
+          {planTitle}
+        </p>
+        <button
+          type="button"
+          onClick={onStartSession}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-sm px-6 py-3 transition-colors cursor-pointer shrink-0"
+        >
+          <Play className="size-4" />
+          <span>Começar sessão</span>
+        </button>
       </div>
     </section>
   );

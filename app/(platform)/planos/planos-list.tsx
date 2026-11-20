@@ -73,7 +73,7 @@ function PlanSection({
                   )}
                 </div>
 
-                <h3 className="font-display text-lg sm:text-xl font-medium text-[#2D3142] leading-snug">
+                <h3 className="font-display text-base sm:text-[17px] font-medium text-[#2D3142] leading-snug">
                   {item.title}
                 </h3>
 

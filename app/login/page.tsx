@@ -81,7 +81,7 @@ export default function LoginPage() {
 
             <div className="rounded-xl bg-[#FFF0E5] p-3.5 flex items-center gap-3">
               <MascotBee pose="standard" className="w-11 h-11 shrink-0" />
-              <p className="font-sans text-xs leading-relaxed text-[#2D3142]">
+              <p className="font-sans font-medium text-xs leading-relaxed text-[#2D3142]/80">
                 Separei 45 minutos no seu melhor horário de foco. Vamos direto
                 para o exemplo prático.
               </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { MascotBee } from "../mascot-bee";
 import { QuestionChoice } from "./question-choice";
 import { QuestionSchedule } from "./question-schedule";
@@ -11,12 +11,14 @@ interface QuestionRendererProps {
   question: QuestionPayload;
   progress?: { current: number; total: number };
   isSubmitting?: boolean;
+  secondaryAction?: ReactNode;
   onSubmit: (answer: QuestionAnswer) => void;
 }
 
 export function QuestionRenderer({
   question,
   isSubmitting = false,
+  secondaryAction,
   onSubmit,
 }: QuestionRendererProps) {
   const [beeReactionTrigger, setBeeReactionTrigger] = useState(0);
@@ -58,6 +60,7 @@ export function QuestionRenderer({
             options={question.options ?? []}
             allowCustom={question.allowCustom}
             isSubmitting={isSubmitting}
+            secondaryAction={secondaryAction}
             onOptionSelect={() => setBeeReactionTrigger((n) => n + 1)}
             onSubmit={onSubmit}
           />

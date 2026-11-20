@@ -10,7 +10,7 @@ import type {
 } from "@/lib/plan-structure";
 import { NextTaskHero } from "./next-task-hero";
 import { WeekStrip } from "./week-strip";
-import { ContextPanel } from "./context-panel";
+import { ContextPanel, MentorNote } from "./context-panel";
 import { FocusSession } from "./focus-session";
 import { RescheduleModal } from "./reschedule-modal";
 
@@ -69,11 +69,23 @@ export function HomeClient({
 
           <WeekStrip days={weekDays} />
 
-          <NextTaskHero
+          {/* Recado do Mentor (mobile, acima do card de plano) */}
+          <MentorNote
             nextTask={nextTask}
             completedToday={completedToday}
-            onStartSession={() => setIsFocusMode(true)}
+            className="flex lg:hidden"
           />
+
+          <div className="space-y-3">
+            <h2 className="font-display text-lg font-medium text-[#2D3142]">
+              Próxima task
+            </h2>
+            <NextTaskHero
+              nextTask={nextTask}
+              completedToday={completedToday}
+              onStartSession={() => setIsFocusMode(true)}
+            />
+          </div>
         </div>
 
         {/* Coluna Direita */}

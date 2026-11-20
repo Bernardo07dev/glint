@@ -66,40 +66,40 @@
 
   <!-- Faixa de ritmo semanal (superfícies da paleta Aquarela Viva) -->
   <g id="rhythm-strip">
-    <rect x="206" y="400" width="868" height="90" rx="20" fill="#FFFFFF" stroke="#F3EFE6" stroke-width="1.5" />
+    <rect x="224" y="400" width="832" height="90" rx="20" fill="#FFFFFF" stroke="#F3EFE6" stroke-width="1.5" />
 
     <!-- Seg (Concluído) -->
-    <rect x="226" y="420" width="118" height="50" rx="12" fill="#EBF9F0" stroke="#95E1B0" stroke-width="1.5" />
-    <g transform="translate(242, 437)">
+    <rect x="244" y="420" width="118" height="50" rx="12" fill="#EBF9F0" stroke="#95E1B0" stroke-width="1.5" />
+    <g transform="translate(260, 437)">
       <path fill="#95E1B0" fill-rule="evenodd" clip-rule="evenodd" d="M13.5 8a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0m-3.9-1.55a.75.75 0 1 0-1.2-.9L7.419 8.858 6.03 7.47a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.13-.08z" />
     </g>
-    <text x="266" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Seg · 25m</text>
+    <text x="284" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Seg · 25m</text>
 
     <!-- Ter (Concluído) -->
-    <rect x="354" y="420" width="118" height="50" rx="12" fill="#EBF9F0" stroke="#95E1B0" stroke-width="1.5" />
-    <g transform="translate(370, 437)">
+    <rect x="372" y="420" width="118" height="50" rx="12" fill="#EBF9F0" stroke="#95E1B0" stroke-width="1.5" />
+    <g transform="translate(388, 437)">
       <path fill="#95E1B0" fill-rule="evenodd" clip-rule="evenodd" d="M13.5 8a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0m-3.9-1.55a.75.75 0 1 0-1.2-.9L7.419 8.858 6.03 7.47a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.13-.08z" />
     </g>
-    <text x="394" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Ter · 20m</text>
+    <text x="412" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Ter · 20m</text>
 
     <!-- Qua (Hoje / Ativo) -->
-    <rect x="482" y="420" width="124" height="50" rx="12" fill="#E8F0FE" stroke="#5B8DEF" stroke-width="1.5" />
-    <g transform="translate(498, 437)">
+    <rect x="500" y="420" width="124" height="50" rx="12" fill="#E8F0FE" stroke="#5B8DEF" stroke-width="1.5" />
+    <g transform="translate(516, 437)">
       <path fill="#5B8DEF" fill-rule="evenodd" clip-rule="evenodd" d="M13.5 8a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0M8.75 4.5a.75.75 0 0 0-1.5 0V8a.75.75 0 0 0 .3.6l2 1.5a.75.75 0 1 0 .9-1.2l-1.7-1.275z" />
     </g>
-    <text x="522" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="600" style="font-variant-numeric: tabular-nums;">Qua · 30m</text>
+    <text x="540" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="600" style="font-variant-numeric: tabular-nums;">Qua · 30m</text>
 
     <!-- Qui (Agendado) -->
-    <rect x="616" y="420" width="118" height="50" rx="12" fill="#F3EFE6" />
-    <g transform="translate(632, 437)">
+    <rect x="634" y="420" width="118" height="50" rx="12" fill="#F3EFE6" />
+    <g transform="translate(650, 437)">
       <path fill="#646B82" fill-rule="evenodd" clip-rule="evenodd" d="M5.25 5.497a.75.75 0 0 1-.75-.75V4A1.5 1.5 0 0 0 3 5.5v1h10v-1A1.5 1.5 0 0 0 11.5 4v.75a.75.75 0 0 1-1.5 0V4H6v.747a.75.75 0 0 1-.75.75M10 2.5H6v-.752a.75.75 0 1 0-1.5 0V2.5a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3v-6a3 3 0 0 0-3-3v-.75a.75.75 0 0 0-1.5 0zM3 8v3.5A1.5 1.5 0 0 0 4.5 13h7a1.5 1.5 0 0 0 1.5-1.5V8z" />
     </g>
-    <text x="656" y="450" fill="#646B82" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Qui · 25m</text>
+    <text x="674" y="450" fill="#646B82" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Qui · 25m</text>
 
     <!-- Nota do Mentor -->
-    <rect x="752" y="420" width="302" height="50" rx="12" fill="#FFF0E5" />
-    <rect x="752" y="429" width="4" height="32" rx="2" fill="#FF9B85" />
-    <path d="M 774 438 L 776 443 L 781 445 L 776 447 L 774 452 L 772 447 L 767 445 L 772 443 Z" fill="#FF9B85" />
-    <text id="mentor-note" x="790" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Ritmo da semana: 2 de 4 blocos</text>
+    <rect x="770" y="420" width="266" height="50" rx="12" fill="#FFF0E5" />
+    <rect x="770" y="429" width="4" height="32" rx="2" fill="#FF9B85" />
+    <path d="M 792 438 L 794 443 L 799 445 L 794 447 L 792 452 L 790 447 L 785 445 L 790 443 Z" fill="#FF9B85" />
+    <text id="mentor-note" x="808" y="450" fill="#2D3142" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="500" style="font-variant-numeric: tabular-nums;">Ritmo da semana: 2 de 4 blocos</text>
   </g>
 </svg>

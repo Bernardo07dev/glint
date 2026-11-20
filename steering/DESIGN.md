@@ -18,6 +18,7 @@ O Glint transmite a sensação de um **mentor caloroso, claro e encorajador**. A
 ### 1.2. Higiene Tipográfica e Ritmo de Leitura
 - **Contraste de Personalidade:** Use estritamente a dupla oficial — **`Fraunces`** (editorial orgânica para títulos e falas de destaque do mentor) e **`Plus Jakarta Sans`** (funcional para interface, calendário e leitura).
 - **Largura e Entrelinha:** Mantenha blocos de leitura, explicações e notas do mentor abaixo de **`75ch`–`80ch`**. Títulos e trechos em `Fraunces` devem ter *line-height* ligeiramente mais generoso e *tracking* suave.
+- **Textos Pequenos (`text-xs`):** Evite usar `font-sans text-xs leading-relaxed text-[#2D3142]` sem peso e suavização de opacidade. Para notas, legendas e textos corridos em `text-xs`, use **`font-sans font-medium text-xs leading-relaxed text-[#2D3142]/80`**.
 - **Vícios de Layout Proibidos:**
   - **Não** destaque uma palavra aleatória no meio do título com cor ou itálico sem propósito semântico real;
   - **Não** use *eyebrow badges* ou etiquetas desnecessárias acima de todo título principal;

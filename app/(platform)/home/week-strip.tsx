@@ -69,34 +69,51 @@ export function WeekStrip({ days }: WeekStripProps) {
       </div>
 
       {selectedDay && selectedDay.sessions.length > 0 && (
-        <div className="rounded-2xl bg-[#F3EFE6]/70 border border-[#F3EFE6] p-4 space-y-2.5">
-          {selectedDay.sessions.map((session) => (
-            <div
-              key={`${session.planId}-${session.taskId}`}
-              className="flex items-start justify-between gap-3"
-            >
-              <div className="min-w-0 space-y-0.5">
-                <p className="text-xs text-[#646B82] truncate">
-                  {session.planTitle}
-                </p>
-                <p className="text-sm font-medium text-[#2D3142] leading-snug">
-                  {session.title}
-                </p>
+        <div className="rounded-2xl bg-white border border-[#2D3142]/8 divide-y divide-[#2D3142]/6 overflow-hidden">
+          {selectedDay.sessions.map((session) => {
+            const accentClass =
+              session.status === "completed"
+                ? "bg-[#95E1B0]"
+                : session.isLocked
+                  ? "bg-[#2D3142]/20"
+                  : "bg-[#5B8DEF]";
+
+            return (
+              <div
+                key={`${session.planId}-${session.taskId}`}
+                className="flex items-stretch gap-5 p-4"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`w-1 shrink-0 rounded-full ${accentClass}`}
+                />
+
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <div className="flex items-center gap-1.5 text-[0.65rem] font-bold text-[#646B82]/80 tabular-nums">
+                    {session.status === "completed" ? (
+                      <CircleCheck className="size-3 text-[#2B6E47]" />
+                    ) : session.isLocked ? (
+                      <Lock className="size-3 text-[#646B82]" />
+                    ) : (
+                      <Clock className="size-3 text-[#5B8DEF]" />
+                    )}
+                    <span>
+                      {session.startTime} · {session.durationMinutes} min
+                    </span>
+                  </div>
+
+                  <div className="min-w-0 space-y-1">
+                    <p className="font-display text-[15px] sm:text-base font-medium text-[#2D3142] leading-snug">
+                      {session.title}
+                    </p>
+                    <p className="font-sans font-medium text-xs leading-relaxed text-[#2D3142]/60 truncate">
+                      {session.planTitle}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0 text-xs tabular-nums">
-                <span className="text-[#646B82]">
-                  {session.startTime} · {session.durationMinutes}m
-                </span>
-                {session.status === "completed" ? (
-                  <CircleCheck className="size-4 text-[#2B6E47]" />
-                ) : session.isLocked ? (
-                  <Lock className="size-3.5 text-[#646B82]" />
-                ) : (
-                  <Clock className="size-3.5 text-[#5B8DEF]" />
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>
