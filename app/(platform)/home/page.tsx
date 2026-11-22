@@ -38,7 +38,7 @@ async function HomeContent() {
 
   const todayIso = getTodayIsoInTimezone(user.timezone);
   const { nextTask, completedToday } = selectNextTask(activePlans, todayIso);
-  const { days, rhythm } = buildWeekStrip(activePlans, todayIso);
+  const { weeks, rhythm } = buildWeekStrip(activePlans, todayIso);
 
   return (
     <HomeClient
@@ -47,7 +47,7 @@ async function HomeContent() {
       }
       nextTask={nextTask}
       completedToday={completedToday}
-      weekDays={days}
+      weeks={weeks}
       rhythm={rhythm}
     />
   );

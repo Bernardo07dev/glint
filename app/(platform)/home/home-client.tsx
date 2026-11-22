@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "@gravity-ui/icons";
 import type {
   ResolvedNextTask,
-  WeekStripDay,
+  WeekStripWeek,
   WeeklyRhythm,
 } from "@/lib/plan-structure";
 import { NextTaskHero } from "./next-task-hero";
@@ -23,7 +23,7 @@ interface HomeClientProps {
   inCreationPlan: InCreationBanner | null;
   nextTask: ResolvedNextTask | null;
   completedToday: boolean;
-  weekDays: WeekStripDay[];
+  weeks: WeekStripWeek[];
   rhythm: WeeklyRhythm;
 }
 
@@ -31,7 +31,7 @@ export function HomeClient({
   inCreationPlan,
   nextTask,
   completedToday,
-  weekDays,
+  weeks,
   rhythm,
 }: HomeClientProps) {
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -67,7 +67,7 @@ export function HomeClient({
             </div>
           )}
 
-          <WeekStrip days={weekDays} />
+          <WeekStrip weeks={weeks} />
 
           {/* Recado do Mentor (mobile, acima do card de plano) */}
           <MentorNote

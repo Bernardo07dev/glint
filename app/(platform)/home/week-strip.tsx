@@ -1,29 +1,90 @@
 "use client";
 
 import { useState } from "react";
-import { CircleCheck, Clock, Lock } from "@gravity-ui/icons";
-import type { WeekStripDay } from "@/lib/plan-structure";
+import {
+  ArrowUturnCcwLeft,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  Clock,
+  Lock,
+} from "@gravity-ui/icons";
+import type { WeekStripDay, WeekStripWeek } from "@/lib/plan-structure";
 
 interface WeekStripProps {
-  days: WeekStripDay[];
+  weeks: WeekStripWeek[];
 }
 
-export function WeekStrip({ days }: WeekStripProps) {
-  const defaultSelected =
+function getDefaultSelectedDate(days: WeekStripDay[]): string | null {
+  return (
     days.find((d) => d.isToday && d.sessions.length > 0)?.dateIso ??
     days.find((d) => d.sessions.length > 0)?.dateIso ??
-    null;
+    null
+  );
+}
 
-  const [selectedDate, setSelectedDate] = useState<string | null>(defaultSelected);
+export function WeekStrip({ weeks }: WeekStripProps) {
+  const [weekIndex, setWeekIndex] = useState(0);
+  const currentWeek = weeks[weekIndex] ?? weeks[0];
+  const days = currentWeek?.days ?? [];
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(() =>
+    getDefaultSelectedDate(days),
+  );
   const selectedDay = days.find((d) => d.dateIso === selectedDate) ?? null;
+
+  const handleChangeWeek = (nextIndex: number) => {
+    if (nextIndex < 0 || nextIndex >= weeks.length) return;
+    setWeekIndex(nextIndex);
+    setSelectedDate(getDefaultSelectedDate(weeks[nextIndex].days));
+  };
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-medium text-[#2D3142]">
-          Sua semana
-        </h2>
-        <span className="text-xs text-[#646B82]">Seg — Dom</span>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <h2 className="font-display text-base sm:text-lg font-medium text-[#2D3142] whitespace-nowrap">
+            Sua semana
+          </h2>
+          {weekIndex > 0 && (
+            <button
+              type="button"
+              onClick={() => handleChangeWeek(0)}
+              aria-label="Voltar para hoje"
+              className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-xl bg-[#E8F0FE]/60 border border-[#5B8DEF]/25 text-[11px] sm:text-xs font-semibold text-[#5B8DEF] hover:bg-[#5B8DEF] hover:text-white hover:border-[#5B8DEF] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap shrink-0"
+            >
+              <ArrowUturnCcwLeft className="size-3 shrink-0" aria-hidden="true" />
+              <span className="sm:hidden">Hoje</span>
+              <span className="hidden sm:inline">Voltar para hoje</span>
+            </button>
+          )}
+        </div>
+
+        <div className="inline-flex items-center gap-0.5 rounded-xl bg-white border border-[#F3EFE6] p-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => handleChangeWeek(weekIndex - 1)}
+            disabled={weekIndex === 0}
+            aria-label="Semana anterior"
+            className="p-1 rounded-lg flex items-center justify-center bg-gray-100 text-[#646B82] hover:bg-[#F3EFE6]/80 hover:text-[#2D3142] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <ChevronLeft className="size-3.5 " />
+          </button>
+
+          <span className="text-[11px] sm:text-xs font-semibold text-[#2D3142]/80 tabular-nums min-w-[76px] sm:min-w-[96px] px-1 sm:px-1.5 text-center select-none whitespace-nowrap">
+            {currentWeek?.rangeLabel ?? "Seg — Dom"}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => handleChangeWeek(weekIndex + 1)}
+            disabled={weekIndex >= weeks.length - 1}
+            aria-label="Próxima semana"
+            className="p-1 rounded-lg flex items-center justify-center bg-gray-100 text-[#646B82] hover:bg-[#F3EFE6]/80 hover:text-[#2D3142] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <ChevronRight className="size-3.5" />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">

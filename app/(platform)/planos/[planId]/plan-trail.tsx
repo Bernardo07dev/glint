@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
+  Clock,
   Lock,
   Play,
-  Calendar,
 } from "@gravity-ui/icons";
 import {
   DAY_NAME_PT,
@@ -32,6 +34,8 @@ export function PlanTrail({
   weeks,
   todayIso,
 }: PlanTrailProps) {
+  const [criteriaOpen, setCriteriaOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   let foundCurrent = false;
 
   return (
@@ -40,46 +44,119 @@ export function PlanTrail({
       <header className="space-y-5">
         <Link
           href="/planos"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#646B82] hover:text-[#2D3142] cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#646B82] hover:text-[#2D3142] cursor-pointer"
         >
           <ArrowLeft className="size-4" />
           <span>Voltar para Planos</span>
         </Link>
 
-        <h1 className="font-display text-2xl sm:text-3xl font-medium text-[#2D3142] leading-snug max-w-[30ch]">
+        <h1 className="font-display text-xl sm:text-2xl font-medium text-[#2D3142] leading-snug max-w-[30ch]">
           {title}
         </h1>
 
         {routineContract && (
-          <div className="inline-flex flex-wrap items-center gap-2 rounded-2xl bg-[#F3EFE6] px-4 py-2.5 text-xs sm:text-sm text-[#2D3142]">
-            <Calendar className="size-4 text-[#5B8DEF]" />
-            <span className="font-medium tabular-nums">
-              {routineContract.weeklyHours}h/semana
-            </span>
-            <span className="text-[#646B82]">·</span>
-            <span className="text-[#646B82]">
-              {routineContract.slots
-                .map(
-                  (s) =>
-                    `${DAY_NAME_PT[s.dayOfWeek.toLowerCase()] ?? s.dayOfWeek} ${s.startTime}`,
-                )
-                .join(", ")}
-            </span>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setScheduleOpen((prev) => !prev)}
+              aria-expanded={scheduleOpen}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs tabular-nums transition-colors cursor-pointer ${
+                scheduleOpen
+                  ? "bg-[#E8F0FE]/85 border-[#5B8DEF]/25 text-[#2D3142]"
+                  : "bg-white/90 border-[#2D3142]/8 text-[#2D3142] hover:bg-[#FFFDF8]"
+              }`}
+            >
+              <Clock className="size-3.5 text-[#5B8DEF] shrink-0" aria-hidden="true" />
+              <span className="font-semibold">
+                {routineContract.weeklyHours}h/semana
+              </span>
+              <span className="text-[#646B82]/60" aria-hidden="true">
+                ·
+              </span>
+              <span className="font-medium text-[#646B82]">
+                {routineContract.slots.length}{" "}
+                {routineContract.slots.length === 1 ? "horário" : "horários"}
+              </span>
+              <ChevronDown
+                aria-hidden="true"
+                className={`size-3.5 text-[#646B82] ml-0.5 transition-transform duration-200 ${
+                  scheduleOpen ? "rotate-180 text-[#5B8DEF]" : ""
+                }`}
+              />
+            </button>
+
+            {scheduleOpen && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {routineContract.slots.map((s, idx) => {
+                  const dayLabel =
+                    DAY_NAME_PT[s.dayOfWeek.toLowerCase()] ?? s.dayOfWeek;
+                  const shortDay = dayLabel.slice(0, 3);
+                  return (
+                    <span
+                      key={`${s.dayOfWeek}-${s.startTime}-${idx}`}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-white/90 border border-[#2D3142]/8 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs tabular-nums"
+                    >
+                      <span className="font-medium text-[#2D3142]">
+                        <span className="sm:hidden">{shortDay}</span>
+                        <span className="hidden sm:inline">{dayLabel}</span>
+                      </span>
+                      <span className="text-[#2D3142]/25" aria-hidden="true">
+                        ·
+                      </span>
+                      <span className="font-medium text-[#646B82]">
+                        {s.startTime}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {successCriteria.length > 0 && (
-          <div className="rounded-3xl bg-white border border-[#F3EFE6] p-5 sm:p-6 space-y-3">
-            <h2 className="font-display text-base font-medium text-[#2D3142]">
+          <div className="rounded-2xl sm:rounded-3xl bg-white/90 border border-[#2D3142]/6 overflow-hidden">
+            {/* Mobile dropdown trigger */}
+            <button
+              type="button"
+              onClick={() => setCriteriaOpen((prev) => !prev)}
+              aria-expanded={criteriaOpen}
+              aria-controls="plan-success-criteria"
+              className="sm:hidden w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[#FFFDF8] transition-colors cursor-pointer"
+            >
+              <div className="flex items-baseline gap-2 min-w-0">
+                <span className="font-display text-[15px] font-medium text-[#2D3142]">
+                  Critérios de sucesso
+                </span>
+                <span className="text-xs font-medium text-[#646B82]/80 tabular-nums shrink-0">
+                  · {successCriteria.length}
+                </span>
+              </div>
+              <ChevronDown
+                aria-hidden="true"
+                className={`size-4 text-[#646B82] shrink-0 transition-transform duration-200 ${
+                  criteriaOpen ? "rotate-180 text-[#5B8DEF]" : ""
+                }`}
+              />
+            </button>
+
+            {/* Desktop static heading */}
+            <h2 className="hidden sm:block font-display text-base font-medium text-[#2D3142] px-6 pt-6 pb-3">
               Critérios de sucesso
             </h2>
-            <ul className="space-y-2">
+
+            <ul
+              id="plan-success-criteria"
+              className={`${
+                criteriaOpen ? "block" : "hidden"
+              } sm:block space-y-2.5 px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-0 border-t border-[#F3EFE6] sm:border-t-0`}
+            >
               {successCriteria.map((criterion, idx) => (
                 <li
                   key={idx}
-                  className="flex items-start gap-2.5 text-sm text-[#2D3142] leading-relaxed max-w-[70ch]"
+                  className="flex items-start gap-2.5 text-[13px] sm:text-sm text-[#2D3142]/90 leading-relaxed max-w-[70ch]"
                 >
-                  <span className="mt-1.5 size-1.5 rounded-full bg-[#5B8DEF] shrink-0" />
+                  <span className="mt-2 size-1.5 rounded-full bg-[#5B8DEF]/75 shrink-0" />
                   <span>{criterion}</span>
                 </li>
               ))}

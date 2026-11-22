@@ -193,7 +193,7 @@ export function NextTaskHero({
           <button
             type="button"
             disabled
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3EFE6] text-[#646B82] font-semibold text-xs sm:text-sm px-5 py-2.5 cursor-not-allowed shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3EFE6] text-[#646B82] font-semibold text-xs px-5 py-2 cursor-not-allowed shrink-0"
           >
             Preparando sua sessão...
           </button>

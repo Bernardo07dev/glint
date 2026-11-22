@@ -88,6 +88,17 @@ A aplicação Next.js (`app/`, `public/`, `prisma/`, `proxy.ts`, `package.json`,
   3. **Esqueleto do Plano e Workers de Task ([`plan_structure.json`](./plan_structure.json)):** Compila a lista direta de `tasks` casadas com os minutos reais de cada dia (`consumeMinutes` + `practiceMinutes`), bloqueadas até a data (`lockState`), onde cada task define suas `requiredTools` (`youtube_video`, `practice_checklist`, `markdown_math`, `code_sandbox`) e é enriquecida isoladamente em background (`for` sobre `tasks` passando apenas `objective` + `routineContract` + `task`).
 - **Plataforma Logada ([`PLATFORM.md`](./PLATFORM.md)):** Especifica o shell mobile-first (bottom tab bar no mobile + top navbar no desktop) sobre rotas dedicadas (`/home`, `/planos`, `/planos/[planId]`, `/conta`), o **Modo Foco** dentro de `/home` (vídeo YouTube com `start`/`end`, checklist otimista e feedback), a **Faixa Semanal**, o fluxo **"Imprevisto hoje?"**, consistência por **ritmo semanal**, presença pontual da Abelhinha e persistência v1 via Server Actions sobre `LearningPlan.planStructure`.
 
+---
+
+## Regras de Branch e Fluxo Git (`development` / `main`)
+
+- **Sempre verificar atualização antes de editar:** Antes de alterar qualquer código, execute `git pull` para garantir que a branch local está *up to date*.
+- **Se estiver na branch `development`:**
+  - **Nunca sobrescrever código:** Se ocorrer qualquer conflito, **não faça nada** (não resolva forçando nem sobrescreva alterações) e pare imediatamente.
+  - **Merge proibido:** É proibido fazer merge direto na ou a partir da branch `development`.
+  - **Pull Request apenas com feature pronta:** Só crie um Pull Request quando a feature estiver 100% pronta. Enquanto estiver em andamento, **não** crie PR.
+  - **Deploy na Vercel:** A branch `development` possui um deploy automático na Vercel com sua própria URL de preview.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

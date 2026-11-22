@@ -165,6 +165,20 @@ export const DAY_NAME_PT: Record<string, string> = {
 };
 
 const SHORT_DAY_PT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+const SHORT_MONTH_PT = [
+  "jan",
+  "fev",
+  "mar",
+  "abr",
+  "mai",
+  "jun",
+  "jul",
+  "ago",
+  "set",
+  "out",
+  "nov",
+  "dez",
+] as const;
 
 export function parsePlanStructure(raw: unknown): PlanStructure | null {
   if (!raw || typeof raw !== "object") return null;
@@ -414,33 +428,37 @@ export function selectNextTask(
   return { nextTask: best, completedToday };
 }
 
+export interface WeekStripWeek {
+  weekOffset: number;
+  rangeLabel: string;
+  days: WeekStripDay[];
+}
+
+function formatWeekRangeLabel(mondayIso: string, sundayIso: string): string {
+  const mon = dateFromIsoUtc(mondayIso);
+  const sun = dateFromIsoUtc(sundayIso);
+  const monDay = mon.getUTCDate();
+  const sunDay = sun.getUTCDate();
+  const monMonth = SHORT_MONTH_PT[mon.getUTCMonth()];
+  const sunMonth = SHORT_MONTH_PT[sun.getUTCMonth()];
+  if (mon.getUTCMonth() === sun.getUTCMonth()) {
+    return `${monDay} — ${sunDay} ${sunMonth}`;
+  }
+  return `${monDay} ${monMonth} — ${sunDay} ${sunMonth}`;
+}
+
 export function buildWeekStrip(
   activePlans: ActivePlanRecord[],
   todayIso: string,
-): { days: WeekStripDay[]; rhythm: WeeklyRhythm } {
+): { days: WeekStripDay[]; weeks: WeekStripWeek[]; rhythm: WeeklyRhythm } {
   const todayDt = dateFromIsoUtc(todayIso);
   const jsDay = todayDt.getUTCDay(); // 0=Sun..6=Sat
   const offsetToMonday = jsDay === 0 ? -6 : 1 - jsDay;
-  const mondayIso = addDaysIso(todayIso, offsetToMonday);
+  const currentMondayIso = addDaysIso(todayIso, offsetToMonday);
+  const currentMondayDt = dateFromIsoUtc(currentMondayIso);
 
-  const dayMap = new Map<string, WeekStripDay>();
-  const orderedDates: string[] = [];
-
-  for (let i = 0; i < 7; i++) {
-    const dateIso = addDaysIso(mondayIso, i);
-    const dt = dateFromIsoUtc(dateIso);
-    orderedDates.push(dateIso);
-    dayMap.set(dateIso, {
-      dateIso,
-      shortLabel: SHORT_DAY_PT[dt.getUTCDay()],
-      dayNumber: dt.getUTCDate(),
-      isToday: dateIso === todayIso,
-      sessions: [],
-    });
-  }
-
-  let completed = 0;
-  let scheduled = 0;
+  let maxWeekOffset = 3;
+  const sessionsByDate = new Map<string, WeekStripDay["sessions"]>();
 
   for (const plan of activePlans) {
     const structure = parsePlanStructure(plan.planStructure);
@@ -449,13 +467,20 @@ export function buildWeekStrip(
 
     for (const task of structure.tasks) {
       const dateIso = task.schedule?.date;
-      if (!dateIso || !dayMap.has(dateIso)) continue;
+      if (!dateIso) continue;
+
+      const diffDays = Math.floor(
+        (dateFromIsoUtc(dateIso).getTime() - currentMondayDt.getTime()) /
+          86_400_000,
+      );
+      if (diffDays >= 0) {
+        const weekOffset = Math.floor(diffDays / 7);
+        if (weekOffset > maxWeekOffset) maxWeekOffset = weekOffset;
+      }
 
       const status = getTaskStatus(task);
-      scheduled++;
-      if (status === "completed") completed++;
-
-      dayMap.get(dateIso)!.sessions.push({
+      const list = sessionsByDate.get(dateIso) ?? [];
+      list.push({
         planId: plan.id,
         planTitle,
         taskId: task.taskId,
@@ -465,17 +490,54 @@ export function buildWeekStrip(
         status,
         isLocked: !isTaskUnlockedForDate(task, todayIso),
       });
+      sessionsByDate.set(dateIso, list);
     }
   }
 
-  const days = orderedDates.map((d) => {
-    const entry = dayMap.get(d)!;
-    entry.sessions.sort((a, b) => a.startTime.localeCompare(b.startTime));
-    return entry;
-  });
+  for (const list of sessionsByDate.values()) {
+    list.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
+
+  const weeks: WeekStripWeek[] = [];
+  let completed = 0;
+  let scheduled = 0;
+
+  for (let w = 0; w <= maxWeekOffset; w++) {
+    const mondayIso = addDaysIso(currentMondayIso, w * 7);
+    const sundayIso = addDaysIso(mondayIso, 6);
+    const days: WeekStripDay[] = [];
+
+    for (let i = 0; i < 7; i++) {
+      const dateIso = addDaysIso(mondayIso, i);
+      const dt = dateFromIsoUtc(dateIso);
+      const sessions = sessionsByDate.get(dateIso) ?? [];
+
+      if (w === 0) {
+        for (const s of sessions) {
+          scheduled++;
+          if (s.status === "completed") completed++;
+        }
+      }
+
+      days.push({
+        dateIso,
+        shortLabel: SHORT_DAY_PT[dt.getUTCDay()],
+        dayNumber: dt.getUTCDate(),
+        isToday: dateIso === todayIso,
+        sessions,
+      });
+    }
+
+    weeks.push({
+      weekOffset: w,
+      rangeLabel: formatWeekRangeLabel(mondayIso, sundayIso),
+      days,
+    });
+  }
 
   return {
-    days,
+    days: weeks[0]?.days ?? [],
+    weeks,
     rhythm: { completed, scheduled },
   };
 }

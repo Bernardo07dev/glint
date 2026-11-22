@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, ChevronRight, CircleCheck } from "@gravity-ui/icons";
+import {
+  ArrowRight,
+  Calendar,
+  CircleCheck,
+  Plus,
+} from "@gravity-ui/icons";
 import { MascotBee } from "@/app/components/mascot-bee";
 
 export interface PlanListItem {
@@ -36,11 +41,11 @@ function PlanSection({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-semibold text-[#646B82] tracking-wide">
+      <h2 className="px-1 text-xs font-semibold text-[#646B82] tracking-wide">
         {title}
       </h2>
 
-      <div className="divide-y divide-[#F3EFE6] rounded-3xl bg-white border border-[#F3EFE6] overflow-hidden">
+      <div className="divide-y divide-[#2D3142]/6 rounded-3xl bg-white border border-[#2D3142]/8 overflow-hidden">
         {items.map((item) => {
           const isCreating = IN_CREATION.has(item.stage);
           const isCompleted = item.stage === "COMPLETED";
@@ -56,61 +61,102 @@ function PlanSection({
             <Link
               key={item.id}
               href={href}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-5 sm:px-6 hover:bg-[#FFFDF8] transition-colors cursor-pointer"
+              className={`group flex justify-between px-4 py-4 sm:px-6 sm:py-5 hover:bg-[#FFFDF8] transition-colors cursor-pointer ${
+                isCreating
+                  ? "flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4"
+                  : "items-center gap-3 sm:gap-4"
+              }`}
             >
-              <div className="space-y-2 min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {isCreating && (
-                    <span className="rounded-full bg-[#FFE07D]/50 text-[#2D3142] px-2.5 py-0.5 text-[11px] font-semibold">
-                      {item.stageLabel}
-                    </span>
-                  )}
-                  {isCompleted && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#95E1B0]/30 text-[#2B6E47] px-2.5 py-0.5 text-[11px] font-semibold">
-                      <CircleCheck className="size-3.5" />
-                      <span>Concluído</span>
-                    </span>
-                  )}
-                </div>
+              <div className="space-y-2.5 min-w-0 flex-1">
+                {(isCreating || isCompleted) && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isCreating && (
+                      <span className="rounded-full bg-[#FFE07D]/50 text-[#2D3142] px-2.5 py-0.5 text-[11px] font-semibold">
+                        {item.stageLabel}
+                      </span>
+                    )}
+                    {isCompleted && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#95E1B0]/30 text-[#2B6E47] px-2.5 py-0.5 text-[11px] font-semibold">
+                        <CircleCheck className="size-3.5" />
+                        <span>Concluído</span>
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <h3 className="font-display text-base sm:text-[17px] font-medium text-[#2D3142] leading-snug">
                   {item.title}
                 </h3>
 
                 {!isCreating && (
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-[#646B82]">
-                    <div className="flex items-center gap-2 min-w-[140px]">
-                      <div className="h-1.5 w-24 rounded-full bg-[#F3EFE6] overflow-hidden">
+                  <div className="flex items-center gap-2.5 sm:gap-5 text-xs text-[#646B82] min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                      <span
+                        aria-hidden="true"
+                        className="sm:hidden inline-flex size-[18px] rounded-full items-center justify-center shrink-0"
+                        style={{
+                          background: `conic-gradient(${
+                            isCompleted ? "#95E1B0" : "#5B8DEF"
+                          } ${pct * 3.6}deg, #E5DFD3 0deg)`,
+                        }}
+                      >
+                        <span className="size-3 rounded-full bg-white" />
+                      </span>
+                      <div className="hidden sm:block h-1.5 w-24 rounded-full bg-[#F3EFE6] overflow-hidden shrink-0">
                         <div
-                          className={`h-full rounded-full ${
+                          className={`h-full rounded-full transition-all ${
                             isCompleted ? "bg-[#95E1B0]" : "bg-[#5B8DEF]"
                           }`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="tabular-nums">
+                      <span className="text-[11px] sm:text-xs font-semibold text-[#2D3142]/80 tabular-nums shrink-0">
                         {item.completedTasks}/{item.totalTasks}
+                        <span className="hidden sm:inline font-medium text-[#646B82]">
+                          {" "}
+                          sessões
+                        </span>
                       </span>
                     </div>
 
                     {item.nextDateLabel && !isCompleted && (
-                      <span className="tabular-nums">
-                        Próxima: {item.nextDateLabel}
-                      </span>
+                      <>
+                        <span aria-hidden="true" className="sm:hidden text-[#2D3142]/20 shrink-0">
+                          ·
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-[#646B82] tabular-nums min-w-0">
+                          <Calendar
+                            className="size-3.5 text-[#5B8DEF] shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span className="truncate">
+                            <span className="hidden sm:inline">Próxima: </span>
+                            {item.nextDateLabel}
+                          </span>
+                        </span>
+                      </>
                     )}
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                {isCreating ? (
-                  <span className="rounded-xl bg-[#E8F0FE] text-[#5B8DEF] px-3.5 py-2 text-xs font-semibold">
-                    Continuar entrevista
-                  </span>
-                ) : (
-                  <ChevronRight className="size-5 text-[#646B82]" />
-                )}
-              </div>
+              {isCreating ? (
+                <span className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E8F0FE] group-hover:bg-[#5B8DEF] text-[#5B8DEF] group-hover:text-white px-3.5 py-2 text-xs font-semibold transition-colors shrink-0 self-start sm:self-center">
+                  <span>Continuar entrevista</span>
+                  <ArrowRight className="size-3.5" aria-hidden="true" />
+                </span>
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className={`size-9 rounded-full border flex items-center justify-center transition-all shrink-0 group-active:scale-95 ${
+                    isCompleted
+                      ? "bg-[#95E1B0]/25 border-[#95E1B0]/50 text-[#2B6E47] group-hover:bg-[#95E1B0] group-hover:text-[#2D3142]"
+                      : "bg-[#E8F0FE] border-[#5B8DEF]/25 text-[#5B8DEF] group-hover:bg-[#5B8DEF] group-hover:text-white group-hover:border-[#5B8DEF]"
+                  }`}
+                >
+                  <ArrowRight className="size-4" />
+                </span>
+              )}
             </Link>
           );
         })}
@@ -127,12 +173,12 @@ export function PlanosList({ items }: PlanosListProps) {
   return (
     <div className="max-w-[920px] mx-auto px-4 sm:px-6 pt-6 sm:pt-9 space-y-8">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="font-display text-3xl font-medium text-[#2D3142]">
+        <h1 className="font-display text-2xl sm:text-3xl font-medium text-[#2D3142]">
           Planos
         </h1>
         <Link
           href="/primeiro-plano"
-          className="inline-flex items-center gap-1.5 rounded-2xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-sm px-4 py-2.5 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-2xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-sm px-4 py-2.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
           <Plus className="size-4" />
           <span>Novo plano</span>
