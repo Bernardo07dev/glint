@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar } from "@gravity-ui/icons";
+import { ArrowChevronRight, Calendar } from "@gravity-ui/icons";
 import { MascotBee, type MascotBeePose } from "@/app/components/mascot-bee";
 import type { ResolvedNextTask, WeeklyRhythm } from "@/lib/plan-structure";
 
@@ -123,16 +123,24 @@ export function ContextPanel({
 
       {/* Ação secundária: Imprevisto hoje? */}
       {canReschedule && (
-        <div className="pt-2 border-t border-[#2D3142]/8">
-          <button
-            type="button"
-            onClick={onOpenReschedule}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium text-[#646B82] hover:text-[#2D3142] hover:bg-white/70 transition-colors cursor-pointer"
-          >
+        <button
+          type="button"
+          onClick={onOpenReschedule}
+          className="group w-full flex items-center gap-3 rounded-2xl bg-white border border-[#2D3142]/8 px-3.5 py-3 text-left transition-colors hover:border-[#5B8DEF]/30 hover:bg-[#E8F0FE]/40 cursor-pointer"
+        >
+          <span className="size-9 shrink-0 rounded-xl bg-[#E8F0FE] text-[#5B8DEF] flex items-center justify-center transition-colors group-hover:bg-[#5B8DEF] group-hover:text-white">
             <Calendar className="size-4" />
-            <span>Imprevisto hoje? Reagendar sessão</span>
-          </button>
-        </div>
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-xs font-semibold text-[#2D3142]">
+              Imprevisto hoje?
+            </span>
+            <span className="block text-[11px] leading-snug text-[#646B82]">
+              Reagendar sessão sem culpa
+            </span>
+          </span>
+          <ArrowChevronRight className="size-4 shrink-0 text-[#646B82]/60 transition-all group-hover:translate-x-0.5 group-hover:text-[#5B8DEF]" />
+        </button>
       )}
       </div>
 

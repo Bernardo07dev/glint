@@ -97,7 +97,7 @@ A aplicação Next.js (`app/`, `public/`, `prisma/`, `proxy.ts`, `package.json`,
   - **Nunca sobrescrever código:** Se ocorrer qualquer conflito, **não faça nada** (não resolva forçando nem sobrescreva alterações) e pare imediatamente.
   - **Merge proibido:** É proibido fazer merge direto na ou a partir da branch `development`.
   - **Pull Request apenas com feature pronta:** Só crie um Pull Request quando a feature estiver 100% pronta. Enquanto estiver em andamento, **não** crie PR.
-  - **Deploy na Vercel:** A branch `development` possui um deploy automático na Vercel com sua própria URL de preview.
+  - **Deploy na Vercel:** A branch `development` possui deploy automático na Vercel com sua própria URL de preview: `https://glint-git-development-bernardo-moreira-lopes-sousas-projects.vercel.app/`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

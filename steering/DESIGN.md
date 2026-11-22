@@ -18,6 +18,9 @@ O Glint transmite a sensação de um **mentor caloroso, claro e encorajador**. A
 ### 1.2. Higiene Tipográfica e Ritmo de Leitura
 - **Contraste de Personalidade:** Use estritamente a dupla oficial — **`Fraunces`** (editorial orgânica para títulos e falas de destaque do mentor) e **`Plus Jakarta Sans`** (funcional para interface, calendário e leitura).
 - **Largura e Entrelinha:** Mantenha blocos de leitura, explicações e notas do mentor abaixo de **`75ch`–`80ch`**. Títulos e trechos em `Fraunces` devem ter *line-height* ligeiramente mais generoso e *tracking* suave.
+- **Escala Contida e Respiro (Anti-Texto Apertado):** Prefira fontes levemente mais contidas acompanhadas de espaçamento generoso — texto grande demais em cards e modais gera sensação de aperto e poluição visual.
+  - **Escala de referência em cards, modais e painéis:** títulos de modal/seção em `text-lg` (`18px`), corpo e botões em `text-[13px]` ou `text-sm` (`13px`–`14px`, nunca `text-base` em diálogos/cards densos), metadados e legendas em `text-xs` (`12px`).
+  - **Respiro obrigatório:** use entrelinha folgada (`leading-[1.6]` a `leading-[1.65]` em parágrafos e caixas de destaque), `padding` interno confortável (`p-6` a `p-7` em modais/cards principais, `px-4 py-3.5` em caixas internas) e separação clara entre blocos (`space-y-3.5` entre parágrafos/blocos relacionados e `space-y-6` entre seções).
 - **Textos Pequenos (`text-xs`):** Evite usar `font-sans text-xs leading-relaxed text-[#2D3142]` sem peso e suavização de opacidade. Para notas, legendas e textos corridos em `text-xs`, use **`font-sans font-medium text-xs leading-relaxed text-[#2D3142]/80`**.
 - **Vícios de Layout Proibidos:**
   - **Não** destaque uma palavra aleatória no meio do título com cor ou itálico sem propósito semântico real;
