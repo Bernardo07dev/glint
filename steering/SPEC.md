@@ -117,7 +117,7 @@ Contratos de referência: [`executable.json`](../executable.json) (Meta-Plano) e
 - A Server Action `createPlanAction` (`app/actions/plan.ts`) valida a sessão JWT (`glint-session`), cria o registro `LearningPlan` no Postgres em `stage: "REFINING_GOAL"` com `executableMeta: {}` e `planStructure: {}` (além de `isFirstPlan`), e redireciona para `/criacao-plano/[plan-id]` (`app/criacao-plano/[plan-id]/page.tsx` + `criacao-plano-client.tsx`).
 
 ### 7.2. Camada de Modelos (`lib/llm.ts`) e Stack de IA
-Toda a orquestração roda via **OpenRouter** (`@openrouter/ai-sdk-provider`) e **Vercel AI SDK v7** (`generateText` + `Output.object` com schemas Zod em `lib/agents/types.ts`):
+Toda a orquestração roda via **OpenRouter** (`@openrouter/ai-sdk-provider`) e **Vercel AI SDK v7** (`generateText` + `Output.object` com schemas Zod em `lib/agents/types/`):
 - **`models.architect` (`google/gemini-4-hydrogen`):** Estruturação pedagógica de alta complexidade — gera o Meta-Plano (Etapa 2) e compila o esqueleto final do plano (Etapa 4).
 - **`models.fast` (`openai/gpt-6.1-terra`):** Diálogo rápido, extração de respostas e consolidação de objetivo (Etapas 1 e 3).
 - **`models.jev` / `checkWithJev` (`typesafe/jev-1.14`):** Modelo de decisão booleana na Decisions API (`threshold: 0.70`) que atua como gatekeeper determinístico da clareza do objetivo e da conclusão de cada step.
@@ -146,3 +146,12 @@ Toda a orquestração roda via **OpenRouter** (`@openrouter/ai-sdk-provider`) e 
 - **Recusar ou Aceitar:**
   - **Recusar e ajustar (`action: "adjust_plan"`):** Pergunta o que melhorar, grava o feedback em `PlanMessage` (`GENERATING_TASKS`) e reexecuta o Agent 4 com o plano anterior + histórico de ajustes.
   - **Aceitar plano (`action: "accept_plan"`):** Promove `LearningPlan.stage` para `ACTIVE` e redireciona para `/home` (`app/home/page.tsx`).
+
+### 7.6. Modelagem de Tasks no Banco (`PlanTask` — Geração Just-In-Time)
+Cada sessão de estudo do plano é persistida na tabela relacional `PlanTask` (`prisma/schema.prisma`), separando o esqueleto agendado do conteúdo pedagógico gerado **Just-In-Time** (no dia da task, evitando gasto antecipado de tokens e permitindo adaptar a aula ao feedback da sessão anterior):
+
+- **Identificação e Vínculo:** `id` (UUID), `planId` (FK para `LearningPlan` com `onDelete: Cascade`), `taskKey` (`"task_01"`) e `order` (`1..N`, com `@@unique([planId, order])`).
+- **Esqueleto Pedagógico:** `title`, `whyItMatters`, `taskType`, `requiredTools` (`String[]`) e `searchQueryUsed`.
+- **Agenda e Tempo:** `scheduledDate` (`"YYYY-MM-DD"`), `dayOfWeek`, `startTime`, `durationMinutes`, `consumeMinutes`, `practiceMinutes` e `unlockAt` (`DateTime`).
+- **Ciclo Just-In-Time (JIT):** `enrichmentStatus` (`TaskEnrichmentStatus`: `PENDING`, `GENERATING`, `READY`, `FAILED`), `jevAlignmentScore`, `enrichedAt` e `content` (`Json?` com o payload das tools geradas para a aula, como vídeo recortado, steps do checklist, leitura guiada ou quiz).
+- **Execução e Feedback do Aluno:** `status` (`TaskStatus`: `LOCKED`, `AVAILABLE`, `IN_PROGRESS`, `COMPLETED`, `SKIPPED`), `completedSteps` (`String[]` com os IDs dos steps concluídos), `completedAt`, `difficultyRating` (`"too_easy" | "just_right" | "too_hard"`) e `userNotes`.

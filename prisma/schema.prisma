@@ -58,10 +58,67 @@ model LearningPlan {
   totalTasks     Int           @default(0)
   completedTasks Int           @default(0)
   messages       PlanMessage[]
+  tasks          PlanTask[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
   @@index([userId, stage])
+}
+
+enum TaskEnrichmentStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+}
+
+enum TaskStatus {
+  LOCKED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+model PlanTask {
+  id                String               @id @default(uuid())
+  planId            String
+  plan              LearningPlan         @relation(fields: [planId], references: [id], onDelete: Cascade)
+  taskKey           String
+  order             Int
+
+  title             String
+  whyItMatters      String
+  taskType          String
+  requiredTools     String[]
+  searchQueryUsed   String
+
+  scheduledDate     String
+  dayOfWeek         String
+  startTime         String
+  durationMinutes   Int
+  consumeMinutes    Int
+  practiceMinutes   Int
+  unlockAt          DateTime
+
+  enrichmentStatus  TaskEnrichmentStatus @default(PENDING)
+  jevAlignmentScore Float?
+  enrichedAt        DateTime?
+
+  content           Json?
+
+  status            TaskStatus           @default(LOCKED)
+  completedSteps    String[]             @default([])
+  completedAt       DateTime?
+  difficultyRating  String?
+  userNotes         String?
+
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@unique([planId, order])
+  @@index([planId, scheduledDate])
+  @@index([planId, status])
 }
 
 model PlanMessage {
