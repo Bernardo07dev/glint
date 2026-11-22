@@ -20,7 +20,6 @@ import {
 interface NextTaskHeroProps {
   nextTask: ResolvedNextTask | null;
   completedToday: boolean;
-  onStartSession: () => void;
 }
 
 const TOOL_LABELS: Record<string, { label: string; icon: typeof Video }> = {
@@ -33,7 +32,6 @@ const TOOL_LABELS: Record<string, { label: string; icon: typeof Video }> = {
 export function NextTaskHero({
   nextTask,
   completedToday,
-  onStartSession,
 }: NextTaskHeroProps) {
   // Empty State: nenhum plano ativo
   if (!nextTask) {
@@ -257,14 +255,13 @@ export function NextTaskHero({
         <p className="font-sans font-medium text-xs text-[#2D3142]/65 truncate">
           {planTitle}
         </p>
-        <button
-          type="button"
-          onClick={onStartSession}
+        <Link
+          href={`/planos/${planId}/tasks/${task.taskId}`}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-sm px-6 py-3 transition-colors cursor-pointer shrink-0"
         >
           <Play className="size-4" />
           <span>Começar sessão</span>
-        </button>
+        </Link>
       </div>
     </section>
   );

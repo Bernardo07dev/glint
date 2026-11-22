@@ -8,11 +8,10 @@ import type {
   WeekStripWeek,
   WeeklyRhythm,
 } from "@/lib/plan-structure";
-import { NextTaskHero } from "./next-task-hero";
-import { WeekStrip } from "./week-strip";
-import { ContextPanel, MentorNote } from "./context-panel";
-import { FocusSession } from "./focus-session";
-import { RescheduleModal } from "./reschedule-modal";
+import { NextTaskHero } from "./components/next-task-hero";
+import { WeekStrip } from "./components/week-strip";
+import { ContextPanel, MentorNote } from "./components/context-panel";
+import { RescheduleModal } from "./components/reschedule-modal";
 
 interface InCreationBanner {
   id: string;
@@ -34,17 +33,7 @@ export function HomeClient({
   weeks,
   rhythm,
 }: HomeClientProps) {
-  const [isFocusMode, setIsFocusMode] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
-
-  if (isFocusMode && nextTask) {
-    return (
-      <FocusSession
-        nextTask={nextTask}
-        onExit={() => setIsFocusMode(false)}
-      />
-    );
-  }
 
   return (
     <div className="max-w-[1120px] mx-auto px-4 sm:px-6 pt-5 sm:pt-8">
@@ -83,7 +72,6 @@ export function HomeClient({
             <NextTaskHero
               nextTask={nextTask}
               completedToday={completedToday}
-              onStartSession={() => setIsFocusMode(true)}
             />
           </div>
         </div>

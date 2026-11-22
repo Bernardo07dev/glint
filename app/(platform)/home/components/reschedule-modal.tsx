@@ -45,7 +45,7 @@ export function RescheduleModal({
       aria-modal="true"
       aria-labelledby="reschedule-title"
     >
-      <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl bg-[#FFFDF8] p-6 space-y-5 border border-[#F3EFE6]">
+      <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl bg-[#FFFDF8] p-6 sm:p-7 space-y-6 border border-[#F3EFE6]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <span className="size-9 rounded-2xl bg-[#E8F0FE] text-[#5B8DEF] flex items-center justify-center">
@@ -53,7 +53,7 @@ export function RescheduleModal({
             </span>
             <h2
               id="reschedule-title"
-              className="font-display text-xl font-medium text-[#2D3142]"
+              className="font-display text-lg font-medium text-[#2D3142]"
             >
               Imprevisto hoje?
             </h2>
@@ -69,13 +69,13 @@ export function RescheduleModal({
           </button>
         </div>
 
-        <div className="space-y-2 text-sm text-[#646B82] leading-relaxed">
+        <div className="space-y-3.5 text-[13px] text-[#646B82] leading-[1.65]">
           <p>
             Sem culpa — sua rotina vem primeiro. Vamos mover{" "}
             <strong className="font-semibold text-[#2D3142]">{taskTitle}</strong>{" "}
             para o próximo horário livre do seu plano:
           </p>
-          <p className="rounded-2xl bg-[#F3EFE6] px-4 py-3 text-[#2D3142] font-medium">
+          <p className="rounded-2xl bg-[#F3EFE6] px-4 py-3.5 text-[#2D3142] font-medium leading-[1.6]">
             Mover esta sessão de hoje para{" "}
             <span className="text-[#5B8DEF]">{nextSlotLabel}</span> e ajustar as
             próximas datas do plano.
@@ -89,7 +89,7 @@ export function RescheduleModal({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="rounded-2xl px-4 py-2.5 text-sm font-medium text-[#646B82] hover:bg-[#F3EFE6] cursor-pointer"
+            className="rounded-2xl px-4 py-2.5 text-[13px] font-medium text-[#646B82] hover:bg-[#F3EFE6] cursor-pointer"
           >
             Cancelar
           </button>
@@ -97,7 +97,7 @@ export function RescheduleModal({
             type="button"
             onClick={handleConfirm}
             disabled={isPending}
-            className="rounded-2xl bg-[#5B8DEF] hover:bg-[#4b7de0] text-white px-5 py-2.5 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-60"
+            className="rounded-2xl bg-[#5B8DEF] hover:bg-[#4b7de0] text-white px-5 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer disabled:opacity-60"
           >
             {isPending ? "Reagendando..." : "Confirmar novo horário"}
           </button>
