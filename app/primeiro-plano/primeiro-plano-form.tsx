@@ -9,6 +9,7 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import Link from "next/link";
 import { Button } from "@heroui/react";
 import { ArrowRight } from "@gravity-ui/icons";
 import { createPlanAction } from "../actions/plan";
@@ -139,8 +140,7 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
               className="w-full resize-none bg-transparent font-sans text-sm leading-relaxed text-[#2D3142] placeholder:text-[#646B82]/60 focus:outline-none glint-scrollbar"
             />
 
-            <div className=" flex-col sm:flex-row sm:items-center justify-between gap-3">
-
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <Button
                 type="submit"
                 className="h-11 px-5 rounded-xl bg-[#FF9B85] hover:bg-[#ff8a70] font-sans text-[#FFFFFF] font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shrink-0"
@@ -148,6 +148,13 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
                 <span>Começar meu plano</span>
                 <ArrowRight className="size-4" />
               </Button>
+
+              <Link
+                href="/home"
+                className="text-center sm:text-right font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] transition-colors cursor-pointer"
+              >
+                Pular por enquanto
+              </Link>
             </div>
           </div>
 
