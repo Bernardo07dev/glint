@@ -36,6 +36,7 @@ export type QuestionAnswer =
 export interface StepProgressItem {
   id: string;
   status: "completed" | "current" | "pending";
+  goal?: string;
 }
 
 export interface StepProgress {

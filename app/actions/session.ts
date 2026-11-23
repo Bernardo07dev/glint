@@ -6,11 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import {
   getTaskStatus,
-  getTodayIsoInTimezone,
   parsePlanStructure,
-  rescheduleRemainingTasks,
   type DifficultyFeedback,
 } from "@/lib/plan-structure";
+import { reschedulePlanTasks } from "@/lib/task-reschedule";
 
 export async function toggleStepAction(input: {
   planId: string;
@@ -151,16 +150,11 @@ export async function rescheduleTodayAction(input: {
     return { success: false, error: "Estrutura do plano inválida" };
   }
 
-  const todayIso = getTodayIsoInTimezone(
-    structure.routineContract?.timezone || user.timezone,
-  );
-  const updated = rescheduleRemainingTasks(structure, input.taskId, todayIso);
-
-  await prisma.learningPlan.update({
-    where: { id: plan.id },
-    data: {
-      planStructure: updated as unknown as Prisma.InputJsonValue,
-    },
+  await reschedulePlanTasks({
+    planId: plan.id,
+    targetTaskIdentifier: input.taskId,
+    planStructure: structure,
+    userTimezone: user.timezone,
   });
 
   revalidatePath("/home");

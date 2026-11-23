@@ -10,6 +10,7 @@ interface RescheduleModalProps {
   taskId: string;
   taskTitle: string;
   nextSlotLabel: string;
+  isTodayOrPast?: boolean;
   onClose: () => void;
 }
 
@@ -19,6 +20,7 @@ export function RescheduleModal({
   taskId,
   taskTitle,
   nextSlotLabel,
+  isTodayOrPast = true,
   onClose,
 }: RescheduleModalProps) {
   const [isPending, startTransition] = useTransition();
@@ -55,7 +57,7 @@ export function RescheduleModal({
               id="reschedule-title"
               className="font-display text-lg font-medium text-[#2D3142]"
             >
-              Imprevisto hoje?
+              {isTodayOrPast ? "Imprevisto hoje?" : "Reagendar próxima sessão"}
             </h2>
           </div>
 
@@ -76,7 +78,9 @@ export function RescheduleModal({
             para o próximo horário livre do seu plano:
           </p>
           <p className="rounded-2xl bg-[#F3EFE6] px-4 py-3.5 text-[#2D3142] font-medium leading-[1.6]">
-            Mover esta sessão de hoje para{" "}
+            {isTodayOrPast
+              ? "Mover esta sessão de hoje para "
+              : "Mover a próxima sessão para "}
             <span className="text-[#5B8DEF]">{nextSlotLabel}</span> e ajustar as
             próximas datas do plano.
           </p>

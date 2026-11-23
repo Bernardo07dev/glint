@@ -1,9 +1,11 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { decrypt } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser } from "@/lib/session";
 
 export type CreatePlanState = {
   success?: boolean;
@@ -72,4 +74,38 @@ export async function createPlanAction(
   }
 
   redirect(`/criacao-plano/${planId}`);
+}
+
+export async function deletePlanAction(
+  planId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getSessionUser();
+  if (!user) {
+    return { success: false, error: "Sessão expirada" };
+  }
+
+  if (!planId?.trim()) {
+    return { success: false, error: "Plano inválido" };
+  }
+
+  try {
+    const deleted = await prisma.learningPlan.deleteMany({
+      where: { id: planId, userId: user.id },
+    });
+
+    if (deleted.count === 0) {
+      return { success: false, error: "Plano não encontrado" };
+    }
+
+    revalidatePath("/planos");
+    revalidatePath("/home");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao excluir plano:", error);
+    return {
+      success: false,
+      error: "Não foi possível excluir o plano agora.",
+    };
+  }
 }

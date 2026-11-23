@@ -403,9 +403,11 @@ export function selectNextTask(
           currentWeek = Math.min(totalWeeks, Math.floor(diffDays / 7) + 1);
         }
 
-        const nextReschedulePreview = isTodayOrPast
-          ? computeNextRescheduleSlot(structure.routineContract, todayIso)
-          : null;
+        const rescheduleAnchorDate = taskDate > todayIso ? taskDate : todayIso;
+        const nextReschedulePreview = computeNextRescheduleSlot(
+          structure.routineContract,
+          rescheduleAnchorDate,
+        );
 
         best = {
           planId: plan.id,

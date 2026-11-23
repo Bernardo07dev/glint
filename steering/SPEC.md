@@ -152,6 +152,6 @@ Cada sessão de estudo do plano é persistida na tabela relacional `PlanTask` (`
 
 - **Identificação e Vínculo:** `id` (UUID), `planId` (FK para `LearningPlan` com `onDelete: Cascade`), `taskKey` (`"task_01"`) e `order` (`1..N`, com `@@unique([planId, order])`).
 - **Esqueleto Pedagógico:** `title`, `whyItMatters`, `taskType`, `requiredTools` (`String[]`) e `searchQueryUsed`.
-- **Agenda e Tempo:** `scheduledDate` (`"YYYY-MM-DD"`), `dayOfWeek`, `startTime`, `durationMinutes`, `consumeMinutes`, `practiceMinutes` e `unlockAt` (`DateTime`).
-- **Ciclo Just-In-Time (JIT):** `enrichmentStatus` (`TaskEnrichmentStatus`: `PENDING`, `GENERATING`, `READY`, `FAILED`), `jevAlignmentScore`, `enrichedAt` e `content` (`Json?` com o payload das tools geradas para a aula, como vídeo recortado, steps do checklist, leitura guiada ou quiz).
+- **Agenda e Tempo:** `scheduledDate` (`"YYYY-MM-DD"`), `dayOfWeek`, `startTime`, `durationMinutes`, `consumeMinutes`, `practiceMinutes`, `unlockAt` (`DateTime`) e `triggerAt` (`DateTime` em UTC para disparo em `T-10 min`).
+- **Ciclo Just-In-Time (JIT):** `enrichmentStatus` (`TaskEnrichmentStatus`: `PENDING`, `GENERATING`, `READY`, `FAILED`), `triggerRunId` (`String?` com o ID do run no Trigger.dev para `reschedule`/`cancel`), `jevAlignmentScore`, `enrichedAt`, `stepsPlan` (`Json?`) e `content` (`Json?` com o payload das tools geradas para a aula, como vídeo recortado, explicação em Markdown e quiz).
 - **Execução e Feedback do Aluno:** `status` (`TaskStatus`: `LOCKED`, `AVAILABLE`, `IN_PROGRESS`, `COMPLETED`, `SKIPPED`), `completedSteps` (`String[]` com os IDs dos steps concluídos), `completedAt`, `difficultyRating` (`"too_easy" | "just_right" | "too_hard"`) e `userNotes`.

@@ -51,15 +51,32 @@ export function StepFlightTrail({ stepProgress }: StepFlightTrailProps) {
         return (
           <div key={step.id} className="inline-flex items-center gap-1">
             {/* Nó da etapa */}
-            <span
-              className={`block rounded-full transition-all duration-300 ${
-                isCompleted
-                  ? "size-2.5 bg-[#95E1B0]"
-                  : isCurrent
-                    ? "size-3 bg-[#5B8DEF] ring-2 ring-[#5B8DEF]/25"
-                    : "size-2 bg-[#2D3142]/18"
-              }`}
-            />
+            <div className="group/step relative flex items-center justify-center">
+              <span
+                tabIndex={step.goal ? 0 : undefined}
+                aria-label={step.goal}
+                className={`block rounded-full transition-all duration-300 focus:outline-none ${
+                  isCompleted
+                    ? "size-2.5 bg-[#95E1B0]"
+                    : isCurrent
+                      ? "size-3 bg-[#5B8DEF] ring-2 ring-[#5B8DEF]/25"
+                      : "size-2 bg-[#2D3142]/18"
+                }`}
+              />
+
+              {step.goal && (
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2.5 z-40 w-max max-w-[230px] rounded-2xl bg-white/95 backdrop-blur-sm border border-[#2D3142]/10 px-3 py-2 text-center font-sans text-[11px] font-normal leading-relaxed text-[#2D3142]/85 shadow-[0_8px_24px_-8px_rgba(45,49,66,0.14)] opacity-0 translate-y-0.5 transition-all duration-150 group-hover/step:opacity-100 group-hover/step:translate-y-0 group-focus-within/step:opacity-100 group-focus-within/step:translate-y-0"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-1 left-1/2 -translate-x-1/2 size-2 rotate-45 bg-white border-l border-t border-[#2D3142]/10"
+                  />
+                  {step.goal}
+                </span>
+              )}
+            </div>
 
             {/* Segmento curto conectando ao próximo nó ou à estrela final */}
             <span

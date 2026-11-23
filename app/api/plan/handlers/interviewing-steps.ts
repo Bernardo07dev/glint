@@ -23,6 +23,7 @@ function buildStepProgress(
 
   const steps = meta.steps.map((step) => ({
     id: step.id,
+    goal: step.questionGoal,
     status:
       step.status === "completed"
         ? ("completed" as const)

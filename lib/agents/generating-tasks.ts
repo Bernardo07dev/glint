@@ -74,7 +74,7 @@ Regras obrigatórias:
    - "title": título claro e acionável da sessão.
    - "whyItMatters": 1 frase explicando por que essa sessão destrava a próxima etapa.
    - "taskType": ex.: "concept_and_setup", "hands_on_practice", "guided_build", "review_and_challenge".
-   - "requiredTools": subconjunto adequado dentre ["youtube_video", "practice_checklist", "markdown_math", "code_sandbox"].
+   - "requiredTools": subconjunto adequado dentre ["video", "concept_explainer", "active_recall_quiz"].
    - "searchQueryUsed": termo curto e objetivo para buscar conteúdo/vídeo complementar daquela aula.
 5. Defina de 2 a 5 "successCriteria" concretos que comprovem que o aluno atingiu o objetivo ao final.
 6. Gere entre 6 e 12 tasks essenciais para manter o plano focado, direto e rápido de consultar.`,

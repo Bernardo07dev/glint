@@ -56,9 +56,7 @@ export function ContextPanel({
   completedToday,
   onOpenReschedule,
 }: ContextPanelProps) {
-  const canReschedule = Boolean(
-    nextTask && nextTask.isTodayOrPast && nextTask.nextReschedulePreview,
-  );
+  const canReschedule = Boolean(nextTask && nextTask.nextReschedulePreview);
 
   const progressPct =
     nextTask && nextTask.planTotalTasks > 0
@@ -121,8 +119,8 @@ export function ContextPanel({
         </div>
       )}
 
-      {/* Ação secundária: Imprevisto hoje? */}
-      {canReschedule && (
+      {/* Ação secundária: Reagendar próxima sessão */}
+      {canReschedule && nextTask && (
         <button
           type="button"
           onClick={onOpenReschedule}
@@ -133,10 +131,14 @@ export function ContextPanel({
           </span>
           <span className="flex-1 min-w-0">
             <span className="block text-xs font-semibold text-[#2D3142]">
-              Imprevisto hoje?
+              {nextTask.isTodayOrPast
+                ? "Imprevisto hoje?"
+                : "Reagendar próxima sessão"}
             </span>
             <span className="block text-[11px] leading-snug text-[#646B82]">
-              Reagendar sessão sem culpa
+              {nextTask.isTodayOrPast
+                ? "Reagendar sessão sem culpa"
+                : "Mover para o próximo horário livre"}
             </span>
           </span>
           <ArrowChevronRight className="size-4 shrink-0 text-[#646B82]/60 transition-all group-hover:translate-x-0.5 group-hover:text-[#5B8DEF]" />

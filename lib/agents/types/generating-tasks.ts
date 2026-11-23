@@ -11,10 +11,9 @@ export const PlanDayOfWeekSchema = z.enum([
 ]);
 
 export const RequiredToolSchema = z.enum([
-  "youtube_video",
-  "practice_checklist",
-  "markdown_math",
-  "code_sandbox",
+  "video",
+  "concept_explainer",
+  "active_recall_quiz",
 ]);
 
 export const GeneratingTasksOutputSchema = z.object({

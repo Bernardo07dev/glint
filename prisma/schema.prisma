@@ -100,11 +100,14 @@ model PlanTask {
   consumeMinutes    Int
   practiceMinutes   Int
   unlockAt          DateTime
+  triggerAt         DateTime
 
   enrichmentStatus  TaskEnrichmentStatus @default(PENDING)
+  triggerRunId      String?
   jevAlignmentScore Float?
   enrichedAt        DateTime?
 
+  stepsPlan         Json?
   content           Json?
 
   status            TaskStatus           @default(LOCKED)
@@ -119,6 +122,7 @@ model PlanTask {
   @@unique([planId, order])
   @@index([planId, scheduledDate])
   @@index([planId, status])
+  @@index([triggerAt])
 }
 
 model PlanMessage {

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PlanApiRequestSchema } from "@/lib/agents/types";
 import { decrypt } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { handleAcceptPlanStage } from "./handlers/accept-plan";
 import {
   handleGeneratingTasksStage,
   hasPlanStructure,
@@ -53,6 +54,9 @@ export async function POST(request: NextRequest) {
   const plan = await prisma.learningPlan.findFirst({
     where: { id: planId, userId },
     include: {
+      user: {
+        select: { timezone: true },
+      },
       messages: {
         orderBy: { createdAt: "asc" },
       },
@@ -68,14 +72,22 @@ export async function POST(request: NextRequest) {
 
   try {
     if (action === "accept_plan") {
-      await prisma.learningPlan.update({
-        where: { id: plan.id },
-        data: { stage: "ACTIVE", complete: true },
+      const result = await handleAcceptPlanStage({
+        planId: plan.id,
+        planStructure: plan.planStructure,
+        userTimezone: plan.user.timezone,
       });
 
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: result.error },
+          { status: result.status },
+        );
+      }
+
       return NextResponse.json({
-        stage: "ACTIVE" as const,
-        redirectTo: "/home",
+        stage: result.stage,
+        redirectTo: result.redirectTo,
       });
     }
 

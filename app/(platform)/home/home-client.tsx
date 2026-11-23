@@ -92,6 +92,7 @@ export function HomeClient({
           taskId={nextTask.task.taskId}
           taskTitle={nextTask.task.title}
           nextSlotLabel={nextTask.nextReschedulePreview.formattedLabel}
+          isTodayOrPast={nextTask.isTodayOrPast}
           onClose={() => setIsRescheduleOpen(false)}
         />
       )}
