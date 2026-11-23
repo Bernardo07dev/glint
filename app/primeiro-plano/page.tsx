@@ -1,10 +1,10 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ArrowRightFromSquare } from "@gravity-ui/icons";
+import { ArrowRight } from "@gravity-ui/icons";
 import { AnimatedLogo } from "../components/animated-logo";
 import { decrypt } from "@/lib/auth";
-import { logoutAction } from "../actions/auth";
 import { BeeLoader } from "../components/bee-loader";
 import { PrimeiroPlanoForm } from "./primeiro-plano-form";
 
@@ -34,15 +34,13 @@ export default function PrimeiroPlanoPage() {
       <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between">
         <AnimatedLogo className="h-11 w-auto" />
 
-        <form action={logoutAction}>
-          <button
-            type="submit"
-            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] hover:bg-[#F3EFE6] transition-colors cursor-pointer"
-          >
-            <ArrowRightFromSquare className="size-4" />
-            <span>Sair</span>
-          </button>
-        </form>
+        <Link
+          href="/home"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] hover:bg-[#F3EFE6] transition-colors cursor-pointer"
+        >
+          <span>Pular por enquanto</span>
+          <ArrowRight className="size-3.5" />
+        </Link>
       </header>
 
       <Suspense

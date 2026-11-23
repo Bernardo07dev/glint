@@ -9,7 +9,6 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import Link from "next/link";
 import { Button } from "@heroui/react";
 import { ArrowRight } from "@gravity-ui/icons";
 import { createPlanAction } from "../actions/plan";
@@ -148,13 +147,6 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
                 <span>Começar meu plano</span>
                 <ArrowRight className="size-4" />
               </Button>
-
-              <Link
-                href="/home"
-                className="text-center sm:text-right font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] transition-colors cursor-pointer"
-              >
-                Pular por enquanto
-              </Link>
             </div>
           </div>
 
