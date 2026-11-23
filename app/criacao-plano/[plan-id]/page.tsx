@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { ArrowRight } from "@gravity-ui/icons";
 import { AnimatedLogo } from "@/app/components/animated-logo";
 import { BeeLoader } from "@/app/components/bee-loader";
 import { decrypt } from "@/lib/auth";
@@ -66,8 +68,15 @@ export default function CriacaoPlanoPage({ params }: CriacaoPlanoPageProps) {
       <Suspense
         fallback={
           <>
-            <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between">
+            <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between gap-3">
               <AnimatedLogo className="h-11 w-auto" />
+              <Link
+                href="/home"
+                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] hover:bg-[#F3EFE6] transition-colors cursor-pointer"
+              >
+                <span>Pular por enquanto</span>
+                <ArrowRight className="size-3.5" />
+              </Link>
             </header>
             <div className="my-auto py-12 flex items-center justify-center">
               <BeeLoader label="Carregando seu plano" />

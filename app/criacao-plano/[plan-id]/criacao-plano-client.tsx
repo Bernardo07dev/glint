@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import {
@@ -356,18 +357,28 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
 
   const header = (
     <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between gap-3">
-      <AnimatedLogo className="h-11 w-auto" />
+      <AnimatedLogo className="hidden sm:block h-11 w-auto shrink-0" />
 
       {question && stepProgress && stepProgress.totalSteps > 0 && (
         <StepFlightTrail stepProgress={stepProgress} />
       )}
 
-      {planStructure &&
-        !isAdjustingPlan &&
-        !question &&
-        !isLoading &&
-        !isSubmitting &&
-        renderCriteriaButton("inline-flex sm:hidden")}
+      <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
+        {planStructure &&
+          !isAdjustingPlan &&
+          !question &&
+          !isLoading &&
+          !isSubmitting &&
+          renderCriteriaButton("inline-flex sm:hidden")}
+
+        <Link
+          href="/home"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-xs font-medium text-[#646B82] hover:text-[#2D3142] hover:bg-[#F3EFE6] transition-colors cursor-pointer"
+        >
+          <span>Pular por enquanto</span>
+          <ArrowRight className="size-3.5" />
+        </Link>
+      </div>
     </header>
   );
 
