@@ -375,3 +375,54 @@ Antes de acionar as tools externas (YouTube / Firecrawl) e montar o `content` fi
 1. **Task Blueprint (`stepsPlan`):** define os steps, o tempo de cada um, qual tool cada step usa e o `toolInputQuery` específico.
 2. **Execução das Tools (`video` / `concept_explainer`):** roda as buscas e extrações necessárias em paralelo com base no `stepsPlan`.
 3. **Síntese Final (`content`):** grava o `walkthrough` de cada step ancorado nos insumos reais resolvidos e gera o `active_recall_quiz`, marcando `enrichmentStatus = "READY"` e `enrichedAt`.
+
+---
+
+## 8. Camada de Renderização (Front-end das Tools)
+
+Os componentes de UI que exibem uma `PlanTask` pronta (`enrichmentStatus = "READY"`) ficam em `app/(platform)/planos/[planId]/tasks/components/tools/`. Eles são **agnósticos**: não buscam dados, não conhecem Prisma nem Trigger.dev. Só recebem o JSON do `PlanTask.content` (seção 3) via props e devolvem eventos de progresso via callbacks. A página que monta a sessão (futura `app/(platform)/planos/[planId]/tasks/[taskId]/page.tsx`) é a única que lê o banco e persiste o progresso.
+
+### 8.1. Mapa de Componentes
+
+| Arquivo | Recebe | Responsabilidade |
+| :--- | :--- | :--- |
+| `types.ts` | — | Tipos TS do contrato: `TaskContent`, `SessionStepData`, `VideoToolData`, `ConceptExplainerData`, `RecallQuizData`, `ToolId`. |
+| `session-step.tsx` | `step: SessionStepData`, `stepIndex`, `totalSteps`, `children` (o palco), `onBack`, `onNext`, `nextLabel`, `nextPrimary` | Casca de **um step por página**: trilha de voo do progresso (linha azul percorrida + abelhinha no passo atual + pontilhado coral no restante), meta (tool · fase · minutos), título, objetivo, palco da tool e navegação. Widgets laterais **Roteiro** (`walkthrough` como checklist local) e **Entrega** (`deliverable`) abrem painel flutuante no espaço à direita sem cobrir o palco. |
+| `video-tool-player.tsx` | `video: VideoToolData`, `onEnded?` | YouTube IFrame API (`youtube-nocookie`) limitado a `watchStartSeconds → watchEndSeconds`; timeline só do recorte, `keyMoments` como chips clicáveis (`seekTo`), `transcriptSummary` como contexto e pausa automática no fim do trecho (dispara `onEnded`). |
+| `concept-explainer.tsx` | `explainer: ConceptExplainerData` | Cabeçalho (título + `estimatedReadMinutes`), corpo via `RichMarkdown` e rodapé com `sources`. |
+| `rich-markdown.tsx` | `markdown: string` | `react-markdown` + `remark-gfm` (tabelas) + `remark-math`/`rehype-katex` (fórmulas) + `rehype-highlight` (código), coluna ≤ 72ch na paleta Aquarela Viva. Sem streaming: o conteúdo já está pronto quando o aluno abre a sessão. |
+| `mermaid-block.tsx` | `chart: string` | Renderiza blocos ` ```mermaid ` com tema da paleta; se o diagrama for inválido, cai para bloco de código. |
+| `recall-quiz.tsx` | `quiz: RecallQuizData`, `onComplete?({ correct, total })` | O quiz inteiro é **um único step**, com N perguntas exibidas **uma por vez**: selecionar → confirmar → feedback (`explanation` da opção escolhida e da correta + `explanation` geral como nota do mentor) → resumo final com "refazer as que errei". |
+
+### 8.2. Fluxo de Dados (Task → Tela → Task)
+
+```mermaid
+flowchart LR
+  A["PlanTask (Prisma)"] -->|"content: Json"| B["page.tsx [taskId] (Server)"]
+  B -->|"TaskContent via props"| C["Client da sessão (stepper)"]
+  C -->|"steps[i]"| D["SessionStep"]
+  D -->|"children = palco"| E{"step.toolRef"}
+  E -->|"video"| F["VideoToolPlayer(content.tools.video)"]
+  E -->|"concept_explainer"| G["ConceptExplainer(content.tools.concept_explainer)"]
+  E -->|"active_recall_quiz"| H["RecallQuiz(content.tools.active_recall_quiz)"]
+  F -->|"onEnded"| C
+  H -->|"onComplete"| C
+  C -->|"Server Action"| I["PlanTask.completedSteps / status / difficultyRating"]
+```
+
+1. **Entrada:** o client da sessão recebe `content` e percorre `content.steps` em ordem (`order`). Cada step aponta, via `toolRef`, para **uma** chave de `content.tools`; o palco renderizado é o componente correspondente.
+2. **Regras de navegação:** o botão principal (coral) é único por tela. No step de `active_recall_quiz`, "Próximo passo" fica neutro (`nextPrimary = false`) até o `onComplete` do quiz.
+3. **Saída (persistência — a implementar):** ao avançar de step, o client chama uma Server Action que adiciona `step.id` em `PlanTask.completedSteps` e muda `status` para `IN_PROGRESS`; ao concluir o último step, grava `status = COMPLETED`, `completedAt` e o `difficultyRating` coletado na tela de fechamento. O checklist do Roteiro e as respostas do quiz são estado local (não persistidos na v1).
+4. **Estados não-prontos:** se `enrichmentStatus` for `PENDING`/`GENERATING`, a página não monta as tools e exibe o estado "Preparando sua sessão"; em `FAILED`, oferece retry (`triggerTaskOnDemand`).
+
+### 8.3. Preview com Fixture
+
+A rota `/preview-ai` (`app/preview-ai/`) monta uma sessão completa usando `fixture.ts` (o exemplo da seção 3 enriquecido com Mermaid, tabela, código e KaTeX). Serve para iterar o visual das tools antes de o motor JIT existir; quando o motor estiver pronto, a mesma composição passa a ler o `PlanTask.content` real.
+
+### 8.4. Tipagem e Validação (`lib/task-content.ts`)
+
+- **Fonte única:** `lib/task-content.ts` define os schemas Zod (`TaskContentSchema`, `SessionStepSchema`, `VideoToolSchema`, `ConceptExplainerSchema`, `RecallQuizSchema`) e exporta os tipos inferidos. `tasks/components/tools/types.ts` apenas re-exporta esses tipos e `lib/plan-structure.ts` usa `TaskContent` no campo `content`.
+- **Regras de integridade validadas:** `watchEndSeconds > watchStartSeconds`; `correctOptionId` existe em `options`; todo `step.toolRef` aponta para uma chave presente em `tools`; `step.id` único.
+- **`parseTaskContent(raw)`:** recebe o `Json` cru de `PlanTask.content`, faz `safeParse` e retorna `TaskContent | null` (loga os issues se inválido). O worker usa `TaskContentSchema.parse` antes de salvar; a página usa `parseTaskContent` ao ler.
+- **`resolveSteps(content)`:** ordena `steps` por `order` e liga cada um ao payload da sua tool, retornando `ResolvedStep[]` (união discriminada por `toolRef`: `{ toolRef, step, tool }`).
+- **`StepStage`** (`tasks/components/tools/step-stage.tsx`): recebe um `ResolvedStep` e renderiza o componente certo (`VideoToolPlayer` / `ConceptExplainer` / `RecallQuiz`), repassando `onVideoEnded` / `onQuizComplete`. A página da sessão só faz: `parseTaskContent(task.content)` → `resolveSteps` → `<SessionStep step={r.step}><StepStage resolved={r} /></SessionStep>`.

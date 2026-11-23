@@ -1,3 +1,5 @@
+import type { TaskContent } from "@/lib/task-content";
+
 export type TaskStatus = "pending" | "in_progress" | "completed";
 export type DifficultyFeedback = "easy" | "just_right" | "hard";
 
@@ -6,20 +8,6 @@ export interface PlanTaskExecution {
   completedSteps?: number[];
   completedAt?: string | null;
   difficultyFeedback?: DifficultyFeedback | null;
-}
-
-export interface PlanTaskVideo {
-  youtubeId: string;
-  title: string;
-  channel?: string;
-  watchStartSeconds?: number;
-  watchEndSeconds?: number;
-  transcriptSummary?: string;
-}
-
-export interface PlanTaskContent {
-  video?: PlanTaskVideo | null;
-  steps?: string[];
 }
 
 export interface PlanTask extends PlanTaskExecution {
@@ -50,7 +38,7 @@ export interface PlanTask extends PlanTaskExecution {
     searchQueryUsed?: string;
     jevAlignmentScore?: number | null;
   };
-  content?: PlanTaskContent | null;
+  content?: TaskContent | null;
 }
 
 export interface RoutineSlot {
@@ -262,7 +250,7 @@ export function isTaskUnlockedForDate(task: PlanTask, todayIso: string): boolean
 export function isTaskEnriched(task: PlanTask): boolean {
   const status = task.backgroundWorker?.enrichmentStatus;
   if (!status) {
-    return Boolean(task.content && (task.content.video || (task.content.steps?.length ?? 0) > 0));
+    return Boolean(task.content && (task.content.steps?.length ?? 0) > 0);
   }
   return status === "completed";
 }
