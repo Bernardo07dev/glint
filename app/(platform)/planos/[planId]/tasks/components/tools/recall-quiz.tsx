@@ -110,7 +110,7 @@ export function RecallQuiz({
   const isCorrect = selected === question.correctOptionId;
 
   return (
-    <section className="rounded-2xl border border-[#2D3142]/8 bg-[#FFFDF8] p-5 sm:p-7 space-y-6">
+    <section className="space-y-5">
       {/* Cabeçalho de progresso das perguntas */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">

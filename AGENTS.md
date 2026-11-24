@@ -53,6 +53,7 @@ As especificações detalhadas de interface, marca e movimento ficam documentada
   - **Superfícies com Propósito:** Construir hierarquia contrastando as superfícies da paleta (`#FFFDF8`, `#F3EFE6`, `#E8F0FE`, `#FFF0E5`, `#FFFFFF`) em vez de empilhar cards idênticos com sombras cinzas; bordas e cores sempre codificam estado real.
   - **Movimento e Interatividade Intencionais:** Todo elemento clicável (botões, links, toggles, controles interativos) deve obrigatoriamente usar `cursor-pointer`; sem *fade-and-slide* repetitivo em listas/cards; animações restritas a feedbacks de ação e às expressões da Abelhinha (`steering/ANIMATIONS.md`).
 - **Estética Geral:** Clara, acolhedora e baseada em tons pastéis vibrantes e solares (zero neon).
+- **Chips do cabeçalho da trilha (`plan-trail.tsx`):** Horas semanais, horários e critérios de sucesso usam pills com fundo Areia Suave, sem borda ou sombra, texto de peso médio, altura de 32px e espaçamento uniforme. Lavanda Gelo destaca hover e expansão; horários expandidos usam Areia Suave mais tênue.
 - **Paleta Oficial — Aquarela Viva:**
   - **Cobalto Pastel (`#5B8DEF`):** Cor primária, anel superior do `g`, haste do `i`, estado ativo no calendário e progresso da jornada;
   - **Pêssego Coral (`#FF9B85`):** Botão de ação principal (CTA da sessão do dia), trilha pontilhada inferior do `g`, estrela do `i`, corte do `t` e destaques do mentor;
@@ -108,5 +109,3 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
-
-
