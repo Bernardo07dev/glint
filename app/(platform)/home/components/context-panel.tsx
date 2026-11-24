@@ -129,17 +129,8 @@ export function ContextPanel({
           <span className="size-9 shrink-0 rounded-xl bg-[#E8F0FE] text-[#5B8DEF] flex items-center justify-center transition-colors group-hover:bg-[#5B8DEF] group-hover:text-white">
             <Calendar className="size-4" />
           </span>
-          <span className="flex-1 min-w-0">
-            <span className="block text-xs font-semibold text-[#2D3142]">
-              {nextTask.isTodayOrPast
-                ? "Imprevisto hoje?"
-                : "Reagendar próxima sessão"}
-            </span>
-            <span className="block text-[11px] leading-snug text-[#646B82]">
-              {nextTask.isTodayOrPast
-                ? "Reagendar sessão sem culpa"
-                : "Mover para o próximo horário livre"}
-            </span>
+          <span className="flex-1 min-w-0 whitespace-nowrap text-[0.8rem] font-semibold text-[#2D3142]">
+            Reagendar próxima sessão
           </span>
           <ArrowChevronRight className="size-4 shrink-0 text-[#646B82]/60 transition-all group-hover:translate-x-0.5 group-hover:text-[#5B8DEF]" />
         </button>
