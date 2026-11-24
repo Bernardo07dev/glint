@@ -23,6 +23,9 @@ interface NextTaskHeroProps {
 }
 
 const TOOL_LABELS: Record<string, { label: string; icon: typeof Video }> = {
+  video: { label: "Vídeo guiado", icon: Video },
+  concept_explainer: { label: "Guia do mentor", icon: BookOpen },
+  active_recall_quiz: { label: "Quiz de fixação", icon: ListCheck },
   youtube_video: { label: "Vídeo guiado", icon: Video },
   practice_checklist: { label: "Checklist prática", icon: ListCheck },
   code_sandbox: { label: "Prática em código", icon: Code },
@@ -188,13 +191,13 @@ export function NextTaskHero({
           <p className="font-sans font-medium text-xs text-[#2D3142]/65 truncate">
             {planTitle}
           </p>
-          <button
-            type="button"
-            disabled
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3EFE6] text-[#646B82] font-semibold text-xs px-5 py-2 cursor-not-allowed shrink-0"
+          <Link
+            href={`/planos/${planId}/tasks/${task.taskId}`}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-xs px-5 py-2.5 transition-colors cursor-pointer shrink-0"
           >
-            Preparando sua sessão...
-          </button>
+            <Play className="size-3.5" />
+            <span>Preparar sessão</span>
+          </Link>
         </div>
       </section>
     );

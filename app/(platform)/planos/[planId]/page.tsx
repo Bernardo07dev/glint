@@ -37,6 +37,7 @@ async function PlanDetailContent({ planId }: { planId: string }) {
 
   return (
     <PlanTrail
+      planId={plan.id}
       title={title}
       successCriteria={successCriteria}
       routineContract={routineContract}

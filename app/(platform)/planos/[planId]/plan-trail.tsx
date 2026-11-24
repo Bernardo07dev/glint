@@ -20,6 +20,7 @@ import {
 } from "@/lib/plan-structure";
 
 interface PlanTrailProps {
+  planId: string;
   title: string;
   successCriteria: string[];
   routineContract: RoutineContract | null;
@@ -28,6 +29,7 @@ interface PlanTrailProps {
 }
 
 export function PlanTrail({
+  planId,
   title,
   successCriteria,
   routineContract,
@@ -243,7 +245,7 @@ export function PlanTrail({
 
                         {isCurrent && (
                           <Link
-                            href="/home"
+                            href={`/planos/${planId}/tasks/${task.taskId}`}
                             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#5B8DEF] hover:bg-[#4b7de0] text-white text-xs font-semibold px-3.5 py-2 shrink-0 transition-colors cursor-pointer"
                           >
                             Ir para sessão
