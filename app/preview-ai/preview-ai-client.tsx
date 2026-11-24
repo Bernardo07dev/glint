@@ -67,6 +67,7 @@ export function PreviewAiClient() {
               step={step}
               stepIndex={stepIndex}
               totalSteps={steps.length}
+              onSelectStep={setStepIndex}
               onBack={stepIndex > 0 ? () => setStepIndex(stepIndex - 1) : undefined}
               onNext={() =>
                 stepIndex + 1 < steps.length

@@ -52,7 +52,9 @@ export function MermaidBlock({ chart }: { chart: string }) {
     mermaid
       .render(`mmd${rawId}`, chart.trim())
       .then(({ svg }) => {
-        if (!cancelled && ref.current) ref.current.innerHTML = svg;
+        if (!cancelled && ref.current) {
+          ref.current.innerHTML = svg;
+        }
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -64,16 +66,23 @@ export function MermaidBlock({ chart }: { chart: string }) {
 
   if (failed) {
     return (
-      <pre className="overflow-x-auto rounded-xl bg-[#F3EFE6] px-4 py-3 text-xs leading-relaxed text-[#2D3142]/80">
+      <pre className="my-4 overflow-x-auto rounded-2xl border border-[#2D3142]/8 bg-[#F3EFE6]/70 px-4 py-3.5 text-xs leading-relaxed text-[#2D3142]/80">
         <code>{chart}</code>
       </pre>
     );
   }
 
   return (
-    <div
-      ref={ref}
-      className="mermaid-diagram my-2 flex justify-center overflow-x-auto rounded-2xl border border-[#5B8DEF]/15 bg-white px-4 py-5 [&_svg]:max-w-full"
-    />
+    <figure className="my-4 overflow-hidden rounded-2xl border border-[#5B8DEF]/20 bg-white">
+      <div className="border-b border-[#2D3142]/6 bg-[#E8F0FE]/35 px-4 py-2">
+        <span className="text-[11px] font-medium text-[#3E6FD6]">
+          Diagrama visual
+        </span>
+      </div>
+      <div
+        ref={ref}
+        className="mermaid-diagram flex min-h-24 items-center justify-center overflow-x-auto px-5 py-6 [&_svg]:max-w-full"
+      />
+    </figure>
   );
 }

@@ -1,11 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CircleCheck, ArrowRotateLeft, Check, Xmark } from "@gravity-ui/icons";
+import {
+  ArrowRight,
+  ArrowRotateLeft,
+  Check,
+  CircleCheck,
+  Xmark,
+} from "@gravity-ui/icons";
 import { MascotBee } from "@/app/components/mascot-bee";
 import type { RecallQuizData, QuizQuestion } from "./types";
 
 type Phase = "answering" | "confirmed";
+
+const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"];
 
 export function RecallQuiz({
   quiz,
@@ -19,7 +27,8 @@ export function RecallQuiz({
   const [selected, setSelected] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("answering");
   const [wrongIds, setWrongIds] = useState<Set<string>>(new Set());
-  const [activeQuestions, setActiveQuestions] = useState<QuizQuestion[]>(questions);
+  const [activeQuestions, setActiveQuestions] =
+    useState<QuizQuestion[]>(questions);
   const [isRetry, setIsRetry] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -61,30 +70,36 @@ export function RecallQuiz({
     const correct = total - wrongIds.size;
     const allRight = wrongIds.size === 0;
     return (
-      <section className="flex flex-col items-center gap-4 rounded-2xl bg-[#95E1B0]/15 px-6 py-8 text-center">
-        <MascotBee pose="celebrating" className="h-20 w-24" />
-        <div className="space-y-1">
-          <h3 className="font-display text-lg font-medium text-[#2D3142]">
-            {allRight ? "Quiz completo" : "Quiz concluído"}
+      <section className="flex flex-col items-center gap-5 rounded-2xl border border-[#95E1B0]/50 bg-[#FFFDF8] px-6 py-9 text-center">
+        <MascotBee
+          pose={allRight ? "celebrating" : "focus"}
+          className="h-20 w-24"
+        />
+        <div className="space-y-1.5">
+          <h3 className="font-display text-xl font-medium text-[#2D3142]">
+            {allRight ? "Fixação validada" : "Rodada concluída"}
           </h3>
           <p className="text-sm text-[#646B82]">
             Você acertou{" "}
-            <span className="font-medium tabular-nums text-[#2B6E47]">
+            <span className="font-semibold tabular-nums text-[#2B6E47]">
               {correct} de {total}
             </span>{" "}
             {total === 1 ? "pergunta" : "perguntas"}
-            {isRetry ? " nesta revisão" : ""}.
+            {isRetry ? " nesta revisão" : ""}
           </p>
         </div>
         {wrongIds.size > 0 && (
           <button
             type="button"
             onClick={retryWrong}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#FFE07D] px-5 py-2.5 text-xs font-semibold text-[#2D3142] transition-colors hover:bg-[#ffd16a] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#FFE07D] px-5 py-2.5 text-xs font-semibold text-[#2D3142] transition-colors hover:bg-[#ffd56b] cursor-pointer"
           >
             <ArrowRotateLeft className="size-4" />
             <span>
-              Refazer {wrongIds.size === 1 ? "a pergunta que errei" : `as ${wrongIds.size} que errei`}
+              Revisar{" "}
+              {wrongIds.size === 1
+                ? "a pergunta que errei"
+                : `as ${wrongIds.size} perguntas que errei`}
             </span>
           </button>
         )}
@@ -92,31 +107,41 @@ export function RecallQuiz({
     );
   }
 
-  const correctOption = question.options.find((o) => o.id === question.correctOptionId);
   const isCorrect = selected === question.correctOptionId;
 
   return (
-    <section className="space-y-5">
-      <div className="flex items-center justify-between">
-        <p className="text-xs tabular-nums text-[#646B82]">
-          Pergunta {index + 1} de {total}
-          {isRetry && <span> · revisão</span>}
-        </p>
+    <section className="rounded-2xl border border-[#2D3142]/8 bg-[#FFFDF8] p-5 sm:p-7 space-y-6">
+      {/* Cabeçalho de progresso das perguntas */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold tabular-nums text-[#646B82]">
+            Pergunta {index + 1} de {total}
+          </span>
+          {isRetry && (
+            <span className="rounded-md bg-[#FFE07D]/55 px-2 py-0.5 text-[11px] font-semibold text-[#2D3142]">
+              Revisão
+            </span>
+          )}
+        </div>
+
         <div className="flex items-center gap-1.5">
           {activeQuestions.map((q, i) => {
-            const answered = i < index || (i === index && phase === "confirmed");
+            const answered =
+              i < index || (i === index && phase === "confirmed");
             const wasWrong = answered && wrongIds.has(q.id);
             return (
               <span
                 key={q.id}
-                className={`size-2 rounded-full ${
-                  i === index
-                    ? "bg-[#5B8DEF]"
-                    : answered
-                      ? wasWrong
-                        ? "bg-[#FF9B85]"
-                        : "bg-[#95E1B0]"
-                      : "bg-[#F3EFE6]"
+                className={`h-2 rounded-full transition-colors ${
+                  i === index ? "w-6" : "w-2.5"
+                } ${
+                  answered
+                    ? wasWrong
+                      ? "bg-[#FF9B85]"
+                      : "bg-[#95E1B0]"
+                    : i === index
+                      ? "bg-[#5B8DEF]"
+                      : "bg-[#E5DFD3]"
                 }`}
               />
             );
@@ -124,24 +149,39 @@ export function RecallQuiz({
         </div>
       </div>
 
-      <h3 className="font-display text-base font-medium leading-snug text-[#2D3142]">
+      {/* Enunciado */}
+      <h3 className="font-display text-lg sm:text-[19px] font-medium leading-snug text-[#2D3142] max-w-[66ch]">
         {question.question}
       </h3>
 
+      {/* Lista de alternativas */}
       <div className="space-y-2.5">
-        {question.options.map((option) => {
+        {question.options.map((option, optIdx) => {
+          const letter = OPTION_LETTERS[optIdx] ?? String(optIdx + 1);
           const isSelected = selected === option.id;
           const isRight = option.id === question.correctOptionId;
           const showState = phase === "confirmed";
 
-          let ring = "border-[#2D3142]/10 bg-white hover:bg-[#F3EFE6]/60";
-          if (isSelected && !showState) ring = "border-[#5B8DEF] bg-[#E8F0FE]/60";
-          if (showState && isRight) ring = "border-[#95E1B0] bg-[#95E1B0]/15";
-          if (showState && isSelected && !isRight) ring = "border-[#FF9B85] bg-[#FFF0E5]/70";
-          if (showState && !isRight && !isSelected) ring = "border-[#2D3142]/8 bg-white text-[#646B82]";
+          let cardClass =
+            "border-[#2D3142]/10 bg-white hover:border-[#5B8DEF]/35 hover:bg-[#E8F0FE]/25";
+          let badgeClass =
+            "border-[#2D3142]/12 bg-[#F3EFE6] text-[#2D3142]/80 group-hover:border-[#5B8DEF]/30 group-hover:bg-[#E8F0FE] group-hover:text-[#3E6FD6]";
 
-          const showExplanation =
-            showState && (isRight || isSelected);
+          if (isSelected && !showState) {
+            cardClass = "border-[#5B8DEF] bg-[#E8F0FE]/45";
+            badgeClass = "border-[#5B8DEF] bg-[#5B8DEF] text-white";
+          } else if (showState && isRight) {
+            cardClass = "border-[#95E1B0] bg-[#95E1B0]/15";
+            badgeClass = "border-[#95E1B0] bg-[#95E1B0] text-[#1F5134]";
+          } else if (showState && isSelected && !isRight) {
+            cardClass = "border-[#FF9B85] bg-[#FFF0E5]/70";
+            badgeClass = "border-[#FF9B85] bg-[#FF9B85] text-white";
+          } else if (showState) {
+            cardClass = "border-[#2D3142]/8 bg-white/70 opacity-75";
+            badgeClass = "border-[#2D3142]/10 bg-[#F3EFE6]/70 text-[#646B82]";
+          }
+
+          const showExplanation = showState && (isRight || isSelected);
 
           return (
             <button
@@ -149,79 +189,81 @@ export function RecallQuiz({
               type="button"
               disabled={showState}
               onClick={() => setSelected(option.id)}
-              className={`w-full rounded-xl border px-4 py-3 text-left transition-colors cursor-pointer disabled:cursor-default ${ring}`}
+              className={`group w-full rounded-2xl border p-4 text-left transition-colors cursor-pointer disabled:cursor-default ${cardClass}`}
             >
-              <span className="flex items-start gap-3">
+              <div className="flex items-start gap-3.5">
                 <span
-                  className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${
-                    showState && isRight
-                      ? "border-[#95E1B0] bg-[#95E1B0] text-white"
-                      : showState && isSelected
-                        ? "border-[#FF9B85] bg-[#FF9B85] text-white"
-                        : isSelected
-                          ? "border-[#5B8DEF] bg-[#5B8DEF] text-white"
-                          : "border-[#2D3142]/20 text-transparent"
-                  }`}
+                  className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border font-sans text-xs font-semibold transition-colors ${badgeClass}`}
                 >
                   {showState && isRight ? (
-                    <Check className="size-3" />
+                    <Check className="size-3.5" />
                   ) : showState && isSelected ? (
-                    <Xmark className="size-3" />
+                    <Xmark className="size-3.5" />
                   ) : (
-                    <Check className="size-3" />
+                    letter
                   )}
                 </span>
-                <span className="space-y-1.5">
-                  <span className="block text-sm leading-snug text-[#2D3142]">
+
+                <div className="min-w-0 flex-1 space-y-2">
+                  <span className="block text-[13px] sm:text-sm font-medium leading-[1.55] text-[#2D3142]">
                     {option.text}
                   </span>
+
                   {showExplanation && (
-                    <span className="block text-sm leading-relaxed text-[#646B82]">
+                    <span className="block border-t border-[#2D3142]/8 pt-2 text-xs leading-[1.6] text-[#2D3142]/80">
                       {option.explanation}
                     </span>
                   )}
-                </span>
-              </span>
+                </div>
+              </div>
             </button>
           );
         })}
       </div>
 
+      {/* Síntese do mentor após confirmar */}
       {phase === "confirmed" && (
-        <div className="rounded-xl bg-[#FFF0E5] px-4 py-3.5">
-          <p className="text-xs font-medium text-[#C4553F]">
-            {isCorrect ? "Mandou bem" : "Nota do mentor"}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-[#2D3142]">
-            {question.explanation}
-          </p>
-          {!isCorrect && correctOption && (
-            <p className="mt-2 text-sm text-[#2B6E47]">
-              Resposta certa: {correctOption.text}
+        <div className="flex items-start gap-3 rounded-2xl border border-[#FF9B85]/25 bg-[#FFF0E5]/70 px-4 py-3.5">
+          <MascotBee
+            pose={isCorrect ? "celebrating" : "focus"}
+            className="h-10 w-11 shrink-0"
+          />
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-semibold text-[#C4553F]">
+              {isCorrect ? "Resposta certa · Ponto-chave" : "Síntese do mentor"}
             </p>
-          )}
+            <p className="text-[13px] leading-[1.6] text-[#2D3142]/90">
+              {question.explanation}
+            </p>
+          </div>
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <span />
+      {/* Ação de confirmar / avançar pergunta */}
+      <div className="flex items-center justify-end">
         {phase === "answering" ? (
           <button
             type="button"
             disabled={!selected}
             onClick={confirm}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#FF9B85] px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#f28972] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#5B8DEF] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#4a7de0] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
-            <span>Confirmar</span>
+            <span>Confirmar resposta</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={next}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#FF9B85] px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#f28972] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#5B8DEF] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#4a7de0] cursor-pointer"
           >
-            <CircleCheck className="size-4" />
-            <span>{index + 1 < total ? "Próxima pergunta" : "Ver resultado"}</span>
+            <span>
+              {index + 1 < total ? "Próxima pergunta" : "Ver resultado do quiz"}
+            </span>
+            {index + 1 < total ? (
+              <ArrowRight className="size-4" />
+            ) : (
+              <CircleCheck className="size-4" />
+            )}
           </button>
         )}
       </div>
