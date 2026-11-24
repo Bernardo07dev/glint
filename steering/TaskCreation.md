@@ -205,87 +205,112 @@ O JSON salvo em `PlanTask.content` segue sempre a estrutura abaixo: primeiro o d
 
 ---
 
-## 4. Arquitetura da Tool 1: Motor de Vídeo (`video` — Fase YouTube)
+## 4. Arquitetura da Tool 1: Motor de Vídeo (`video` — YouTube Data API v3)
 
-O objetivo do motor de `video` é encontrar um vídeo altamente didático sobre o tópico exato da task, garantir que ele possa ser incorporado no Modo Foco (`youtube-nocookie.com`) e **recortar cirurgicamente a janela de tempo (`watchStartSeconds` até `watchEndSeconds`)** que ensina o conceito dentro do orçamento `consumeMinutes` do aluno.
+O objetivo do motor de `video` é encontrar o vídeo mais didático sobre o tópico exato da task usando a **YouTube Data API v3** (`YOUTUBE_API_KEY`), garantir que ele possa ser incorporado no Modo Foco (`youtube-nocookie.com`) e **recortar cirurgicamente a janela de tempo (`watchStartSeconds` até `watchEndSeconds`)** dentro do orçamento `consumeMinutes`, retornando exatamente o contrato **`VideoToolSchema`** já consumido pelo front-end em [`lib/task-content.ts`](../lib/task-content.ts).
+
+> **Custo de Cota da YouTube Data API v3:**
+> Cada `search.list` custa **100 unidades** e `videos.list` em lote (até 50 IDs) custa **1 unidade**. Com **3 buscas por task**, o custo é de **301 unidades/task** (~33 tasks de vídeo/dia na cota gratuita de 10.000 unidades/dia). A API é gratuita e a cota pode ser expandida sem custo via *Quota Extension Request* no Google Cloud.
 
 ### Pipeline em 5 Etapas do Agente de Vídeo
 
 ```mermaid
 flowchart TD
-    A["Input da Task: title + whyItMatters + searchQueryUsed + consumeMinutes"] --> B["1. Query Planner (models.fast)"]
-    B --> C["2. YouTube Search & Metadata Filter (Código Determinístico)"]
-    C --> D["3. Extração de Transcrição Timestamped (Top 3 Candidatos)"]
-    D --> E["4. Segment Slicer + Jev Judge (Recorte de start/end + validação)"]
-    E --> F["5. Walkthrough Synthesizer (Gera os steps guiados sobre o trecho)"]
+    A["Input da Task: title + whyItMatters + searchQueryUsed + consumeMinutes"] --> B["1. Query Planner (models.fast — gera 3 queries)"]
+    B --> C["2. 3x YouTube search.list + 1x videos.list (Deduplicação & Hard Filter)"]
+    C --> D["3. Extração de Transcrição Timestamped + Capítulos (Top Candidatos)"]
+    D --> E["4. Escolha do Melhor Vídeo + Segment Slicer + Jev Judge"]
+    E --> F["5. Output validado em VideoToolSchema (lib/task-content.ts) → Walkthrough"]
 ```
 
 #### Etapa 1 — Query Planner (`models.fast`)
-- Recebe o `title`, `whyItMatters`, `searchQueryUsed` e o idioma/nível do aluno (extraídos do `executableMeta`).
-- Gera **2 a 3 variações de busca** otimizadas para o algoritmo do YouTube:
-  1. Query direta em Português (ex.: `"Claude Code tutorial como configurar CLAUDE.md"`).
-  2. Query técnica em Inglês para fallback de alta profundidade (ex.: `"Claude Code CLI tutorial CLAUDE.md setup"`).
+- Recebe `title`, `whyItMatters`, `searchQueryUsed` e o perfil/idioma do aluno (`executableMeta`).
+- Gera **3 queries/keywords** otimizadas para o algoritmo de busca do YouTube cobrindo ângulos complementares do tema (ex.: tutorial direto em PT-BR, demonstração prática e variação técnica).
 
-#### Etapa 2 — Busca e Filtro Determinístico (Hard Filter sem gastar LLM)
-- Executa a busca no YouTube e coleta metadados dos **Top 8 resultados** (`videoId`, `title`, `channel`, `durationSeconds`, `viewCount`, `embeddable`).
-- **Regras de descarte imediato em código:**
-  - `durationSeconds < 120` (descarta Shorts e teasers rasos);
-  - `durationSeconds > 5400` (descarta lives de 3 horas sem edição);
-  - `embeddable === false` (impede vídeos que quebram no iframe do Modo Foco).
+#### Etapa 2 — 3 Buscas na YouTube Data API v3 + Enriquecimento em Lote (301 unidades)
+- Executa **3 chamadas `search.list`** (1 por query gerada), deduplica os `videoId` encontrados e faz **1 única chamada `videos.list`** (`part=snippet,contentDetails,statistics,status`) para todos os IDs.
+- **Regras de descarte imediato em código (Hard Filter sem gastar LLM):**
+  - `status.embeddable !== true` (impede vídeos que quebram no iframe `youtube-nocookie.com`);
+  - `durationSeconds < 120` (descarta Shorts e teasers rasos) ou `durationSeconds > 5400` (descarta lives sem edição);
+  - `snippet.liveBroadcastContent !== "none"` (descarta lives ativas/agendadas).
+- Ranqueia os aprovados deterministicamente (presença de capítulos na descrição, razão `likes/views`, recência e idioma) e seleciona os **Top 3 candidatos**.
 
-#### Etapa 3 — Extração de Transcrição com Timestamps + Capítulos
-- Para os **Top 3 candidatos** aprovados no filtro físico, o motor busca:
-  - Os **capítulos da descrição** (se o criador dividiu o vídeo em timestamps `00:00`, `02:30`, etc.);
-  - A **transcrição completa com timestamps** (`[{ offsetSeconds, durationSeconds, text }]`).
-- Candidatos sem transcrição legível e sem capítulos detalhados caem para o fim da fila (pois sem transcrição a IA não consegue criar um walkthrough real nem recortar o trecho com precisão).
+#### Etapa 3 — Extração de Transcrição com Timestamps via Supadata (`SUPADATA_API_KEY`)
+- Para economizar créditos (1 crédito/transcrição no plano free de 100/mês), o agente seleciona o **melhor candidato (Top 1)** dentre os aprovados usando `title`, descrição, capítulos (`00:00`, `02:30`, etc.) e métricas já retornados gratuitamente pela YouTube Data API v3.
+- Chama a **Supadata API** (`GET https://api.supadata.ai/v1/youtube/transcript?videoId=...`, header `x-api-key`) **apenas para o Top 1** (com `lang` preferencial do aluno e fallback para o idioma original) para obter `content: [{ text, offset, duration, lang }]`.
+- **Conversão de unidade (`ms` → `s`):** `offset` e `duration` na Supadata vêm em **milissegundos** — o agente converte `Math.floor(offset / 1000)` para segundos antes de condensar os blocos e passar ao Segment Slicer.
+- Caso o Top 1 não possua transcrição disponível, tenta o 2º candidato do ranking.
 
-#### Etapa 4 — Segment Slicer & Validação com `checkWithJev`
-- O `models.fast` analisa a transcrição condensada (agrupada em blocos de 30–60 segundos) dos melhores candidatos junto com o limite de `consumeMinutes` da task:
-  - Escolhe o vídeo mais didático e direto ao ponto;
-  - Define **`watchStartSeconds`** (pulando introduções, patrocinadores e vinhetas do canal) e **`watchEndSeconds`** para que `(watchEndSeconds - watchStartSeconds) <= consumeMinutes * 60`;
-  - Extrai os **`keyMoments`** (2 a 4 marcos de tempo dentro daquele recorte) e o **`transcriptSummary`**.
+#### Etapa 4 — Segment Slicer & Validação (`models.fast` + `checkWithJev`)
+- O `models.fast` analisa a transcrição condensada (blocos de 30–60s) junto com os capítulos e o orçamento `consumeMinutes`:
+  - Define **`watchStartSeconds`** (pulando introdução, patrocinadores e vinhetas) e **`watchEndSeconds`** garantindo `watchEndSeconds > watchStartSeconds` e `(watchEndSeconds - watchStartSeconds) <= consumeMinutes * 60`;
+  - Extrai **`keyMoments`** (`{ timestampSeconds, label }[]`, 2 a 4 marcos reais dentro do recorte) e **`transcriptSummary`**.
 - **Gatekeeper (`checkWithJev`):**
-  - Avalia: *"O trecho selecionado (`transcriptSummary` + `keyMoments`) ensina diretamente o necessário para o aluno cumprir o objetivo desta task?"*
-  - Se aprovado (`passed: true`), o objeto `tools.video` está fechado. Se reprovado, tenta a query secundária ou faz fallback automático para `concept_explainer`.
+  - Valida se o trecho selecionado (`transcriptSummary` + `keyMoments`) ensina diretamente o objetivo da task.
 
-#### Etapa 5 — Síntese do Walkthrough (`Tool → Walkthrough`)
-- Com `tools.video` resolvido (contendo `watchStartSeconds`, `watchEndSeconds`, `keyMoments` e a transcrição do trecho), o agente gera o step de consumo e os steps práticos (`concept_explainer` / `active_recall_quiz`), citando os momentos reais do vídeo no `walkthrough`.
-
----
-
-## 5. Arquitetura da Tool 2: `concept_explainer` (Firecrawl + Rich AI Markdown)
-
-O `concept_explainer` substitui tanto textos rasos quanto laboratórios complexos ao entregar **uma resposta de IA de nível editorial**, fundamentada em páginas e documentações reais da web extraídas via **Firecrawl** (`search` + `scrape` em formato markdown).
-
-### Pipeline em 3 Etapas do `concept_explainer`
-1. **Pesquisa Web com Firecrawl (`firecrawl.search` / `scrape`):**
-   - Usa `searchQueryUsed` + o título e objetivo da task para buscar na internet (via API do Firecrawl com `scrapeOptions: { formats: ["markdown"] }`) as 2 a 3 fontes mais relevantes (documentação oficial, guias técnicos ou referências canônicas do domínio).
-2. **Síntese Editorial Rica (`models.architect`):**
-   - Com o conteúdo real da web no contexto e o perfil do aluno (`executableMeta`), gera um documento **Markdown completo** (como a melhor resposta possível de um mentor especialista), utilizando livremente todos os recursos que o Markdown da plataforma renderiza:
-     - **Diagramas `mermaid`** (`flowchart`, `sequenceDiagram`, `stateDiagram-v2`, etc.) sempre que um fluxo, arquitetura ou relação visual ajudar a explicar o conceito;
-     - **Tabelas GFM** (*Antes vs. Depois*, *Erro Comum vs. Padrão Correto*, comparativos de parâmetros ou resumo de comandos);
-     - **Blocos de código com syntax highlighting**, fórmulas matemáticas **KaTeX** (quando aplicável), listas acionáveis e callouts/citações da documentação oficial.
-3. **Payload Estruturado (`tools.concept_explainer`):**
-   - `title`: título da explicação/guia;
-   - `estimatedReadMinutes`: tempo estimado de leitura/execução dentro do orçamento da task;
-   - `markdown`: string Markdown completa contendo texto, diagramas `mermaid`, tabelas, blocos de código e exemplos práticos;
-   - `sources`: array de `{ title, url }` com as fontes reais consultadas pelo Firecrawl.
+#### Etapa 5 — Saída no Contrato do Front-End (`VideoToolSchema`)
+- O objeto final é validado pelo **`VideoToolSchema`** em [`lib/task-content.ts`](../lib/task-content.ts) (já consumido por [`VideoToolPlayer`](../app/(platform)/planos/[planId]/tasks/components/tools/video-tool-player.tsx)):
+  ```ts
+  {
+    provider: "youtube",
+    videoId: string,
+    title: string,
+    channel?: string,
+    durationSeconds?: number,
+    watchStartSeconds: number,
+    watchEndSeconds: number, // > watchStartSeconds
+    transcriptSummary?: string,
+    keyMoments?: Array<{ timestampSeconds: number; label: string }>
+  }
+  ```
+- Com `tools.video` fechado e validado, o estágio de síntese gera o `SessionStepData` (`walkthrough` ancorado nos timestamps reais do vídeo).
 
 ---
 
-## 6. Arquitetura da Tool 3: `active_recall_quiz` (Quiz Dinâmico de Fixação)
+## 5. Arquitetura da Tool 2: `concept_explainer` (Firecrawl + Síntese Editorial em Markdown)
 
-O `active_recall_quiz` fecha a sessão validando se o aluno realmente absorveu os conceitos do `video` e/ou do `concept_explainer`.
+O `concept_explainer` (Content Tool) entrega um guia didático sob medida para o objetivo do step, fundamentado em páginas e documentações reais da web extraídas via **Firecrawl** (`FIRECRAWL_API_KEY`) e validado pelo **`ConceptExplainerSchema`** em [`lib/task-content.ts`](../lib/task-content.ts).
 
-### Regras e Contrato do `active_recall_quiz`
-- **Quantidade Dinâmica decidida pela IA:** Não há número fixo engessado — o agente escolhe quantas perguntas criar (tipicamente de 2 a 5, podendo variar conforme a densidade do tema, o `practiceMinutes` disponível e o `difficultyRating` da sessão anterior).
-- **Respostas de Múltipla Escolha com Parâmetro de Resposta Certa e Explicações:**
+### Pipeline em 3 Etapas do `concept_explainer` (`lib/step-agents/concept-explainer-agent.ts`)
+
+```mermaid
+flowchart TD
+    A["Step Blueprint: step.goal + task.title + estimatedMinutes"] --> B["1. Varredura Firecrawl (/v2/search com scrapeOptions: markdown)"]
+    B --> C["2. Agente de Síntese Editorial (models.fast / models.architect)"]
+    C --> D["3. Output validado em ConceptExplainerSchema (title, estimatedReadMinutes, markdown, sources)"]
+```
+
+1. **Varredura Web com Firecrawl v2 a partir do Objetivo do Step (`POST https://api.firecrawl.dev/v2/search`):**
+   - Usa obrigatoriamente a **API v2** (`/v1/search` foi depreciado pelo Firecrawl): envia `query` (derivado do `goal` do step + título da task), `sources: [{ type: "web" }]`, `limit: 3` e `scrapeOptions: { formats: ["markdown"], onlyMainContent: true }`.
+   - Coleta o Markdown limpo (de `data.web`) e os metadados (`title`, `url`) das páginas encontradas. Se `/v2/search` retornar vazio por instabilidade upstream, aplica fallback gracioso sintetizando o guia sem travar a task (`sources: []`).
+2. **Síntese Editorial Polida (`models.fast`):**
+   - Recebe o Markdown bruto extraído pelo Firecrawl + o `goal` do step + o perfil do aluno (`executableMeta`).
+   - Usa um **prompt especializado em formatação visual para o [`RichMarkdown`](../app/(platform)/planos/[planId]/tasks/components/tools/rich-markdown.tsx)** da plataforma:
+     - **Diagramas `mermaid`** (`flowchart LR/TD`, `sequenceDiagram`, etc. com labels entre aspas) sempre que um fluxo, arquitetura ou decisão visual deixar o conceito mais claro;
+     - **Tabelas comparativas GFM** (*O que fazer vs. O que evitar*, comparativos ou referência rápida);
+     - **Blocos de código com linguagem explícita** (habilitando syntax highlighting e o botão *Copiar* do front-end), callouts (`>`) e fórmulas **KaTeX** (`$...$`) quando aplicável.
+3. **Payload Estruturado no Contrato do Front-End (`ConceptExplainerSchema`):**
+   - `title`: título direto do guia para aquele step;
+   - `estimatedReadMinutes`: tempo estimado de leitura/prática alinhado ao `estimatedMinutes` do step;
+   - `markdown`: string Markdown polida pronta para renderização;
+   - `sources`: array `{ title, url }[]` extraído diretamente dos resultados utilizados do Firecrawl.
+
+---
+
+## 6. Arquitetura da Tool 3: `active_recall_quiz` (`lib/step-agents/quiz-and-walkthrough-agent.ts`)
+
+O `active_recall_quiz` fecha a sessão validando se o aluno realmente absorveu os conceitos do `video` e/ou do `concept_explainer`. Não depende de API externa: a própria IA (`models.fast` com `Output.object({ schema: RecallQuizSchema })`) gera diretamente o objeto validado pelo **`RecallQuizSchema`** de [`lib/task-content.ts`](../lib/task-content.ts) a partir do objetivo do step e do conteúdo real gerado nas tools anteriores daquela sessão.
+
+### Regras e Contrato do `active_recall_quiz` (`RecallQuizSchema`)
+- **Entrada do Agente:** `step.goal` + insumos já resolvidos na sessão (`tools.video.transcriptSummary`/`keyMoments` e/ou `tools.concept_explainer.markdown`) + `estimatedMinutes` + `difficultyRating` da sessão anterior.
+- **Quantidade Dinâmica decidida pela IA:** Não há número fixo engessado — o agente escolhe quantas perguntas criar (tipicamente de 2 a 5, conforme a densidade do tema e o tempo do step).
+- **Saída Estruturada Direta (`RecallQuizSchema`):**
   - Cada item em `questions` contém:
     - `id`: identificador único (`"q_01"`, `"q_02"`, ...);
     - `question`: pergunta contextualizada (focada em cenário prático ou conceito-chave visto na aula);
-    - `options`: lista de opções (`{ id, text, explanation }`), onde cada opção traz o porquê de estar certa ou errada;
-    - `correctOptionId`: ID explícito da alternativa correta (ex.: `"opt_b"`);
-    - `explanation`: resumo pedagógico geral exibido após a resposta do aluno para consolidar o aprendizado.
+    - `options`: lista de opções (`{ id, text, explanation }`, mín. 2), onde cada opção traz o porquê de estar certa ou errada;
+    - `correctOptionId`: ID explícito da alternativa correta (garantido pelo `.refine` do Zod como existente em `options`);
+    - `explanation`: síntese pedagógica geral exibida após a confirmação do aluno no [`RecallQuiz`](../app/(platform)/planos/[planId]/tasks/components/tools/recall-quiz.tsx).
 
 ---
 
@@ -334,8 +359,14 @@ Camada de integração que isola o SDK do Trigger.dev da lógica de negócio do 
 - **`triggerTaskOnDemand(planTaskId)`** (Disparo imediato PRO / Retry):
   - Dispara `enrich-plan-task` imediatamente sem `delay` quando um aluno PRO adianta uma sessão futura ainda `PENDING`/`FAILED` ou solicita reprocessamento após falha.
 
-### 7.4. Contrato do `PlanTask.stepsPlan` (Estágio 1 do Agente JIT)
-Antes de acionar as tools externas (YouTube / Firecrawl) e montar o `content` final, o primeiro passo do Agente JIT preenche `PlanTask.stepsPlan` com a divisão de responsabilidades daquela sessão:
+### 7.4. Contrato do `PlanTask.stepsPlan` (Objeto Base do Plano de Steps) e Pasta `lib/step-agents/`
+Para não concentrar tudo em um único arquivo, o worker do Trigger.dev (`trigger/enrich-plan-task.ts`) apenas orquestra as chamadas importando os agentes modulares de **`lib/step-agents/`**:
+- `lib/step-agents/blueprint.ts` — gera o `stepsPlan` (objeto base dos steps da sessão);
+- `lib/step-agents/video-agent.ts` — motor da tool `video` (YouTube Data API v3 + Supadata + Segment Slicer + Jev);
+- `lib/step-agents/concept-explainer-agent.ts` — motor da tool `concept_explainer` (Firecrawl **v2** `/v2/search` sobre o objetivo + síntese Markdown com Mermaid/tabelas);
+- `lib/step-agents/quiz-and-walkthrough-agent.ts` — sintetiza o `active_recall_quiz` e os `steps` finais (`walkthrough` + `deliverable`) validados pelo `TaskContentSchema`.
+
+O objeto base **`PlanTask.stepsPlan`** contém apenas o objetivo (`goal`), a fase, o tempo e a tool de cada step (sem URLs hardcoded):
 
 ```json
 {
@@ -347,8 +378,7 @@ Antes de acionar as tools externas (YouTube / Firecrawl) e montar o `content` fi
       "phase": "consume",
       "estimatedMinutes": 10,
       "tool": "video",
-      "goal": "Ver na prática como o /init escaneia o repositório",
-      "toolInputQuery": "Claude Code CLI /init tutorial CLAUDE.md"
+      "goal": "Ver na prática como o comando /init escaneia o repositório e gera o CLAUDE.md inicial"
     },
     {
       "stepId": "step_02",
@@ -356,8 +386,7 @@ Antes de acionar as tools externas (YouTube / Firecrawl) e montar o `content` fi
       "phase": "practice",
       "estimatedMinutes": 20,
       "tool": "concept_explainer",
-      "goal": "Guia com diagrama Mermaid e tabela do que pôr no CLAUDE.md + exercício local",
-      "toolInputQuery": "Anthropic Claude Code memory CLAUDE.md documentation best practices"
+      "goal": "Estruturar um CLAUDE.md enxuto com comandos de verificação e convenções de arquitetura"
     },
     {
       "stepId": "step_03",
@@ -365,7 +394,7 @@ Antes de acionar as tools externas (YouTube / Firecrawl) e montar o `content` fi
       "phase": "practice",
       "estimatedMinutes": 5,
       "tool": "active_recall_quiz",
-      "goal": "Fixar regras de contexto e comandos no CLAUDE.md"
+      "goal": "Validar fixação sobre memória permanente e economia de contexto no CLAUDE.md"
     }
   ]
 }
@@ -422,6 +451,7 @@ A rota `/preview-ai` (`app/preview-ai/`) monta uma sessão completa usando `fixt
 ### 8.4. Tipagem e Validação (`lib/task-content.ts`)
 
 - **Fonte única:** `lib/task-content.ts` define os schemas Zod (`TaskContentSchema`, `SessionStepSchema`, `VideoToolSchema`, `ConceptExplainerSchema`, `RecallQuizSchema`) e exporta os tipos inferidos. `tasks/components/tools/types.ts` apenas re-exporta esses tipos e `lib/plan-structure.ts` usa `TaskContent` no campo `content`.
+- **Schemas de Geração LLM vs Validação Final:** como `Output.object` em providers estritos (OpenRouter) não aceita `.refine()`/`.superRefine()`, os agentes em `lib/step-agents/` usam schemas Zod planos para a chamada à LLM e validam/normalizam o resultado final com `VideoToolSchema.parse` / `RecallQuizSchema.parse` / `TaskContentSchema.parse` antes de salvar. Além disso, `blueprint.ts` garante no máximo 1 step por `ToolId` em `requiredTools`.
 - **Regras de integridade validadas:** `watchEndSeconds > watchStartSeconds`; `correctOptionId` existe em `options`; todo `step.toolRef` aponta para uma chave presente em `tools`; `step.id` único.
 - **`parseTaskContent(raw)`:** recebe o `Json` cru de `PlanTask.content`, faz `safeParse` e retorna `TaskContent | null` (loga os issues se inválido). O worker usa `TaskContentSchema.parse` antes de salvar; a página usa `parseTaskContent` ao ler.
 - **`resolveSteps(content)`:** ordena `steps` por `order` e liga cada um ao payload da sua tool, retornando `ResolvedStep[]` (união discriminada por `toolRef`: `{ toolRef, step, tool }`).
