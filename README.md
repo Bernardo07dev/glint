@@ -12,7 +12,7 @@
 
 Aprender algo novo por conta própria — ou usando chats de IA convencionais — quase sempre esbarra nos mesmos problemas: **falta de direção, continuidade e adaptação à rotina**. Respostas soltas não constroem conhecimento de longo prazo, e cursos prontos ignoram quem você é, quanto tempo tem e como funciona a sua semana.
 
-O **Glint** resolve isso agindo como um **mentor pessoal**: ele primeiro entende profundamente você, depois desenha um plano claro de várias semanas, organiza esse plano no seu calendário real e acompanha sua execução diariamente.
+O **Glint** resolve isso agindo como um **mentor pessoal**: ele primeiro entende profundamente você, depois desenha um plano claro de várias semanas, organiza esse plano no seu calendário real e acompanha sua execução diariamente
 
 ---
 
