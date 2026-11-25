@@ -1,5 +1,9 @@
 import type { Prisma } from "@prisma/client";
 import type { PlanStructure } from "@/lib/agents/types";
+import {
+  findScheduleConflicts,
+  getOccupiedSlots,
+} from "@/lib/occupied-slots";
 import { getTodayIsoInTimezone } from "@/lib/plan-structure";
 import { prisma } from "@/lib/prisma";
 import {
@@ -54,6 +58,7 @@ export function buildPlanTaskRows(
 export async function handleAcceptPlanStage(input: {
   planId: string;
   planStructure: unknown;
+  userId?: string;
   userTimezone?: string | null;
 }) {
   if (!hasPlanStructure(input.planStructure)) {
@@ -62,6 +67,29 @@ export async function handleAcceptPlanStage(input: {
       status: 400,
       error: "O plano ainda não possui sessões geradas",
     };
+  }
+
+  if (input.userId) {
+    const occupiedSlots = await getOccupiedSlots(
+      input.userId,
+      input.planId,
+    );
+    const newSlots = input.planStructure.tasks.map((task) => ({
+      dayOfWeek: task.schedule.dayOfWeek,
+      startTime: task.schedule.startTime,
+      durationMinutes: task.schedule.durationMinutes,
+    }));
+    const conflicts = findScheduleConflicts(newSlots, occupiedSlots);
+
+    if (conflicts.length > 0) {
+      return {
+        ok: false as const,
+        status: 409,
+        error:
+          "Este plano agenda sessões em horários já reservados por outro plano ativo. Ajuste o cronograma para continuar.",
+        conflicts,
+      };
+    }
   }
 
   const timeZone = normalizeTimeZone(

@@ -69,6 +69,7 @@ export function QuestionRenderer({
         {question.inputType === "schedule_picker" && (
           <QuestionSchedule
             defaultDurationMinutes={question.defaultDurationMinutes}
+            occupiedSlots={question.occupiedSlots}
             isSubmitting={isSubmitting}
             onSubmit={onSubmit}
           />

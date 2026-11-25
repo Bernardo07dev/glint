@@ -19,6 +19,11 @@ export interface QuestionPayload {
   options?: QuestionOption[];
   allowCustom?: boolean;
   defaultDurationMinutes?: number;
+  occupiedSlots?: {
+    dayOfWeek: string;
+    startTime: string;
+    durationMinutes: number;
+  }[];
 }
 
 export interface ScheduleSlot {

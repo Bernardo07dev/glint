@@ -22,6 +22,7 @@ model User {
   planExpiresAt       DateTime?
   billingCustomerId   String?
   timezone            String         @default("America/Sao_Paulo")
+  knowledgeGraph      String?
   onboardingCompleted Boolean        @default(false)
   lastActiveAt        DateTime?
   learningPlans       LearningPlan[]

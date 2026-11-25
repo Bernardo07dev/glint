@@ -1,5 +1,9 @@
 import type { LearningPlan, PlanMessage, Prisma } from "@prisma/client";
-import type { QuestionAnswer, StepProgress } from "@/app/components/ai/types";
+import type {
+  QuestionAnswer,
+  QuestionPayload,
+  StepProgress,
+} from "@/app/components/ai/types";
 import { runInterviewingStepsAgent } from "@/lib/agents/interviewing-steps";
 import {
   formatAnswerToText,
@@ -8,9 +12,21 @@ import {
   serializeQuestionMessage,
   type ExecutableMeta,
 } from "@/lib/agents/types";
+import type { OccupiedSlot } from "@/lib/occupied-slots";
 import { prisma } from "@/lib/prisma";
 
 type PlanWithMessages = LearningPlan & { messages: PlanMessage[] };
+
+function attachOccupiedSlots(
+  question: QuestionPayload,
+  occupiedSlots?: OccupiedSlot[],
+): QuestionPayload {
+  if (question.inputType !== "schedule_picker" || !occupiedSlots?.length) {
+    return question;
+  }
+
+  return { ...question, occupiedSlots };
+}
 
 function buildStepProgress(
   meta: ExecutableMeta,
@@ -47,6 +63,7 @@ export async function handleInterviewingStepsStage(
   plan: PlanWithMessages,
   executableMeta: ExecutableMeta,
   answer?: QuestionAnswer,
+  occupiedSlots?: OccupiedSlot[],
 ) {
   const stageMessages = plan.messages.filter(
     (message) => message.stage === "INTERVIEWING_STEPS",
@@ -86,7 +103,7 @@ export async function handleInterviewingStepsStage(
     return {
       stage: "INTERVIEWING_STEPS" as const,
       refinedGoal: plan.refinedGoal,
-      question: lastQuestion,
+      question: attachOccupiedSlots(lastQuestion, occupiedSlots),
       stepProgress: buildStepProgress(executableMeta, plan.currentStepId),
     };
   }
@@ -123,7 +140,7 @@ export async function handleInterviewingStepsStage(
     return {
       stage: "INTERVIEWING_STEPS" as const,
       refinedGoal: plan.refinedGoal,
-      question: result.question,
+      question: attachOccupiedSlots(result.question, occupiedSlots),
       stepProgress: buildStepProgress(
         result.executableMeta,
         result.currentStepId,
