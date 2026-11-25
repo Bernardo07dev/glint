@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { PlanApiRequestSchema } from "@/lib/agents/types";
 import { decrypt } from "@/lib/auth";
+import { updateLearnerContext } from "@/lib/learner-context";
+import { getOccupiedSlots } from "@/lib/occupied-slots";
 import { prisma } from "@/lib/prisma";
 import { handleAcceptPlanStage } from "./handlers/accept-plan";
 import {
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
     where: { id: planId, userId },
     include: {
       user: {
-        select: { timezone: true },
+        select: { timezone: true, knowledgeGraph: true },
       },
       messages: {
         orderBy: { createdAt: "asc" },
@@ -75,12 +77,18 @@ export async function POST(request: NextRequest) {
       const result = await handleAcceptPlanStage({
         planId: plan.id,
         planStructure: plan.planStructure,
+        userId,
         userTimezone: plan.user.timezone,
       });
 
       if (!result.ok) {
         return NextResponse.json(
-          { error: result.error },
+          {
+            error: result.error,
+            ...("conflicts" in result
+              ? { conflicts: result.conflicts }
+              : {}),
+          },
           { status: result.status },
         );
       }
@@ -116,13 +124,24 @@ export async function POST(request: NextRequest) {
         previousPlanStructure: hasPlanStructure(plan.planStructure)
           ? plan.planStructure
           : null,
+        occupiedSlots: await getOccupiedSlots(userId, plan.id),
       });
+
+      try {
+        await updateLearnerContext(plan.id);
+      } catch (error) {
+        console.error("Falha ao atualizar o knowledge graph do aluno:", error);
+      }
 
       return NextResponse.json(generatingPayload);
     }
 
     if (plan.stage === "REFINING_GOAL") {
-      const payload = await handleRefiningGoalStage(plan, answer);
+      const payload = await handleRefiningGoalStage(
+        plan,
+        answer,
+        plan.user.knowledgeGraph,
+      );
 
       if (payload.stage !== "INTERVIEWING_STEPS" || !payload.refinedGoal) {
         return NextResponse.json(payload);
@@ -132,6 +151,7 @@ export async function POST(request: NextRequest) {
         planId: plan.id,
         rawInput: plan.rawInput,
         refinedGoal: payload.refinedGoal,
+        knowledgeGraph: plan.user.knowledgeGraph,
       });
 
       const updatedPlan = {
@@ -144,6 +164,8 @@ export async function POST(request: NextRequest) {
       const interviewPayload = await handleInterviewingStepsStage(
         updatedPlan,
         executableMeta,
+        undefined,
+        await getOccupiedSlots(userId, plan.id),
       );
 
       return NextResponse.json(interviewPayload);
@@ -156,6 +178,7 @@ export async function POST(request: NextRequest) {
               planId: plan.id,
               rawInput: plan.rawInput,
               refinedGoal: plan.refinedGoal,
+              knowledgeGraph: plan.user.knowledgeGraph,
             })
           : hasExecutableSteps(plan.executableMeta)
             ? plan.executableMeta
@@ -172,6 +195,7 @@ export async function POST(request: NextRequest) {
         plan,
         executableMeta,
         answer,
+        await getOccupiedSlots(userId, plan.id),
       );
 
       return NextResponse.json(interviewPayload);
@@ -198,7 +222,14 @@ export async function POST(request: NextRequest) {
         rawInput: plan.rawInput,
         refinedGoal: plan.refinedGoal ?? plan.rawInput,
         executableMeta: plan.executableMeta,
+        occupiedSlots: await getOccupiedSlots(userId, plan.id),
       });
+
+      try {
+        await updateLearnerContext(plan.id);
+      } catch (error) {
+        console.error("Falha ao atualizar o knowledge graph do aluno:", error);
+      }
 
       return NextResponse.json(generatingPayload);
     }

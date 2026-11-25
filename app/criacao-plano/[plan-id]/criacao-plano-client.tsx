@@ -60,6 +60,12 @@ const DAY_LABELS: Record<string, string> = {
   sunday: "Dom",
 };
 
+interface ScheduleConflictSlot {
+  dayOfWeek: string;
+  startTime: string;
+  durationMinutes: number;
+}
+
 const ADJUST_PLAN_QUESTION: QuestionPayload = {
   id: "adjust_plan_feedback",
   question: "O que você gostaria de mudar ou melhorar neste plano?",
@@ -115,6 +121,9 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [awaitingAgent, setAwaitingAgent] = useState(false);
+  const [scheduleConflicts, setScheduleConflicts] = useState<
+    ScheduleConflictSlot[]
+  >([]);
 
   const requestNextStep = useCallback(
     async (answer?: QuestionAnswer) => {
@@ -235,6 +244,16 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
         }),
       });
 
+      if (response.status === 409) {
+        const data = (await response.json()) as {
+          error?: string;
+          conflicts?: ScheduleConflictSlot[];
+        };
+        setScheduleConflicts(data.conflicts ?? []);
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error("Não foi possível confirmar seu plano");
       }
@@ -251,12 +270,12 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
     }
   }, [plan.id, router]);
 
-  const handleAdjustPlanSubmit = useCallback(
-    async (answer: QuestionAnswer) => {
-      const feedback = formatAnswerToText(answer, ADJUST_PLAN_QUESTION);
+  const sendAdjustFeedback = useCallback(
+    async (feedback: string, answer?: QuestionAnswer) => {
       setError(null);
-      setLastAdjustAnswer(answer);
+      setLastAdjustAnswer(answer ?? null);
       setIsAdjustingPlan(false);
+      setScheduleConflicts([]);
       setStage("GENERATING_TASKS");
       setIsSubmitting(true);
 
@@ -290,6 +309,26 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
     },
     [applyApiResponse, plan.id],
   );
+
+  const handleAdjustPlanSubmit = useCallback(
+    async (answer: QuestionAnswer) => {
+      const feedback = formatAnswerToText(answer, ADJUST_PLAN_QUESTION);
+      await sendAdjustFeedback(feedback, answer);
+    },
+    [sendAdjustFeedback],
+  );
+
+  const handleConflictAdjust = useCallback(async () => {
+    const conflictList = scheduleConflicts
+      .map(
+        (slot) =>
+          `${DAY_LABELS[slot.dayOfWeek] ?? slot.dayOfWeek} ${slot.startTime} (${slot.durationMinutes} min)`,
+      )
+      .join(", ");
+    await sendAdjustFeedback(
+      `Os horários gerados conflitam com outro plano ativo: ${conflictList}. Reagende essas sessões para outros dias ou horários livres, mantendo a rotina real do aluno.`,
+    );
+  }, [scheduleConflicts, sendAdjustFeedback]);
 
   useEffect(() => {
     let cancelled = false;
@@ -574,6 +613,34 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
               </p>
             </div>
           </header>
+
+        {scheduleConflicts.length > 0 && (
+          <div className="rounded-2xl border border-[#FF9B85] bg-[#FFF0E5] p-4 space-y-3">
+            <p className="font-sans text-sm font-semibold text-[#2D3142]">
+              Estes horários já estão reservados por outro plano seu:
+            </p>
+            <ul className="space-y-1">
+              {scheduleConflicts.map((slot) => (
+                <li
+                  key={`${slot.dayOfWeek}-${slot.startTime}`}
+                  className="font-sans text-xs text-[#646B82] tabular-nums"
+                >
+                  {DAY_LABELS[slot.dayOfWeek] ?? slot.dayOfWeek} ·{" "}
+                  {slot.startTime} · {slot.durationMinutes} min
+                </li>
+              ))}
+            </ul>
+            <Button
+              type="button"
+              isDisabled={isSubmitting}
+              onPress={() => void handleConflictAdjust()}
+              className="h-9 px-4 rounded-lg bg-[#FF9B85] hover:bg-[#ff8a70] font-sans text-[#FFFFFF] font-semibold text-xs transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ArrowRotateRight className="size-3.5" />
+              <span>Ajustar cronograma</span>
+            </Button>
+          </div>
+        )}
 
         <div className="flex flex-row items-center gap-2.5 sm:gap-3 pt-1">
           <Button

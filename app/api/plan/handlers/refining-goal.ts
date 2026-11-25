@@ -14,6 +14,7 @@ type PlanWithMessages = LearningPlan & { messages: PlanMessage[] };
 export async function handleRefiningGoalStage(
   plan: PlanWithMessages,
   answer?: QuestionAnswer,
+  knowledgeGraph?: string | null,
 ) {
   const stageMessages = plan.messages.filter(
     (message) => message.stage === "REFINING_GOAL",
@@ -51,6 +52,7 @@ export async function handleRefiningGoalStage(
   const result = await runRefiningGoalAgent({
     rawInput: plan.rawInput,
     messages: formatHistoryForAgent(stageMessages),
+    knowledgeGraph,
   });
 
   if (result.status === "NEEDS_USER_INPUT") {

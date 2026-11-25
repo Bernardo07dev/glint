@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { runGeneratingTasksAgent } from "@/lib/agents/generating-tasks";
 import type { ExecutableMeta, PlanStructure } from "@/lib/agents/types";
+import type { OccupiedSlot } from "@/lib/occupied-slots";
 import { prisma } from "@/lib/prisma";
 
 export function hasPlanStructure(value: unknown): value is PlanStructure {
@@ -20,6 +21,7 @@ export async function handleGeneratingTasksStage(input: {
   feedback?: string;
   priorFeedbacks?: string[];
   previousPlanStructure?: PlanStructure | null;
+  occupiedSlots?: OccupiedSlot[];
 }) {
   let adjustmentFeedback = input.priorFeedbacks ?? [];
 
@@ -42,6 +44,7 @@ export async function handleGeneratingTasksStage(input: {
     executableMeta: input.executableMeta,
     previousPlanStructure: input.previousPlanStructure,
     adjustmentFeedback,
+    occupiedSlots: input.occupiedSlots,
   });
 
   await prisma.learningPlan.update({

@@ -129,15 +129,18 @@ Toda a orquestração roda via **OpenRouter** (`@openrouter/ai-sdk-provider`) e 
 ### 7.4. Etapas da Criação do Plano
 1. **Etapa 1 — `REFINING_GOAL` (`lib/agents/refining-goal.ts` + `handlers/refining-goal.ts`):**
    - Avalia no Jev se `rawInput` + histórico já expressam um resultado concreto e executável.
+   - Quando o `User` possui `knowledgeGraph` (resumo do aluno mantido por `lib/learner-context.ts` e atualizado via `models.fast` após cada geração de `planStructure`), ele é injetado no contexto da Etapa 1 e da Etapa 2 para personalizar perguntas e steps.
    - Enquanto vago (até `MAX_REFINING_TURNS = 2`), gera uma única pergunta (`single_choice` com `allowCustom: true` ou `text`).
    - Quando aprovado, consolida `refinedGoal`, avança `stage` para `INTERVIEWING_STEPS` e já encadeia a Etapa 2 e a primeira pergunta da Etapa 3 na mesma requisição.
 2. **Etapa 2 — Meta-Plano (`lib/agents/meta-plan.ts` + `handlers/meta-plan.ts`):**
    - Gera de 3 a 5 `steps` investigativos específicos do domínio no formato `executable.json` (incluindo obrigatoriamente `routine_and_slots`) com `value: null` e `status: "pending"`, salvando em `LearningPlan.executableMeta` e `currentStepId`.
 3. **Etapa 3 — `INTERVIEWING_STEPS` (`lib/agents/interviewing-steps.ts` + `handlers/interviewing-steps.ts`):**
    - Faz uma pergunta simples por vez (priorizando `single_choice`/`multi_choice`, e usando `schedule_picker` em `routine_and_slots`), extrai respostas com suporte a *cross-filling*, valida no Jev contra `criteriaForJev` (máximo de 2 tentativas por step) e devolve `stepProgress` para a interface.
+   - O `schedule_picker` recebe `occupiedSlots` no payload: a UI exibe por dia os intervalos já reservados por outros planos e bloqueia o submit de rotinas sobrepostas.
    - Quando todos os steps são concluídos, avança `stage` para `GENERATING_TASKS`.
 4. **Etapa 4 — `GENERATING_TASKS` (`lib/agents/generating-tasks.ts` + `handlers/generating-tasks.ts`):**
    - Compila o `plan_structure.json` (`successCriteria`, `routineContract` e lista de `tasks` com datas reais, `durationMinutes = consumeMinutes + practiceMinutes`, `lockState` com a 1ª sessão desbloqueada e `requiredTools`), salvando em `LearningPlan.planStructure` e `totalTasks`, e avançando `stage` para `ENRICHING_TASKS`.
+   - Recebe `occupiedSlots` (`lib/occupied-slots.ts` — slots `{ dayOfWeek, startTime, durationMinutes }` das `PlanTask` de planos `ACTIVE`/`ENRICHING_TASKS` do usuário) e instrui o prompt a não alocar sessões nesses horários.
    - *(A Etapa 5 — `ENRICHING_TASKS` — enriquecerá o `content` de cada task em background).*
 
 ### 7.5. Revisão, Paywall e Aceite (`/criacao-plano/[plan-id]`)
@@ -145,7 +148,7 @@ Toda a orquestração roda via **OpenRouter** (`@openrouter/ai-sdk-provider`) e 
 - **Tela de Plano Pronto (`criacao-plano-client.tsx`):** Exibe os chips de resumo (botão tátil de metas abrindo popup flutuante no canto, semanas e horas/semana), mostra as **3 primeiras sessões** visíveis e o restante sob gradiente bloqueado (*paywall*).
 - **Recusar ou Aceitar:**
   - **Recusar e ajustar (`action: "adjust_plan"`):** Pergunta o que melhorar, grava o feedback em `PlanMessage` (`GENERATING_TASKS`) e reexecuta o Agent 4 com o plano anterior + histórico de ajustes.
-  - **Aceitar plano (`action: "accept_plan"`):** Promove `LearningPlan.stage` para `ACTIVE` e redireciona para `/home` (`app/home/page.tsx`).
+  - **Aceitar plano (`action: "accept_plan"`):** Antes de ativar, valida deterministicamente (`findScheduleConflicts`) se as sessões do novo plano se sobrepõem a slots de planos `ACTIVE`/`ENRICHING_TASKS`; em conflito, responde `409` com os horários e o client exibe banner com botão que dispara `adjust_plan` automático. Sem conflito, promove `LearningPlan.stage` para `ACTIVE` e redireciona para `/home` (`app/home/page.tsx`).
 
 ### 7.6. Modelagem de Tasks no Banco (`PlanTask` — Geração Just-In-Time)
 Cada sessão de estudo do plano é persistida na tabela relacional `PlanTask` (`prisma/schema.prisma`), separando o esqueleto agendado do conteúdo pedagógico gerado **Just-In-Time** (no dia da task, evitando gasto antecipado de tokens e permitindo adaptar a aula ao feedback da sessão anterior):

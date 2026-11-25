@@ -1,5 +1,6 @@
 import { generateText, Output } from "ai";
 import { models } from "@/lib/llm";
+import type { OccupiedSlot } from "@/lib/occupied-slots";
 import { BASE_SYSTEM_PROMPT } from "./prompts";
 import {
   GeneratingTasksOutputSchema,
@@ -16,6 +17,7 @@ export interface RunGeneratingTasksInput {
   startDateIso?: string;
   previousPlanStructure?: PlanStructure | null;
   adjustmentFeedback?: string[];
+  occupiedSlots?: OccupiedSlot[];
 }
 
 export async function runGeneratingTasksAgent({
@@ -27,6 +29,7 @@ export async function runGeneratingTasksAgent({
   startDateIso,
   previousPlanStructure,
   adjustmentFeedback,
+  occupiedSlots,
 }: RunGeneratingTasksInput): Promise<PlanStructure> {
   const referenceDate = startDateIso ?? new Date().toISOString().slice(0, 10);
 
@@ -42,6 +45,15 @@ export async function runGeneratingTasksAgent({
         .map(
           (t) =>
             `${t.order}. ${t.title} (${t.schedule.durationMinutes} min: ${t.schedule.timeBreakdown.consumeMinutes}m estudo + ${t.schedule.timeBreakdown.practiceMinutes}m prática)`,
+        )
+        .join("\n")}`
+    : "";
+
+  const occupiedSection = occupiedSlots?.length
+    ? `\n\nHorários já reservados por outros planos ativos do aluno (NÃO aloque sessões nesses dias/horários nem em intervalos que se sobreponham a eles):\n${occupiedSlots
+        .map(
+          (slot) =>
+            `- ${slot.dayOfWeek} ${slot.startTime} (${slot.durationMinutes} min)`,
         )
         .join("\n")}`
     : "";
@@ -82,7 +94,7 @@ Regras obrigatórias:
 Objetivo claro (clearGoal): "${refinedGoal}"
 
 Dados coletados na entrevista:
-${collectedSteps}${previousSummary}${feedbackSection}`,
+${collectedSteps}${occupiedSection}${previousSummary}${feedbackSection}`,
   });
 
   const tasks = output.tasks.map((task, index) => {

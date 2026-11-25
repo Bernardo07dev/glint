@@ -16,10 +16,12 @@ export async function handleMetaPlanStage(input: {
   planId: string;
   rawInput: string;
   refinedGoal: string;
+  knowledgeGraph?: string | null;
 }): Promise<ExecutableMeta> {
   const executableMeta = await runMetaPlanAgent({
     rawInput: input.rawInput,
     refinedGoal: input.refinedGoal,
+    knowledgeGraph: input.knowledgeGraph,
   });
 
   await prisma.learningPlan.update({

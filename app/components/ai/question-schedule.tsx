@@ -3,10 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@heroui/react";
 import { ArrowRight, Calendar, Clock } from "@gravity-ui/icons";
-import type { QuestionAnswer, ScheduleSlot } from "./types";
+import type { QuestionAnswer, QuestionPayload, ScheduleSlot } from "./types";
 
 interface QuestionScheduleProps {
   defaultDurationMinutes?: number;
+  occupiedSlots?: QuestionPayload["occupiedSlots"];
   isSubmitting?: boolean;
   onSubmit: (answer: QuestionAnswer) => void;
 }
@@ -23,8 +24,30 @@ const WEEK_DAYS: { key: ScheduleSlot["day"]; short: string; full: string }[] = [
 
 const DURATION_OPTIONS = [15, 30, 60, 90];
 
+const DAY_NAME_TO_KEY: Record<string, ScheduleSlot["day"]> = {
+  monday: "mon",
+  tuesday: "tue",
+  wednesday: "wed",
+  thursday: "thu",
+  friday: "fri",
+  saturday: "sat",
+  sunday: "sun",
+};
+
+function toMinutes(time: string): number {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function formatMinutes(total: number): string {
+  const hour = Math.floor(total / 60);
+  const minute = total % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 export function QuestionSchedule({
   defaultDurationMinutes = 30,
+  occupiedSlots,
   isSubmitting = false,
   onSubmit,
 }: QuestionScheduleProps) {
@@ -78,6 +101,28 @@ export function QuestionSchedule({
     );
   };
 
+  const occupiedByDay = new Map<
+    ScheduleSlot["day"],
+    { startTime: string; durationMinutes: number }[]
+  >();
+  for (const slot of occupiedSlots ?? []) {
+    const day = DAY_NAME_TO_KEY[slot.dayOfWeek];
+    if (!day) continue;
+    const list = occupiedByDay.get(day) ?? [];
+    list.push({ startTime: slot.startTime, durationMinutes: slot.durationMinutes });
+    occupiedByDay.set(day, list);
+  }
+
+  const findConflict = (slot: ScheduleSlot) =>
+    (occupiedByDay.get(slot.day) ?? []).find((occupied) => {
+      const slotStart = toMinutes(slot.startTime);
+      const occupiedStart = toMinutes(occupied.startTime);
+      return (
+        slotStart < occupiedStart + occupied.durationMinutes &&
+        occupiedStart < slotStart + slot.durationMinutes
+      );
+    });
+
   const totalWeeklyMinutes = slots.reduce(
     (sum, slot) => sum + slot.durationMinutes,
     0,
@@ -115,6 +160,18 @@ export function QuestionSchedule({
       setError("Informe uma duração entre 5 e 480 minutos para cada sessão");
       return;
     }
+    const conflicting = slots.find((slot) => findConflict(slot));
+    if (conflicting) {
+      const dayMeta = WEEK_DAYS.find((d) => d.key === conflicting.day);
+      const occupied = findConflict(conflicting);
+      setError(
+        `${dayMeta?.full} às ${conflicting.startTime} conflita com outro plano seu (${occupied?.startTime}–${formatMinutes(
+          toMinutes(occupied?.startTime ?? "0:00") +
+            (occupied?.durationMinutes ?? 0),
+        )}). Escolha outro horário.`,
+      );
+      return;
+    }
     onSubmit({ inputType: "schedule_picker", slots });
   };
 
@@ -145,6 +202,8 @@ export function QuestionSchedule({
           <div className="flex gap-1 sm:gap-1.5">
             {WEEK_DAYS.map((day) => {
               const isSelected = slots.some((s) => s.day === day.key);
+              const hasOccupied =
+                (occupiedByDay.get(day.key)?.length ?? 0) > 0;
               return (
                 <button
                   key={day.key}
@@ -152,13 +211,26 @@ export function QuestionSchedule({
                   disabled={isSubmitting}
                   onClick={() => toggleDay(day.key)}
                   aria-pressed={isSelected}
-                  className={`flex-1 min-w-0 h-10 sm:h-9 rounded-full font-sans text-xs font-medium transition-colors cursor-pointer ${
+                  className={`relative flex-1 min-w-0 h-10 sm:h-9 rounded-full font-sans text-xs font-medium transition-colors cursor-pointer ${
                     isSelected
                       ? "bg-[#5B8DEF] text-[#FFFFFF]"
                       : "text-[#646B82] hover:bg-[#E8F0FE] hover:text-[#5B8DEF]"
                   }`}
                 >
                   {day.short}
+                  {hasOccupied && (
+                    <>
+                      <span
+                        aria-hidden
+                        className={`absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full ${
+                          isSelected ? "bg-[#FFFFFF]/80" : "bg-[#FF9B85]"
+                        }`}
+                      />
+                      <span className="sr-only">
+                        (há horários reservados neste dia)
+                      </span>
+                    </>
+                  )}
                 </button>
               );
             })}
@@ -246,13 +318,30 @@ export function QuestionSchedule({
                             updateSlot(slot.day, { durationMinutes: parsed });
                           }
                         }}
-                        className={`h-9 sm:h-7 w-14 sm:w-12 rounded-full text-center font-sans text-xs tabular-nums placeholder:text-[#646B82]/60 focus:outline-none focus:bg-[#E8F0FE] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                        className={`h-9 sm:h-7 w-14 sm:w-12 rounded-full border border-[#2D3142]/12 text-center font-sans text-xs tabular-nums placeholder:text-[#646B82]/60 focus:outline-none focus:border-[#5B8DEF] focus:bg-[#E8F0FE] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                           !isPreset
-                            ? "bg-[#E8F0FE] text-[#5B8DEF] font-medium"
+                            ? "bg-[#E8F0FE] border-[#5B8DEF]/40 text-[#5B8DEF] font-medium"
                             : "bg-transparent text-[#2D3142]"
                         }`}
                       />
                     </div>
+
+                    {(occupiedByDay.get(slot.day)?.length ?? 0) > 0 && (
+                      <p className="w-full sm:pl-[76px] font-sans text-[11px] text-[#646B82] tabular-nums flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-[#FF9B85] shrink-0" />
+                        Já reservado por outro plano:{" "}
+                        {occupiedByDay
+                          .get(slot.day)
+                          ?.map(
+                            (occupied) =>
+                              `${occupied.startTime}–${formatMinutes(
+                                toMinutes(occupied.startTime) +
+                                  occupied.durationMinutes,
+                              )}`,
+                          )
+                          .join(", ")}
+                      </p>
+                    )}
                   </li>
                 );
               })}
