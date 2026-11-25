@@ -14,7 +14,7 @@ function getDomain(url: string): string {
 
 export function ConceptExplainer({ explainer }: { explainer: ConceptExplainerData }) {
   return (
-    <article className="rounded-2xl border border-[#2D3142]/8 bg-[#FFFDF8] p-5 sm:p-7 space-y-6">
+    <article className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2D3142]/8 pb-4">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#5B8DEF]">

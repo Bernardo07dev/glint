@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  CircleCheck,
   Clock,
   Lock,
   Play,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/plan-structure";
 
 interface PlanTrailProps {
+  planId: string;
   title: string;
   successCriteria: string[];
   routineContract: RoutineContract | null;
@@ -28,6 +30,7 @@ interface PlanTrailProps {
 }
 
 export function PlanTrail({
+  planId,
   title,
   successCriteria,
   routineContract,
@@ -36,7 +39,9 @@ export function PlanTrail({
 }: PlanTrailProps) {
   const [criteriaOpen, setCriteriaOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  let foundCurrent = false;
+  const currentTaskId = weeks
+    .flatMap((w) => w.tasks)
+    .find((t) => getTaskStatus(t) !== "completed")?.taskId;
 
   return (
     <div className="max-w-[820px] mx-auto px-4 sm:px-6 pt-6 sm:pt-9 space-y-8">
@@ -50,43 +55,89 @@ export function PlanTrail({
           <span>Voltar para Planos</span>
         </Link>
 
-        <h1 className="font-display text-xl sm:text-2xl font-medium text-[#2D3142] leading-snug max-w-[30ch]">
+        <h1 className="font-display text-xl sm:text-2xl font-medium text-[#2D3142] leading-snug ">
           {title}
         </h1>
 
-        {routineContract && (
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => setScheduleOpen((prev) => !prev)}
-              aria-expanded={scheduleOpen}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs tabular-nums transition-colors cursor-pointer ${
-                scheduleOpen
-                  ? "bg-[#E8F0FE]/85 border-[#5B8DEF]/25 text-[#2D3142]"
-                  : "bg-white/90 border-[#2D3142]/8 text-[#2D3142] hover:bg-[#FFFDF8]"
-              }`}
-            >
-              <Clock className="size-3.5 text-[#5B8DEF] shrink-0" aria-hidden="true" />
-              <span className="font-semibold">
-                {routineContract.weeklyHours}h/semana
-              </span>
-              <span className="text-[#646B82]/60" aria-hidden="true">
-                ·
-              </span>
-              <span className="font-medium text-[#646B82]">
-                {routineContract.slots.length}{" "}
-                {routineContract.slots.length === 1 ? "horário" : "horários"}
-              </span>
-              <ChevronDown
-                aria-hidden="true"
-                className={`size-3.5 text-[#646B82] ml-0.5 transition-transform duration-200 ${
-                  scheduleOpen ? "rotate-180 text-[#5B8DEF]" : ""
-                }`}
-              />
-            </button>
+        {(routineContract || successCriteria.length > 0) && (
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {routineContract && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScheduleOpen((prev) => !prev);
+                    setCriteriaOpen(false);
+                  }}
+                  aria-expanded={scheduleOpen}
+                  className={`inline-flex h-8 border border-[#dad7cf]/50 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 sm:px-3.5 text-[11px] sm:text-xs font-medium tabular-nums transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#646B82] ${
+                    scheduleOpen
+                      ? "bg-[#E8F0FE] text-[#2D3142]"
+                      : "bg-[#F3EFE6] text-[#2D3142] hover:bg-[#E8F0FE]"
+                  }`}
+                >
+                  <Clock className="size-3.5 text-[#646B82] shrink-0" aria-hidden="true" />
+                  <span>
+                    {routineContract.weeklyHours < 1
+                      ? `${Math.round(routineContract.weeklyHours * 60)} min/semana`
+                      : `${routineContract.weeklyHours}h/semana`}
+                  </span>
+                  <span className="hidden sm:inline text-[#646B82]/50" aria-hidden="true">
+                    ·
+                  </span>
+                  <span className="hidden sm:inline text-[#646B82]">
+                    {routineContract.slots.length}{" "}
+                    {routineContract.slots.length === 1 ? "horário" : "horários"}
+                  </span>
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={`size-3.5 text-[#646B82] shrink-0 transition-transform duration-150 ${
+                      scheduleOpen ? "rotate-180 text-[#2D3142]" : ""
+                    }`}
+                  />
+                </button>
+              )}
 
-            {scheduleOpen && (
-              <div className="flex flex-wrap items-center gap-1.5">
+              {successCriteria.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCriteriaOpen((prev) => !prev);
+                    setScheduleOpen(false);
+                  }}
+                  aria-expanded={criteriaOpen}
+                  aria-controls="plan-success-criteria"
+                  className={`inline-flex h-8 items-center gap-1.5 border border-[#dad7cf]/50 whitespace-nowrap rounded-full px-2.5 sm:px-3.5 text-[11px] sm:text-xs font-medium tabular-nums transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#646B82] ${
+                    criteriaOpen
+                      ? "bg-[#E8F0FE] text-[#2D3142]"
+                      : "bg-[#F3EFE6] text-[#2D3142] hover:bg-[#E8F0FE]"
+                  }`}
+                >
+                  <CircleCheck
+                    className="size-3.5 text-[#646B82] shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    Critérios<span className="hidden sm:inline"> de sucesso</span>
+                  </span>
+                  <span className="text-[#646B82]/50" aria-hidden="true">
+                    ·
+                  </span>
+                  <span className="text-[#646B82]">
+                    {successCriteria.length}
+                  </span>
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={`size-3.5 text-[#646B82] shrink-0 transition-transform duration-150 ${
+                      criteriaOpen ? "rotate-180 text-[#2D3142]" : ""
+                    }`}
+                  />
+                </button>
+              )}
+            </div>
+
+            {routineContract && scheduleOpen && (
+              <div className="flex flex-wrap items-center gap-1.5 ">
                 {routineContract.slots.map((s, idx) => {
                   const dayLabel =
                     DAY_NAME_PT[s.dayOfWeek.toLowerCase()] ?? s.dayOfWeek;
@@ -94,73 +145,43 @@ export function PlanTrail({
                   return (
                     <span
                       key={`${s.dayOfWeek}-${s.startTime}-${idx}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-white/90 border border-[#2D3142]/8 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs tabular-nums"
+                      className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#F3EFE6]/60 px-3 text-xs tabular-nums"
                     >
                       <span className="font-medium text-[#2D3142]">
                         <span className="sm:hidden">{shortDay}</span>
                         <span className="hidden sm:inline">{dayLabel}</span>
                       </span>
-                      <span className="text-[#2D3142]/25" aria-hidden="true">
+                      <span className="text-[#646B82]/50" aria-hidden="true">
                         ·
                       </span>
-                      <span className="font-medium text-[#646B82]">
-                        {s.startTime}
-                      </span>
+                      <span className="text-[#646B82]">{s.startTime}</span>
                     </span>
                   );
                 })}
               </div>
             )}
-          </div>
-        )}
 
-        {successCriteria.length > 0 && (
-          <div className="rounded-2xl sm:rounded-3xl bg-white/90 border border-[#2D3142]/6 overflow-hidden">
-            {/* Mobile dropdown trigger */}
-            <button
-              type="button"
-              onClick={() => setCriteriaOpen((prev) => !prev)}
-              aria-expanded={criteriaOpen}
-              aria-controls="plan-success-criteria"
-              className="sm:hidden w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[#FFFDF8] transition-colors cursor-pointer"
-            >
-              <div className="flex items-baseline gap-2 min-w-0">
-                <span className="font-display text-[15px] font-medium text-[#2D3142]">
-                  Critérios de sucesso
-                </span>
-                <span className="text-xs font-medium text-[#646B82]/80 tabular-nums shrink-0">
-                  · {successCriteria.length}
-                </span>
-              </div>
-              <ChevronDown
-                aria-hidden="true"
-                className={`size-4 text-[#646B82] shrink-0 transition-transform duration-200 ${
-                  criteriaOpen ? "rotate-180 text-[#5B8DEF]" : ""
-                }`}
-              />
-            </button>
-
-            {/* Desktop static heading */}
-            <h2 className="hidden sm:block font-display text-base font-medium text-[#2D3142] px-6 pt-6 pb-3">
-              Critérios de sucesso
-            </h2>
-
-            <ul
-              id="plan-success-criteria"
-              className={`${
-                criteriaOpen ? "block" : "hidden"
-              } sm:block space-y-2.5 px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-0 border-t border-[#F3EFE6] sm:border-t-0`}
-            >
-              {successCriteria.map((criterion, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-2.5 text-[13px] sm:text-sm text-[#2D3142]/90 leading-relaxed max-w-[70ch]"
-                >
-                  <span className="mt-2 size-1.5 rounded-full bg-[#5B8DEF]/75 shrink-0" />
-                  <span>{criterion}</span>
-                </li>
-              ))}
-            </ul>
+            {successCriteria.length > 0 && criteriaOpen && (
+              <ul
+                id="plan-success-criteria"
+                className="rounded-2xl bg-white border border-[#2D3142]/8 p-4 sm:p-5 space-y-2.5 max-w-[68ch]"
+              >
+                {successCriteria.map((criterion, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2.5 font-sans text-xs sm:text-[13px] font-medium text-[#2D3142]/85 leading-[1.6]"
+                  >
+                    <span className="mt-0.5 size-4 rounded-full bg-[#95E1B0]/35 flex items-center justify-center shrink-0">
+                      <Check
+                        className="size-2.5 text-[#2B6E47]"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <span>{criterion}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
       </header>
@@ -173,63 +194,61 @@ export function PlanTrail({
               Semana {group.weekNumber}
             </h2>
 
-            <ol className="relative space-y-3 pl-7 before:content-[''] before:absolute before:left-[11px] before:top-3 before:bottom-3 before:w-[2px] before:bg-[#F3EFE6]">
+            <ol className="relative space-y-2.5 pl-8 before:content-[''] before:absolute before:left-[13px] before:top-4 before:bottom-4 before:w-[2px] before:bg-[#F3EFE6]">
               {group.tasks.map((task) => {
                 const status = getTaskStatus(task);
                 const isCompleted = status === "completed";
-                const unlocked = isTaskUnlockedForDate(task, todayIso);
-                const isCurrent = !isCompleted && !foundCurrent && unlocked;
-                if (isCurrent) foundCurrent = true;
+                const isCurrent = task.taskId === currentTaskId;
 
                 return (
                   <li key={task.taskId} className="relative">
                     {/* Nó na linha vertical */}
                     <span
-                      className={`absolute -left-7 top-4 size-6 rounded-full flex items-center justify-center border-2 border-[#FFFDF8] ${
+                      className={`absolute -left-8 top-4 size-7 rounded-full flex items-center justify-center ring-4 ring-[#FFFDF8] ${
                         isCompleted
-                          ? "bg-[#95E1B0] text-[#2D3142]"
+                        ? "bg-[#95E1B0] text-[#1F5E38]"
                           : isCurrent
-                            ? "bg-[#5B8DEF] text-white"
+                            ? "bg-[#5B8DEF] text-white shadow-sm shadow-[#5B8DEF]/25"
                             : "bg-[#F3EFE6] text-[#646B82]"
                       }`}
                     >
                       {isCompleted ? (
                         <Check className="size-3.5" />
                       ) : isCurrent ? (
-                        <Play className="size-3" />
+                        <Play className="size-3 translate-x-[0.5px]" />
                       ) : (
                         <Lock className="size-3" />
                       )}
                     </span>
 
                     <div
-                      className={`rounded-2xl p-4 sm:p-5 border ${
+                      className={`rounded-2xl p-5 sm:p-5 border ${
                         isCurrent
-                          ? "bg-[#E8F0FE]/50 border-[#5B8DEF]/35"
+                        ? "bg-[#E8F0FE]/50 border-2 border-[#5B8DEF]/35"
                           : isCompleted
-                            ? "bg-white border-[#95E1B0]/40"
+                          ? "bg-white border-2 border-[#95E1B0]/20"
                             : "bg-[#F3EFE6]/60 border-[#F3EFE6]"
                       }`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                        <div className="space-y-1.5 min-w-0">
-                          <p className="text-xs text-[#646B82] tabular-nums">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="space-y-1 min-w-0">
+                          <p className="text-[0.7rem] text-[#646B82] font-medium tabular-nums">
                             {formatWeekdayAndDatePt(task.schedule.date)} às{" "}
                             {task.schedule.startTime} ·{" "}
                             {task.schedule.durationMinutes} min
                           </p>
-                          <h3 className="font-display text-base sm:text-lg font-medium text-[#2D3142] leading-snug">
+                          <h3 className="font-display text-sm sm:text-[1.1rem] font-medium text-[#2D3142] leading-snug">
                             {task.title}
                           </h3>
-                          <p className="text-xs sm:text-sm text-[#646B82] leading-relaxed max-w-[65ch]">
+                          <p className="text-xs text-[#646B82] leading-[1.55]">
                             {task.whyItMatters}
                           </p>
                         </div>
 
                         {isCurrent && (
                           <Link
-                            href="/home"
-                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#5B8DEF] hover:bg-[#4b7de0] text-white text-xs font-semibold px-4 py-2 shrink-0 transition-colors cursor-pointer"
+                            href={`/planos/${planId}/tasks/${task.taskId}`}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#5B8DEF] hover:bg-[#4b7de0] text-white text-xs font-semibold px-3.5 py-2 shrink-0 transition-colors cursor-pointer"
                           >
                             Ir para sessão
                           </Link>

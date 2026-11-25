@@ -12,6 +12,7 @@ import {
   normalizeTimeZone,
   resolveInitialTaskStatus,
 } from "@/lib/task-schedule";
+import { schedulePlanTasksOnAccept } from "@/lib/trigger-jobs";
 import { hasPlanStructure } from "./generating-tasks";
 
 export function buildPlanTaskRows(
@@ -127,6 +128,8 @@ export async function handleAcceptPlanStage(input: {
       },
     }),
   ]);
+
+  await schedulePlanTasksOnAccept(createdTasks);
 
   return {
     ok: true as const,

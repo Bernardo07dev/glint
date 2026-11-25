@@ -16,6 +16,7 @@ import {
   computeUnlockAt,
   normalizeTimeZone,
 } from "@/lib/task-schedule";
+import { reschedulePlanTaskRuns } from "@/lib/trigger-jobs";
 
 export interface RescheduleJobDelta {
   taskId: string;
@@ -221,6 +222,10 @@ export async function reschedulePlanTasks(input: {
             ]
           : []),
       ]);
+    }
+
+    if (jobsToReschedule.length > 0) {
+      await reschedulePlanTaskRuns(jobsToReschedule);
     }
 
     return {
