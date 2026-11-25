@@ -338,12 +338,12 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
         type="button"
         aria-expanded={isCriteriaPopupOpen}
         onClick={() => setIsCriteriaPopupOpen((prev) => !prev)}
-        className={`${visibilityClassName} items-center gap-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F5FCF7] border border-[#95E1B0] shadow-[0_2px_0_0_#95E1B0] hover:shadow-[0_3px_0_0_#82D9A1] hover:-translate-y-[1px] active:translate-y-[1px] active:shadow-none px-3 sm:py-1.5 py-2 font-sans text-xs font-semibold text-[#2D3142] transition-all cursor-pointer shrink-0`}
+        className={`${visibilityClassName} items-center gap-1.5 rounded-full bg-white hover:bg-[#F5FCF7] border border-[#95E1B0]/70 hover:border-[#95E1B0] px-3 py-1.5 font-sans text-xs font-medium text-[#2D3142] transition-colors cursor-pointer shrink-0`}
       >
-        <span className="size-4 rounded-full bg-[#95E1B0]/45 flex items-center justify-center">
-          <Check className="size-3 text-green-600" />
+        <span className="size-4 rounded-full bg-[#95E1B0]/40 flex items-center justify-center shrink-0">
+          <Check className="size-2.5 text-[#2B6E47]" />
         </span>
-        <span className="text-[#2D3142]/70">
+        <span className="text-[#2D3142]/80">
           {planStructure.objective.successCriteria.length} metas do plano
         </span>
         <ChevronDown
@@ -566,12 +566,12 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
               className="w-20 h-16 sm:w-20 sm:h-20 shrink-0 -ml-2 -mb-1 sm:ml-0 sm:mb-0"
             />
             <div className="space-y-1 max-w-[65ch]">
-              <h1 className="font-display text-2xl sm:text-3xl font-medium text-[#2D3142]">
+              <p className="font-sans text-xs sm:text-sm font-medium text-[#646B82]">
                 Seu plano está pronto
-              </h1>
-              <p className="font-sans text-sm leading-relaxed text-[#646B82]">
-                {planStructure.objective.clearGoal}
               </p>
+              <h1 className="font-display text-xl sm:text-2xl font-medium text-[#2D3142] leading-snug">
+                {planStructure.objective.clearGoal}
+              </h1>
             </div>
           </header>
 

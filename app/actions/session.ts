@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { runs } from "@trigger.dev/sdk/v3";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import {
@@ -331,6 +332,15 @@ export async function finishTaskSessionAction(input: {
         completedAt: now.toISOString(),
         difficultyFeedback: mappedFeedback,
       };
+      if (idx + 1 < structure.tasks.length) {
+        structure.tasks[idx + 1] = {
+          ...structure.tasks[idx + 1],
+          lockState: {
+            ...structure.tasks[idx + 1].lockState,
+            isLocked: false,
+          },
+        };
+      }
     }
     totalTasks = structure.tasks.length;
     completedTasks = structure.tasks.filter(
@@ -340,6 +350,10 @@ export async function finishTaskSessionAction(input: {
 
   const isPlanCompleted = totalTasks > 0 && completedTasks >= totalTasks;
 
+  if (planTask.triggerRunId) {
+    await runs.cancel(planTask.triggerRunId).catch(() => null);
+  }
+
   await prisma.$transaction([
     prisma.planTask.update({
       where: { id: planTask.id },
@@ -348,6 +362,7 @@ export async function finishTaskSessionAction(input: {
         completedAt: now,
         difficultyRating: input.difficultyRating,
         userNotes: input.userNotes?.trim() || null,
+        triggerRunId: null,
       },
     }),
     prisma.learningPlan.update({

@@ -251,7 +251,7 @@ export function SessionStep({
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-4">
       {/* Botões externos de Roteiro e Objetivo */}
-      <aside className="relative order-1 flex gap-2.5 lg:order-3 lg:sticky lg:top-6 lg:flex-col">
+      <aside className="relative order-1 flex gap-2.5 lg:order-3 lg:sticky lg:top-20 lg:flex-col">
         <button
           type="button"
           aria-label={`Roteiro deste passo, ${completedWalkthrough} de ${totalWalkthrough} itens feitos`}

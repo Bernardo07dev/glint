@@ -317,24 +317,25 @@ export function PlanosList({ items }: PlanosListProps) {
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-3xl bg-[#F3EFE6]/70 px-6 py-10 text-center space-y-4">
-          <MascotBee pose="curious" className="h-24 w-28 mx-auto" />
-          <div className="space-y-1.5">
-            <h2 className="font-display text-2xl font-medium text-[#2D3142]">
-              Nenhum plano ainda
-            </h2>
-            <p className="text-sm text-[#646B82] max-w-[46ch] mx-auto">
-              Comece escolhendo um tema e o Glint monta sua jornada semana a
-              semana.
-            </p>
+        <div className="rounded-2xl bg-white/80 border border-[#2D3142]/8 px-6 py-7 sm:px-8 sm:py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div className="flex items-center gap-4 min-w-0">
+            <MascotBee pose="curious" className="h-12 w-14 shrink-0" />
+            <div className="space-y-0.5 min-w-0">
+              <h2 className="font-display text-lg sm:text-xl font-medium text-[#2D3142]">
+                Nenhum plano ainda
+              </h2>
+              <p className="text-xs sm:text-[13px] text-[#646B82] max-w-[44ch]">
+                Escolha um tema e monte sua trilha encaixada na sua rotina.
+              </p>
+            </div>
           </div>
-          <Link
+          {/* <Link
             href="/primeiro-plano"
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-sm px-5 py-3 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#F6F2EB] hover:bg-[#e7e4dd] text-gray-700 font-semibold text-xs sm:text-[0.85rem] px-4 py-2.5 transition-colors cursor-pointer shrink-0"
           >
-            <Plus className="size-4" />
-            <span>Criar primeiro plano</span>
-          </Link>
+            <Plus className="size-3" />
+            <span>Criar plano</span>
+          </Link> */}
         </div>
       ) : (
         <div className="space-y-8">

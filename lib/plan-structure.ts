@@ -360,6 +360,10 @@ export function selectNextTask(
 
     const firstDate = structure.tasks[0]?.schedule?.date;
 
+    const firstPendingTaskId = structure.tasks.find(
+      (t) => getTaskStatus(t) !== "completed",
+    )?.taskId;
+
     for (const task of structure.tasks) {
       const status = getTaskStatus(task);
       const taskDate = task.schedule?.date ?? todayIso;
@@ -376,7 +380,7 @@ export function selectNextTask(
       if (!best || sortKey < bestSortKey) {
         bestSortKey = sortKey;
         const isTodayOrPast = taskDate <= todayIso;
-        const isUnlocked = isTaskUnlockedForDate(task, todayIso);
+        const isUnlocked = true;
         const isEnriched = isTaskEnriched(task);
 
         let currentWeek = 1;
@@ -455,6 +459,10 @@ export function buildWeekStrip(
     if (!structure) continue;
     const planTitle = getPlanDisplayTitle(plan, structure);
 
+    const firstPendingTaskId = structure.tasks.find(
+      (t) => getTaskStatus(t) !== "completed",
+    )?.taskId;
+
     for (const task of structure.tasks) {
       const dateIso = task.schedule?.date;
       if (!dateIso) continue;
@@ -478,7 +486,9 @@ export function buildWeekStrip(
         startTime: task.schedule?.startTime ?? "",
         durationMinutes: task.schedule?.durationMinutes ?? 30,
         status,
-        isLocked: !isTaskUnlockedForDate(task, todayIso),
+        isLocked:
+          task.taskId !== firstPendingTaskId &&
+          !isTaskUnlockedForDate(task, todayIso),
       });
       sessionsByDate.set(dateIso, list);
     }

@@ -87,46 +87,60 @@ export function WeekStrip({ weeks }: WeekStripProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-        {days.map((day) => {
-          const hasSessions = day.sessions.length > 0;
-          const allCompleted =
-            hasSessions && day.sessions.every((s) => s.status === "completed");
-          const isSelected = selectedDate === day.dateIso;
-
-          let dotClass = "bg-transparent";
-          if (hasSessions) {
-            if (allCompleted) dotClass = "bg-[#95E1B0]";
-            else if (day.isToday) dotClass = "bg-[#5B8DEF]";
-            else dotClass = "bg-[#2D3142]/25";
-          }
-
-          return (
-            <button
-              key={day.dateIso}
-              type="button"
-              onClick={() => setSelectedDate(isSelected ? null : day.dateIso)}
-              className={`flex flex-col items-center justify-center rounded-2xl py-2.5 sm:py-3 px-1 transition-colors cursor-pointer border ${
-                day.isToday
-                  ? "bg-[#E8F0FE] border-[#5B8DEF]/40 text-[#5B8DEF]"
-                  : isSelected
-                    ? "bg-[#F3EFE6] border-[#2D3142]/15 text-[#2D3142]"
-                    : "bg-white border-[#F3EFE6] text-[#2D3142] hover:bg-[#F3EFE6]/50"
-              }`}
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{ transform: `translateX(-${weekIndex * 100}%)` }}
+        >
+          {weeks.map((week, wIdx) => (
+            <div
+              key={`${week.rangeLabel}-${wIdx}`}
+              aria-hidden={wIdx !== weekIndex}
+              className="w-full shrink-0 grid grid-cols-7 gap-1.5 sm:gap-2"
             >
-              <span className="text-[11px] font-medium opacity-80">
-                {day.shortLabel}
-              </span>
-              <span className="text-sm sm:text-base font-semibold tabular-nums mt-0.5">
-                {day.dayNumber}
-              </span>
-              <span
-                className={`mt-1.5 size-2 rounded-full ${dotClass}`}
-                aria-hidden="true"
-              />
-            </button>
-          );
-        })}
+              {week.days.map((day) => {
+                const hasSessions = day.sessions.length > 0;
+                const allCompleted =
+                  hasSessions && day.sessions.every((s) => s.status === "completed");
+                const isSelected = selectedDate === day.dateIso;
+
+                let dotClass = "bg-transparent";
+                if (hasSessions) {
+                  if (allCompleted) dotClass = "bg-[#95E1B0]";
+                  else if (day.isToday) dotClass = "bg-[#5B8DEF]";
+                  else dotClass = "bg-[#2D3142]/25";
+                }
+
+                return (
+                  <button
+                    key={day.dateIso}
+                    type="button"
+                    tabIndex={wIdx === weekIndex ? 0 : -1}
+                    onClick={() => setSelectedDate(isSelected ? null : day.dateIso)}
+                    className={`flex flex-col items-center justify-center rounded-2xl py-2.5 sm:py-3 px-1 transition-colors cursor-pointer border ${
+                      day.isToday
+                        ? "bg-[#E8F0FE] border-[#5B8DEF]/40 text-[#5B8DEF]"
+                        : isSelected
+                          ? "bg-[#F3EFE6] border-[#2D3142]/15 text-[#2D3142]"
+                          : "bg-white border-[#F3EFE6] text-[#2D3142] hover:bg-[#F3EFE6]/50"
+                    }`}
+                  >
+                    <span className="text-[11px] font-medium opacity-80">
+                      {day.shortLabel}
+                    </span>
+                    <span className="text-sm sm:text-base font-semibold tabular-nums mt-0.5">
+                      {day.dayNumber}
+                    </span>
+                    <span
+                      className={`mt-1.5 size-2 rounded-full ${dotClass}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
       {selectedDay && selectedDay.sessions.length > 0 && (

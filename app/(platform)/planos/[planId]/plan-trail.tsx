@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  CircleCheck,
   Clock,
   Lock,
   Play,
@@ -40,10 +41,7 @@ export function PlanTrail({
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const currentTaskId = weeks
     .flatMap((w) => w.tasks)
-    .find(
-      (t) =>
-        getTaskStatus(t) !== "completed" && isTaskUnlockedForDate(t, todayIso),
-    )?.taskId;
+    .find((t) => getTaskStatus(t) !== "completed")?.taskId;
 
   return (
     <div className="max-w-[820px] mx-auto px-4 sm:px-6 pt-6 sm:pt-9 space-y-8">
@@ -72,14 +70,18 @@ export function PlanTrail({
                     setCriteriaOpen(false);
                   }}
                   aria-expanded={scheduleOpen}
-                  className={`inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 sm:px-3.5 text-[11px] sm:text-xs font-medium tabular-nums transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#646B82] ${
+                  className={`inline-flex h-8 border border-[#dad7cf]/50 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 sm:px-3.5 text-[11px] sm:text-xs font-medium tabular-nums transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#646B82] ${
                     scheduleOpen
                       ? "bg-[#E8F0FE] text-[#2D3142]"
                       : "bg-[#F3EFE6] text-[#2D3142] hover:bg-[#E8F0FE]"
                   }`}
                 >
                   <Clock className="size-3.5 text-[#646B82] shrink-0" aria-hidden="true" />
-                  <span>{routineContract.weeklyHours}h/semana</span>
+                  <span>
+                    {routineContract.weeklyHours < 1
+                      ? `${Math.round(routineContract.weeklyHours * 60)} min/semana`
+                      : `${routineContract.weeklyHours}h/semana`}
+                  </span>
                   <span className="hidden sm:inline text-[#646B82]/50" aria-hidden="true">
                     ·
                   </span>
@@ -105,13 +107,13 @@ export function PlanTrail({
                   }}
                   aria-expanded={criteriaOpen}
                   aria-controls="plan-success-criteria"
-                  className={`inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 sm:px-3.5 text-[11px] sm:text-xs font-medium tabular-nums transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#646B82] ${
+                  className={`inline-flex h-8 items-center gap-1.5 border border-[#dad7cf]/50 whitespace-nowrap rounded-full px-2.5 sm:px-3.5 text-[11px] sm:text-xs font-medium tabular-nums transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#646B82] ${
                     criteriaOpen
                       ? "bg-[#E8F0FE] text-[#2D3142]"
                       : "bg-[#F3EFE6] text-[#2D3142] hover:bg-[#E8F0FE]"
                   }`}
                 >
-                  <Check
+                  <CircleCheck
                     className="size-3.5 text-[#646B82] shrink-0"
                     aria-hidden="true"
                   />
@@ -135,7 +137,7 @@ export function PlanTrail({
             </div>
 
             {routineContract && scheduleOpen && (
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5 ">
                 {routineContract.slots.map((s, idx) => {
                   const dayLabel =
                     DAY_NAME_PT[s.dayOfWeek.toLowerCase()] ?? s.dayOfWeek;
@@ -192,7 +194,7 @@ export function PlanTrail({
               Semana {group.weekNumber}
             </h2>
 
-            <ol className="relative space-y-2.5 pl-7 before:content-[''] before:absolute before:left-[11px] before:top-3 before:bottom-3 before:w-[2px] before:bg-[#F3EFE6]">
+            <ol className="relative space-y-2.5 pl-8 before:content-[''] before:absolute before:left-[13px] before:top-4 before:bottom-4 before:w-[2px] before:bg-[#F3EFE6]">
               {group.tasks.map((task) => {
                 const status = getTaskStatus(task);
                 const isCompleted = status === "completed";
@@ -202,18 +204,18 @@ export function PlanTrail({
                   <li key={task.taskId} className="relative">
                     {/* Nó na linha vertical */}
                     <span
-                      className={`absolute -left-7 top-4 size-6 rounded-full flex items-center justify-center border-4 border-[#FFFDF8] ${
+                      className={`absolute -left-8 top-4 size-7 rounded-full flex items-center justify-center ring-4 ring-[#FFFDF8] ${
                         isCompleted
-                          ? "bg-[#95E1B0] text-[#2D3142]"
+                        ? "bg-[#95E1B0] text-[#1F5E38]"
                           : isCurrent
-                            ? "bg-[#5B8DEF] text-white"
+                            ? "bg-[#5B8DEF] text-white shadow-sm shadow-[#5B8DEF]/25"
                             : "bg-[#F3EFE6] text-[#646B82]"
                       }`}
                     >
                       {isCompleted ? (
-                        <Check className="size-3.5 " />
+                        <Check className="size-3.5" />
                       ) : isCurrent ? (
-                        <Play className="size-3" />
+                        <Play className="size-3 translate-x-[0.5px]" />
                       ) : (
                         <Lock className="size-3" />
                       )}
@@ -222,9 +224,9 @@ export function PlanTrail({
                     <div
                       className={`rounded-2xl p-5 sm:p-5 border ${
                         isCurrent
-                          ? "bg-[#E8F0FE]/50 border-[#5B8DEF]/35"
+                        ? "bg-[#E8F0FE]/50 border-2 border-[#5B8DEF]/35"
                           : isCompleted
-                            ? "bg-white border-[#95E1B0]/40"
+                          ? "bg-white border-2 border-[#95E1B0]/20"
                             : "bg-[#F3EFE6]/60 border-[#F3EFE6]"
                       }`}
                     >
