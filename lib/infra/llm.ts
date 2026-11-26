@@ -3,6 +3,7 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 export const MODEL_IDS = {
   architect: "google/gemini-4-hydrogen",
   fast: "openai/gpt-6.1-terra",
+  lowCost: "anthropic/claude-haiku-5.5",
   jev: "typesafe/jev-1.14",
 } as const;
 
@@ -15,6 +16,7 @@ export const openrouter = createOpenRouter({
 export const models = {
   architect: openrouter.chat(MODEL_IDS.architect),
   fast: openrouter.chat(MODEL_IDS.fast),
+  lowCost: openrouter.chat(MODEL_IDS.lowCost),
   jev: openrouter.evaluationModel(MODEL_IDS.jev),
 };
 
