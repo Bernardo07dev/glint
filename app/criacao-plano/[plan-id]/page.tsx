@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { ArrowRight } from "@gravity-ui/icons";
 import { AnimatedLogo } from "@/app/components/animated-logo";
 import { BeeLoader } from "@/app/components/bee-loader";
-import { decrypt } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { decrypt } from "@/lib/auth/auth";
+import { prisma } from "@/lib/infra/prisma";
 import { CriacaoPlanoClient } from "./criacao-plano-client";
 
 interface CriacaoPlanoPageProps {

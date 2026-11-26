@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "@gravity-ui/icons";
 import { AnimatedLogo } from "../components/animated-logo";
-import { decrypt } from "@/lib/auth";
+import { decrypt } from "@/lib/auth/auth";
 import { BeeLoader } from "../components/bee-loader";
 import { PrimeiroPlanoForm } from "./primeiro-plano-form";
 

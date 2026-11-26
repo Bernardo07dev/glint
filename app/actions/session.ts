@@ -3,16 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { runs } from "@trigger.dev/sdk/v3";
-import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/session";
+import { prisma } from "@/lib/infra/prisma";
+import { getSessionUser } from "@/lib/auth/session";
 import {
   getTaskStatus,
   parsePlanStructure,
   type DifficultyFeedback,
-} from "@/lib/plan-structure";
-import { enrichPlanTaskDirect } from "@/lib/enrich-plan-task";
-import { parseTaskContent, type TaskContent } from "@/lib/task-content";
-import { reschedulePlanTasks } from "@/lib/task-reschedule";
+} from "@/lib/plan/plan-structure";
+import { enrichPlanTaskDirect } from "@/lib/tasks/enrich-plan-task";
+import { parseTaskContent, type TaskContent } from "@/lib/tasks/task-content";
+import { reschedulePlanTasks } from "@/lib/schedule/task-reschedule";
 
 export async function toggleStepAction(input: {
   planId: string;

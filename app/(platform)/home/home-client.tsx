@@ -7,7 +7,7 @@ import type {
   ResolvedNextTask,
   WeekStripWeek,
   WeeklyRhythm,
-} from "@/lib/plan-structure";
+} from "@/lib/plan/plan-structure";
 import { NextTaskHero } from "./components/next-task-hero";
 import { WeekStrip } from "./components/week-strip";
 import { ContextPanel, MentorNote } from "./components/context-panel";

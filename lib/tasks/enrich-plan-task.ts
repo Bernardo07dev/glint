@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { parsePlanStructure } from "@/lib/plan-structure";
-import { prisma } from "@/lib/prisma";
+import { parsePlanStructure } from "@/lib/plan/plan-structure";
+import { prisma } from "@/lib/infra/prisma";
 import {
   runEnrichTaskPipeline,
   type StepAgentTaskContext,
 } from "@/lib/step-agents";
-import { TaskContentSchema, type TaskContent } from "@/lib/task-content";
+import { TaskContentSchema, type TaskContent } from "@/lib/tasks/task-content";
 
 export interface EnrichPlanTaskDirectResult {
   skipped: boolean;

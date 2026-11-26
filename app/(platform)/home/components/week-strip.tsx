@@ -9,7 +9,7 @@ import {
   Clock,
   Lock,
 } from "@gravity-ui/icons";
-import type { WeekStripDay, WeekStripWeek } from "@/lib/plan-structure";
+import type { WeekStripDay, WeekStripWeek } from "@/lib/plan/plan-structure";
 
 interface WeekStripProps {
   weeks: WeekStripWeek[];
@@ -117,13 +117,12 @@ export function WeekStrip({ weeks }: WeekStripProps) {
                     type="button"
                     tabIndex={wIdx === weekIndex ? 0 : -1}
                     onClick={() => setSelectedDate(isSelected ? null : day.dateIso)}
-                    className={`flex flex-col items-center justify-center rounded-2xl py-2.5 sm:py-3 px-1 transition-colors cursor-pointer border ${
-                      day.isToday
-                        ? "bg-[#E8F0FE] border-[#5B8DEF]/40 text-[#5B8DEF]"
-                        : isSelected
-                          ? "bg-[#F3EFE6] border-[#2D3142]/15 text-[#2D3142]"
-                          : "bg-white border-[#F3EFE6] text-[#2D3142] hover:bg-[#F3EFE6]/50"
-                    }`}
+                    className={`flex flex-col items-center justify-center rounded-2xl py-2.5 sm:py-3 px-1 transition-colors cursor-pointer border ${day.isToday
+                      ? "bg-[#E8F0FE] border-[#5B8DEF]/40 text-[#5B8DEF]"
+                      : isSelected
+                        ? "bg-[#F3EFE6] border-[#2D3142]/15 text-[#2D3142]"
+                        : "bg-white border-[#F3EFE6] text-[#2D3142] hover:bg-[#F3EFE6]/50"
+                      }`}
                   >
                     <span className="text-[11px] font-medium opacity-80">
                       {day.shortLabel}

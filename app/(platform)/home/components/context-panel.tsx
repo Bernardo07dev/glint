@@ -2,7 +2,7 @@
 
 import { ArrowChevronRight, Calendar } from "@gravity-ui/icons";
 import { MascotBee, type MascotBeePose } from "@/app/components/mascot-bee";
-import type { ResolvedNextTask, WeeklyRhythm } from "@/lib/plan-structure";
+import type { ResolvedNextTask, WeeklyRhythm } from "@/lib/plan/plan-structure";
 
 interface ContextPanelProps {
   rhythm: WeeklyRhythm;

@@ -1,6 +1,6 @@
-import { parsePlanStructure } from "@/lib/plan-structure";
-import { prisma } from "@/lib/prisma";
-import { parseTimeHHmm } from "@/lib/task-schedule";
+import { parsePlanStructure } from "@/lib/plan/plan-structure";
+import { prisma } from "@/lib/infra/prisma";
+import { parseTimeHHmm } from "@/lib/schedule/task-schedule";
 
 export interface OccupiedSlot {
   dayOfWeek: string;

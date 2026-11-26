@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { PlanApiRequestSchema } from "@/lib/agents/types";
-import { decrypt } from "@/lib/auth";
-import { updateLearnerContext } from "@/lib/learner-context";
-import { getOccupiedSlots } from "@/lib/occupied-slots";
-import { prisma } from "@/lib/prisma";
+import { decrypt } from "@/lib/auth/auth";
+import { updateLearnerContext } from "@/lib/plan/learner-context";
+import { getOccupiedSlots } from "@/lib/schedule/occupied-slots";
+import { prisma } from "@/lib/infra/prisma";
 import { handleAcceptPlanStage } from "./handlers/accept-plan";
 import {
   handleGeneratingTasksStage,

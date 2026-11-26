@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import type { QuestionPayload } from "@/app/components/ai/types";
-import { checkWithJev, models } from "@/lib/llm";
+import { checkWithJev, models } from "@/lib/infra/llm";
 import { BASE_SYSTEM_PROMPT } from "./prompts";
 import {
   RefinedGoalOutputSchema,

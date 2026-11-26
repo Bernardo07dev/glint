@@ -608,7 +608,7 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
               <p className="font-sans text-xs sm:text-sm font-medium text-[#646B82]">
                 Seu plano está pronto
               </p>
-              <h1 className="font-display text-xl sm:text-2xl font-medium text-[#2D3142] leading-snug">
+              <h1 className="font-display text-lg sm:text-xl font-medium text-[#2D3142] leading-snug">
                 {planStructure.objective.clearGoal}
               </h1>
             </div>

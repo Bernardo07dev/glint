@@ -1,8 +1,8 @@
 import type { Prisma } from "@prisma/client";
 import { runGeneratingTasksAgent } from "@/lib/agents/generating-tasks";
 import type { ExecutableMeta, PlanStructure } from "@/lib/agents/types";
-import type { OccupiedSlot } from "@/lib/occupied-slots";
-import { prisma } from "@/lib/prisma";
+import type { OccupiedSlot } from "@/lib/schedule/occupied-slots";
+import { prisma } from "@/lib/infra/prisma";
 
 export function hasPlanStructure(value: unknown): value is PlanStructure {
   return (

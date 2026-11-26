@@ -18,7 +18,7 @@ import {
   isTaskUnlockedForDate,
   type RoutineContract,
   type WeekGroup,
-} from "@/lib/plan-structure";
+} from "@/lib/plan/plan-structure";
 
 interface PlanTrailProps {
   planId: string;

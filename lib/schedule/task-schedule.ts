@@ -1,5 +1,5 @@
 import type { TaskStatus } from "@prisma/client";
-import { parseIsoDateParts } from "@/lib/plan-structure";
+import { parseIsoDateParts } from "@/lib/plan/plan-structure";
 
 export const DEFAULT_TIMEZONE = "America/Sao_Paulo";
 export const DEFAULT_TRIGGER_LEAD_MINUTES = 10;

@@ -15,7 +15,7 @@ import { MascotBee } from "@/app/components/mascot-bee";
 import {
   formatWeekdayAndDatePt,
   type ResolvedNextTask,
-} from "@/lib/plan-structure";
+} from "@/lib/plan/plan-structure";
 
 interface NextTaskHeroProps {
   nextTask: ResolvedNextTask | null;
@@ -52,7 +52,7 @@ export function NextTaskHero({
           </div>
         </div>
         <Link
-          href="/primeiro-plano"
+          href="/planos/novo"
           className="inline-flex items-center justify-center rounded-xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-xs sm:text-sm px-4 py-2.5 transition-colors cursor-pointer shrink-0"
         >
           Criar meu plano

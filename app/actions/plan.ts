@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { decrypt } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/session";
+import { decrypt } from "@/lib/auth/auth";
+import { rebuildLearnerContext } from "@/lib/plan/learner-context";
+import { prisma } from "@/lib/infra/prisma";
+import { getSessionUser } from "@/lib/auth/session";
 
 export type CreatePlanState = {
   success?: boolean;
@@ -95,6 +96,12 @@ export async function deletePlanAction(
 
     if (deleted.count === 0) {
       return { success: false, error: "Plano não encontrado" };
+    }
+
+    try {
+      await rebuildLearnerContext(user.id);
+    } catch (contextError) {
+      console.error("Erro ao atualizar knowledgeGraph após exclusão:", contextError);
     }
 
     revalidatePath("/planos");

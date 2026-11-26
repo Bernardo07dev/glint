@@ -11,4 +11,4 @@ export type {
   SessionStepData,
   TaskContent,
   ResolvedStep,
-} from "@/lib/task-content";
+} from "@/lib/tasks/task-content";

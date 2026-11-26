@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { decrypt } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { decrypt } from "@/lib/auth/auth";
+import { prisma } from "@/lib/infra/prisma";
 
 export interface SessionUser {
   id: string;

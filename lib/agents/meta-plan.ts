@@ -1,5 +1,5 @@
 import { generateText, Output } from "ai";
-import { models } from "@/lib/llm";
+import { models } from "@/lib/infra/llm";
 import { BASE_SYSTEM_PROMPT } from "./prompts";
 import { MetaPlanOutputSchema, type ExecutableMeta } from "./types";
 

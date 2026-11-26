@@ -8,7 +8,7 @@ import {
   type TaskContent,
   type ToolId,
   type VideoToolData,
-} from "@/lib/task-content";
+} from "@/lib/tasks/task-content";
 
 export const StepBlueprintItemSchema = z.object({
   stepId: z.string().min(1),

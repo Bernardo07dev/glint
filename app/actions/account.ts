@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
-import { encrypt } from "@/lib/auth";
-import { getSessionUser } from "@/lib/session";
+import { prisma } from "@/lib/infra/prisma";
+import { encrypt } from "@/lib/auth/auth";
+import { getSessionUser } from "@/lib/auth/session";
 
 export interface UpdateProfileState {
   success?: boolean;

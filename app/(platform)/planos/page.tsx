@@ -1,12 +1,12 @@
 import { Suspense } from "react";
-import { prisma } from "@/lib/prisma";
-import { requireSessionUser } from "@/lib/session";
+import { prisma } from "@/lib/infra/prisma";
+import { requireSessionUser } from "@/lib/auth/session";
 import {
   formatWeekdayAndDatePt,
   getPlanDisplayTitle,
   getTaskStatus,
   parsePlanStructure,
-} from "@/lib/plan-structure";
+} from "@/lib/plan/plan-structure";
 import { BeeLoader } from "@/app/components/bee-loader";
 import { PlanosList, type PlanListItem } from "./planos-list";
 

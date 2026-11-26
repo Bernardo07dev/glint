@@ -308,7 +308,7 @@ export function PlanosList({ items }: PlanosListProps) {
           Planos
         </h1>
         <Link
-          href="/primeiro-plano"
+          href="/planos/novo"
           className="inline-flex items-center gap-1.5 rounded-2xl bg-[#FF9B85] hover:bg-[#f28972] text-white font-semibold text-sm px-4 py-2.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
           <Plus className="size-4" />
@@ -330,7 +330,7 @@ export function PlanosList({ items }: PlanosListProps) {
             </div>
           </div>
           {/* <Link
-            href="/primeiro-plano"
+            href="/planos/novo"
             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#F6F2EB] hover:bg-[#e7e4dd] text-gray-700 font-semibold text-xs sm:text-[0.85rem] px-4 py-2.5 transition-colors cursor-pointer shrink-0"
           >
             <Plus className="size-3" />

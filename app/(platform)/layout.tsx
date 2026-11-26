@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import { requireSessionUser } from "@/lib/session";
+import { requireSessionUser } from "@/lib/auth/session";
 import { BeeLoader } from "@/app/components/bee-loader";
 import { PlatformShell } from "./platform-shell";
 

@@ -1,5 +1,5 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
-import { enrichPlanTaskDirect } from "@/lib/enrich-plan-task";
+import { enrichPlanTaskDirect } from "@/lib/tasks/enrich-plan-task";
 
 export interface EnrichPlanTaskPayload {
   planTaskId: string;

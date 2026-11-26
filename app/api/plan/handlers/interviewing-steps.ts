@@ -12,8 +12,8 @@ import {
   serializeQuestionMessage,
   type ExecutableMeta,
 } from "@/lib/agents/types";
-import type { OccupiedSlot } from "@/lib/occupied-slots";
-import { prisma } from "@/lib/prisma";
+import type { OccupiedSlot } from "@/lib/schedule/occupied-slots";
+import { prisma } from "@/lib/infra/prisma";
 
 type PlanWithMessages = LearningPlan & { messages: PlanMessage[] };
 

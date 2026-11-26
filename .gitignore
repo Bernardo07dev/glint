@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Devin local overrides (contem credenciais pessoais)
 .devin/*.local.json
+
+# Motionmaxxing film demo
+film/

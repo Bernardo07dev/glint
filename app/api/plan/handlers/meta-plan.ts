@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { runMetaPlanAgent } from "@/lib/agents/meta-plan";
 import type { ExecutableMeta } from "@/lib/agents/types";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/infra/prisma";
 
 export function hasExecutableSteps(meta: unknown): meta is ExecutableMeta {
   return (

@@ -19,7 +19,7 @@ import { BeeLoader } from "@/app/components/bee-loader";
 import { MascotBee } from "@/app/components/mascot-bee";
 import { SessionStep } from "@/app/(platform)/planos/[planId]/tasks/components/tools/session-step";
 import { StepStage } from "@/app/(platform)/planos/[planId]/tasks/components/tools/step-stage";
-import { resolveSteps, type TaskContent } from "@/lib/task-content";
+import { resolveSteps, type TaskContent } from "@/lib/tasks/task-content";
 
 interface TaskSessionClientProps {
   planId: string;

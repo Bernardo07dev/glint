@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import type { QuestionPayload } from "@/app/components/ai/types";
-import { checkWithJev, models } from "@/lib/llm";
+import { checkWithJev, models } from "@/lib/infra/llm";
 import { BASE_SYSTEM_PROMPT } from "./prompts";
 import {
   InterviewQuestionOutputSchema,
@@ -74,6 +74,15 @@ async function evaluateUpdatedSteps(input: {
 
       const extractedValue = updatesMap.get(step.id);
       if (!extractedValue) return step;
+
+      if (step.id === "routine_and_slots") {
+        return {
+          ...step,
+          value: extractedValue,
+          jevConfidence: 1,
+          status: "completed" as const,
+        };
+      }
 
       const jev = await checkWithJev({
         state: {

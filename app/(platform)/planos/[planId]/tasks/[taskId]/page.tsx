@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { BeeLoader } from "@/app/components/bee-loader";
-import { prisma } from "@/lib/prisma";
-import { requireSessionUser } from "@/lib/session";
-import { parseTaskContent } from "@/lib/task-content";
+import { prisma } from "@/lib/infra/prisma";
+import { requireSessionUser } from "@/lib/auth/session";
+import { parseTaskContent } from "@/lib/tasks/task-content";
 import { TaskSessionClient } from "./task-session-client";
 
 async function TaskSessionContent({

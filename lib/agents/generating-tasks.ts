@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
-import { models } from "@/lib/llm";
-import type { OccupiedSlot } from "@/lib/occupied-slots";
+import { models } from "@/lib/infra/llm";
+import type { OccupiedSlot } from "@/lib/schedule/occupied-slots";
 import { BASE_SYSTEM_PROMPT } from "./prompts";
 import {
   GeneratingTasksOutputSchema,

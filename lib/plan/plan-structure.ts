@@ -1,4 +1,4 @@
-import type { TaskContent } from "@/lib/task-content";
+import type { TaskContent } from "@/lib/tasks/task-content";
 
 export type TaskStatus = "pending" | "in_progress" | "completed";
 export type DifficultyFeedback = "easy" | "just_right" | "hard";

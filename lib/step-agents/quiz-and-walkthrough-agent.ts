@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { BASE_SYSTEM_PROMPT } from "@/lib/agents/prompts";
-import { checkWithJev, models } from "@/lib/llm";
+import { checkWithJev, models } from "@/lib/infra/llm";
 import {
   RecallQuizSchema,
   SessionStepSchema,
@@ -11,7 +11,7 @@ import {
   type SessionStepData,
   type TaskContent,
   type VideoToolData,
-} from "@/lib/task-content";
+} from "@/lib/tasks/task-content";
 import {
   formatPreviousFeedbackSummary,
   type StepAgentTaskContext,

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { Calendar, Clock } from "@gravity-ui/icons";
 import { AnimatedLogo } from "../components/animated-logo";
 import { MascotBee } from "../components/mascot-bee";
-import { decrypt } from "@/lib/auth";
+import { decrypt } from "@/lib/auth/auth";
 import { loginAction } from "../actions/auth";
 import { LoginForm } from "./login-form";
 

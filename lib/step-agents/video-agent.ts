@@ -1,8 +1,8 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { BASE_SYSTEM_PROMPT } from "@/lib/agents/prompts";
-import { checkWithJev, models } from "@/lib/llm";
-import { VideoToolSchema, type VideoToolData } from "@/lib/task-content";
+import { checkWithJev, models } from "@/lib/infra/llm";
+import { VideoToolSchema, type VideoToolData } from "@/lib/tasks/task-content";
 import {
   formatLearnerProfileSummary,
   type StepAgentTaskContext,

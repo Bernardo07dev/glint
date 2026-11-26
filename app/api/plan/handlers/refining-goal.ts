@@ -7,7 +7,7 @@ import {
   parseStoredQuestion,
   serializeQuestionMessage,
 } from "@/lib/agents/types";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/infra/prisma";
 
 type PlanWithMessages = LearningPlan & { messages: PlanMessage[] };
 

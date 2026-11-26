@@ -23,6 +23,7 @@ model User {
   billingCustomerId   String?
   timezone            String         @default("America/Sao_Paulo")
   knowledgeGraph      String?
+  planCreationPrompts Json?
   onboardingCompleted Boolean        @default(false)
   lastActiveAt        DateTime?
   learningPlans       LearningPlan[]

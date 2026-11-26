@@ -3,8 +3,8 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { encrypt } from "@/lib/auth";
+import { prisma } from "@/lib/infra/prisma";
+import { encrypt } from "@/lib/auth/auth";
 
 export async function checkEmailExistsAction(
   email: string,

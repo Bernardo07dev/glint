@@ -12,7 +12,7 @@ import {
   updateProfileAction,
   type UpdateProfileState,
 } from "@/app/actions/account";
-import { DAY_NAME_PT, type RoutineSlot } from "@/lib/plan-structure";
+import { DAY_NAME_PT, type RoutineSlot } from "@/lib/plan/plan-structure";
 
 export interface PlanRoutineSummary {
   planId: string;

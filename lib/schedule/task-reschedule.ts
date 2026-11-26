@@ -9,14 +9,14 @@ import {
   rescheduleRemainingTasks,
   type PlanStructure,
   type RoutineContract,
-} from "@/lib/plan-structure";
-import { prisma } from "@/lib/prisma";
+} from "@/lib/plan/plan-structure";
+import { prisma } from "@/lib/infra/prisma";
 import {
   computeTriggerAt,
   computeUnlockAt,
   normalizeTimeZone,
-} from "@/lib/task-schedule";
-import { reschedulePlanTaskRuns } from "@/lib/trigger-jobs";
+} from "@/lib/schedule/task-schedule";
+import { reschedulePlanTaskRuns } from "@/lib/infra/trigger-jobs";
 
 export interface RescheduleJobDelta {
   taskId: string;

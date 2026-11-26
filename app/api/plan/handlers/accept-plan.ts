@@ -3,16 +3,16 @@ import type { PlanStructure } from "@/lib/agents/types";
 import {
   findScheduleConflicts,
   getOccupiedSlots,
-} from "@/lib/occupied-slots";
-import { getTodayIsoInTimezone } from "@/lib/plan-structure";
-import { prisma } from "@/lib/prisma";
+} from "@/lib/schedule/occupied-slots";
+import { getTodayIsoInTimezone } from "@/lib/plan/plan-structure";
+import { prisma } from "@/lib/infra/prisma";
 import {
   computeTriggerAt,
   computeUnlockAt,
   normalizeTimeZone,
   resolveInitialTaskStatus,
-} from "@/lib/task-schedule";
-import { schedulePlanTasksOnAccept } from "@/lib/trigger-jobs";
+} from "@/lib/schedule/task-schedule";
+import { schedulePlanTasksOnAccept } from "@/lib/infra/trigger-jobs";
 import { hasPlanStructure } from "./generating-tasks";
 
 export function buildPlanTaskRows(

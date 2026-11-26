@@ -1,6 +1,6 @@
 import { runs, tasks } from "@trigger.dev/sdk/v3";
-import { prisma } from "@/lib/prisma";
-import type { RescheduleJobDelta } from "@/lib/task-reschedule";
+import { prisma } from "@/lib/infra/prisma";
+import type { RescheduleJobDelta } from "@/lib/schedule/task-reschedule";
 import type { enrichPlanTask } from "@/trigger/enrich-plan-task";
 
 export interface ScheduledTaskTriggerResult {

@@ -1,12 +1,12 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { BASE_SYSTEM_PROMPT } from "@/lib/agents/prompts";
-import { models } from "@/lib/llm";
+import { models } from "@/lib/infra/llm";
 import {
   ConceptExplainerSchema,
   type ConceptExplainerData,
   type ConceptExplainerSource,
-} from "@/lib/task-content";
+} from "@/lib/tasks/task-content";
 import {
   formatLearnerProfileSummary,
   formatPreviousFeedbackSummary,

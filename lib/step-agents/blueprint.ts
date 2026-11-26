@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { BASE_SYSTEM_PROMPT } from "@/lib/agents/prompts";
-import { models } from "@/lib/llm";
+import { models } from "@/lib/infra/llm";
 import {
   formatLearnerProfileSummary,
   formatPreviousFeedbackSummary,
