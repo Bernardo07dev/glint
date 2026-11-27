@@ -73,7 +73,7 @@ export function MermaidBlock({ chart }: { chart: string }) {
   }
 
   return (
-    <figure className="my-4 overflow-hidden rounded-2xl border border-[#5B8DEF]/20 bg-white">
+    <figure className="my-4 w-full overflow-hidden rounded-2xl border border-[#5B8DEF]/20 bg-white">
       <div className="border-b border-[#2D3142]/6 bg-[#E8F0FE]/35 px-4 py-2">
         <span className="text-[11px] font-medium text-[#3E6FD6]">
           Diagrama visual
@@ -81,7 +81,7 @@ export function MermaidBlock({ chart }: { chart: string }) {
       </div>
       <div
         ref={ref}
-        className="mermaid-diagram flex min-h-24 items-center justify-center overflow-x-auto px-5 py-6 [&_svg]:max-w-full"
+        className="mermaid-diagram flex min-h-24 w-full items-center justify-center overflow-x-auto px-5 py-6 [&_svg]:w-full [&_svg]:h-auto [&_svg]:max-w-full"
       />
     </figure>
   );

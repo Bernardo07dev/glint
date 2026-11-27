@@ -7,7 +7,7 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { CircleCheck, Pause, Play } from "@gravity-ui/icons";
+import { ChevronDown, CircleCheck, Pause, Play } from "@gravity-ui/icons";
 import type { VideoToolData } from "./types";
 
 declare global {
@@ -86,6 +86,7 @@ export function VideoToolPlayer({
   const [current, setCurrent] = useState(clipStart);
   const [playing, setPlaying] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
 
   const seekTo = useCallback(
     (seconds: number, autoPlay = false) => {
@@ -198,113 +199,124 @@ export function VideoToolPlayer({
   }
 
   return (
-    <section className="space-y-4">
-      <div className="overflow-hidden rounded-2xl border border-[#2D3142]/8 bg-[#1F2330]">
+    <section className="space-y-5">
+      {/* Player principal */}
+      <div className="overflow-hidden rounded-2xl border border-[#2D3142]/10 bg-[#1F2330] shadow-xs">
         <div className="aspect-video w-full" ref={containerRef} />
       </div>
 
-      {/* Controle leve do trecho */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={togglePlayPause}
-          aria-label={playing ? "Pausar trecho" : "Reproduzir trecho"}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F3EFE6] text-[#2D3142] transition-colors hover:bg-[#E8F0FE] hover:text-[#3E6FD6] cursor-pointer"
-        >
-          {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-        </button>
-
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div
-            ref={timelineRef}
-            role="slider"
-            tabIndex={0}
-            aria-label="Linha do tempo do trecho selecionado"
-            aria-valuemin={0}
-            aria-valuemax={clipDuration}
-            aria-valuenow={Math.round(current - clipStart)}
-            onClick={onTimelineClick}
-            className="relative h-1.5 cursor-pointer rounded-full bg-[#F3EFE6]"
-          >
-            <div
-              className="absolute inset-y-0 left-0 right-0 origin-left rounded-full bg-[#5B8DEF] transition-transform duration-200 ease-out"
-              style={{ transform: `scaleX(${progress})` }}
-            />
-            {sortedMoments.map((moment) => {
-              const pos = Math.min(
-                1,
-                Math.max(0, (moment.timestampSeconds - clipStart) / clipDuration),
-              );
-              return (
-                <span
-                  key={moment.timestampSeconds}
-                  title={`${formatTime(moment.timestampSeconds)} · ${moment.label}`}
-                  className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-[#FF9B85]"
-                  style={{ left: `${pos * 100}%` }}
-                />
-              );
-            })}
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] tabular-nums text-[#646B82]">
-            <span>
-              {formatTime(current - clipStart)} / {formatTime(clipDuration)}
-              {playing && <span className="text-[#3E6FD6]"> · assistindo</span>}
-            </span>
-            <span>
-              Trecho {formatTime(clipStart)}–{formatTime(clipEnd)}
+      {/* Cabeçalho do vídeo + trecho */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h3 className="font-display text-base sm:text-lg font-medium leading-snug text-[#2D3142]">
+            {video.title}
+          </h3>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[#646B82]">
+            {video.channel && <span>{video.channel}</span>}
+            {video.channel && <span aria-hidden="true">·</span>}
+            <span className="tabular-nums">
+              Trecho {formatTime(clipStart)}–{formatTime(clipEnd)} ({formatTime(clipDuration)})
             </span>
           </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {video.transcriptSummary && (
+            <button
+              type="button"
+              onClick={() => setShowDescription((prev) => !prev)}
+              aria-expanded={showDescription}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+                showDescription
+                  ? "bg-[#E8F0FE] text-[#3E6FD6]"
+                  : "bg-[#F3EFE6] text-[#646B82] hover:bg-[#EAE4D7] hover:text-[#2D3142]"
+              }`}
+            >
+              <span>Descrição</span>
+              <ChevronDown
+                className={`size-3.5 transition-transform duration-200 ${
+                  showDescription ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          )}
+
+          {finished ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#95E1B0]/30 px-3 py-1 text-xs font-semibold text-[#1F5134]">
+              <CircleCheck className="size-3.5" />
+              <span>Trecho assistido</span>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={togglePlayPause}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#F3EFE6] px-3 py-1.5 text-xs font-semibold text-[#2D3142] transition-colors hover:bg-[#E8F0FE] hover:text-[#3E6FD6] cursor-pointer"
+            >
+              {playing ? (
+                <>
+                  <Pause className="size-3.5" />
+                  <span>Pausar</span>
+                </>
+              ) : (
+                <>
+                  <Play className="size-3.5" />
+                  <span>Assistir trecho</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Momentos-chave em pílulas leves */}
-      {sortedMoments.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {sortedMoments.map((moment, idx) => {
-            const isActive = idx === activeMomentIdx;
-            return (
-              <button
-                key={`${moment.timestampSeconds}-${moment.label}`}
-                type="button"
-                onClick={() => seekTo(moment.timestampSeconds, true)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                  isActive
-                    ? "bg-[#E8F0FE] text-[#2D3142]"
-                    : "bg-[#F3EFE6]/80 text-[#2D3142]/85 hover:bg-[#E8F0FE]"
-                }`}
-              >
-                <span className="tabular-nums font-semibold text-[#3E6FD6]">
-                  {formatTime(moment.timestampSeconds)}
-                </span>
-                <span>{moment.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Descrição expandível */}
+      {video.transcriptSummary && showDescription && (
+        <p className="rounded-2xl bg-[#FFFDF8] border border-[#2D3142]/8 px-4 py-3 text-sm leading-[1.65] text-[#2D3142]/85">
+          {video.transcriptSummary}
+        </p>
       )}
 
-      {/* Resumo e créditos sem caixa extra */}
-      <div className="flex items-start justify-between gap-4 pt-1">
-        <div className="min-w-0 space-y-1">
-          {video.transcriptSummary && (
-            <p className="max-w-[68ch] text-[13px] leading-[1.6] text-[#2D3142]/85">
-              {video.transcriptSummary}
-            </p>
-          )}
-          <p className="text-xs text-[#646B82]">
-            {video.title}
-            {video.channel && <span> · {video.channel}</span>}
+      {/* Capítulos / Momentos-chave em lista limpa */}
+      {sortedMoments.length > 0 && (
+        <div className="space-y-2 pt-1">
+          <p className="text-xs font-semibold text-[#646B82]">
+            Momentos-chave
           </p>
+          <ul className="divide-y divide-[#2D3142]/6 rounded-2xl border border-[#2D3142]/8 bg-[#FFFDF8]">
+            {sortedMoments.map((moment, idx) => {
+              const isActive = idx === activeMomentIdx;
+              return (
+                <li key={`${moment.timestampSeconds}-${moment.label}`}>
+                  <button
+                    type="button"
+                    onClick={() => seekTo(moment.timestampSeconds, true)}
+                    className={`group flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors cursor-pointer first:rounded-t-2xl last:rounded-b-2xl ${
+                      isActive
+                        ? "bg-[#E8F0FE]/60 text-[#2D3142]"
+                        : "text-[#2D3142]/85 hover:bg-[#F3EFE6]/60"
+                    }`}
+                  >
+                    <span
+                      className={`w-11 shrink-0 font-mono text-xs font-semibold tabular-nums ${
+                        isActive
+                          ? "text-[#3E6FD6]"
+                          : "text-[#5B8DEF] group-hover:text-[#3E6FD6]"
+                      }`}
+                    >
+                      {formatTime(moment.timestampSeconds)}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug">
+                      {moment.label}
+                    </span>
+                    {isActive && (
+                      <span className="size-1.5 shrink-0 rounded-full bg-[#5B8DEF]" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-
-        {finished && (
-          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-[#2B6E47]">
-            <CircleCheck className="size-4" />
-            <span>Trecho assistido</span>
-          </span>
-        )}
-      </div>
+      )}
     </section>
   );
 }

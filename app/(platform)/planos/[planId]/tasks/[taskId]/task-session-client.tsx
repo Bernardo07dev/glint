@@ -49,10 +49,8 @@ const DIFFICULTY_OPTIONS: Array<{
 
 export function TaskSessionClient({
   planId,
-  planTitle,
   taskKey,
   title,
-  whyItMatters,
   durationMinutes,
   initialEnrichmentStatus,
   initialTaskStatus,
@@ -148,6 +146,41 @@ export function TaskSessionClient({
 
   const resolved = steps[stepIndex];
 
+  /* Estado 3: Sessão Ativa — Workspace estilo LeetCode ocupando 100% da tela */
+  if (content && resolved && !finished) {
+    return (
+      <SessionStep
+        planId={planId}
+        taskKey={taskKey}
+        taskTitle={title}
+        step={resolved.step}
+        stepIndex={stepIndex}
+        totalSteps={steps.length}
+        quizState={quizState}
+        onSelectStep={setStepIndex}
+        onBack={
+          stepIndex > 0 ? () => setStepIndex(stepIndex - 1) : undefined
+        }
+        onNext={handleNextStep}
+        nextLabel={
+          stepIndex + 1 < steps.length
+            ? "Próximo passo"
+            : "Concluir sessão"
+        }
+        nextPrimary={
+          resolved.step.toolRef !== "active_recall_quiz" || quizDone
+        }
+      >
+        <StepStage
+          resolved={resolved}
+          onQuizComplete={() => setQuizDone(true)}
+          onQuizStateChange={setQuizState}
+        />
+      </SessionStep>
+    );
+  }
+
+  /* Estados 1 e 2: Preparação sob demanda ou Fechamento da Sessão */
   return (
     <main className="min-h-dvh bg-[#FFFDF8]">
       <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -174,7 +207,6 @@ export function TaskSessionClient({
           </Link>
         </header>
 
-        {/* Estado 1: Sessão ainda não enriquecida (PENDING / GENERATING / FAILED) */}
         {!content || !resolved ? (
           <section className="flex flex-col items-center gap-6 rounded-3xl border border-[#5B8DEF]/20 bg-white px-6 py-10 text-center sm:px-10">
             {isEnriching ? (
@@ -186,14 +218,11 @@ export function TaskSessionClient({
                   className="h-24 w-28"
                 />
                 <div className="max-w-[54ch] space-y-2">
-                  <h2 className="font-display text-ld sm:text-xl font-medium text-[#2D3142]">
+                  <h2 className="font-display text-lg sm:text-xl font-medium text-[#2D3142]">
                     {enrichmentStatus === "FAILED"
                       ? "Não conseguimos montar esta sessão ainda"
                       : "Sua sessão está pronta para ser montada"}
                   </h2>
-                  {/* <p className="text-sm leading-relaxed text-[#646B82]">
-                    {whyItMatters}
-                  </p> */}
                   <p className="text-xs font-medium tabular-nums text-[#646B82]">
                     Duração estimada: {durationMinutes} min · Geração sob demanda
                   </p>
@@ -225,8 +254,7 @@ export function TaskSessionClient({
               </>
             )}
           </section>
-        ) : finished ? (
-          /* Estado 2: Fechamento da Sessão + Feedback para próxima task JIT */
+        ) : (
           <section className="flex flex-col items-center gap-6 rounded-3xl border border-[#95E1B0]/50 bg-white px-6 py-10 text-center sm:px-10">
             <MascotBee pose="celebrating" className="h-24 w-28" />
 
@@ -304,36 +332,6 @@ export function TaskSessionClient({
               </button>
             </div>
           </section>
-        ) : (
-          /* Estado 3: Sessão Ativa (Stepper Tool -> Walkthrough) */
-          <SessionStep
-            key={resolved.step.id}
-            planId={planId}
-            taskKey={taskKey}
-            step={resolved.step}
-            stepIndex={stepIndex}
-            totalSteps={steps.length}
-            quizState={quizState}
-            onSelectStep={setStepIndex}
-            onBack={
-              stepIndex > 0 ? () => setStepIndex(stepIndex - 1) : undefined
-            }
-            onNext={handleNextStep}
-            nextLabel={
-              stepIndex + 1 < steps.length
-                ? "Próximo passo"
-                : "Concluir sessão"
-            }
-            nextPrimary={
-              resolved.step.toolRef !== "active_recall_quiz" || quizDone
-            }
-          >
-            <StepStage
-              resolved={resolved}
-              onQuizComplete={() => setQuizDone(true)}
-              onQuizStateChange={setQuizState}
-            />
-          </SessionStep>
         )}
       </div>
     </main>

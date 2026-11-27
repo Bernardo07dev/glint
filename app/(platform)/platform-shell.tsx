@@ -29,6 +29,17 @@ export function PlatformShell({ userName, children }: PlatformShellProps) {
   const isActive = (href: string) =>
     href === "/home" ? pathname === "/home" : pathname.startsWith(href);
 
+  // Modo Workspace Imersivo (estilo LeetCode) nas sessões de estudo (/planos/[planId]/tasks/[taskId])
+  const isTaskWorkspace = /^\/planos\/[^/]+\/tasks\/[^/]+/.test(pathname);
+
+  if (isTaskWorkspace) {
+    return (
+      <div className="min-h-dvh bg-[#FFFDF8] text-[#2D3142] flex flex-col">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FFFDF8] text-[#2D3142] flex flex-col">
       {/* Top Navbar (Desktop >= md) */}

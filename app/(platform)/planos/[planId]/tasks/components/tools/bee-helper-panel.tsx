@@ -120,7 +120,8 @@ interface BeeHelperPanelProps {
   quizState?: LiveQuizState;
   messages: BeeMessage[];
   onMessagesChange: Dispatch<SetStateAction<BeeMessage[]>>;
-  onClose: () => void;
+  onClose?: () => void;
+  embedded?: boolean;
 }
 
 export function BeeHelperPanel({
@@ -134,6 +135,7 @@ export function BeeHelperPanel({
   messages,
   onMessagesChange,
   onClose,
+  embedded = false,
 }: BeeHelperPanelProps) {
   const [input, setInput] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -149,7 +151,7 @@ export function BeeHelperPanel({
   useEffect(() => {
     const raf = requestAnimationFrame(() => setMounted(true));
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCloseRef.current();
+      if (e.key === "Escape") onCloseRef.current?.();
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -308,6 +310,237 @@ export function BeeHelperPanel({
   const prompts = QUICK_PROMPTS[toolRef];
   const hasInput = input.trim().length > 0 && !isStreaming;
 
+  const panelBody = (
+    <>
+      {/* Barra superior: Nova conversa + indicador circular de step à esquerda | Fechar (se flutuante) à direita */}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#2D3142]/8 bg-[#FFFDF8] px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              abortControllerRef.current?.abort();
+              setIsStreaming(false);
+              onMessagesChange([]);
+              setInput("");
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3EFE6] px-2.5 py-1 text-[0.7rem] font-medium text-[#646B82] transition-colors hover:bg-[#EAE4D7] hover:text-[#2D3142] cursor-pointer"
+          >
+            <Plus className="size-3 shrink-0" />
+            <span>Nova conversa</span>
+          </button>
+
+          {(() => {
+            const completed = checkedWalkthroughIndices.length;
+            const pct =
+              totalWalkthrough > 0
+                ? Math.round((completed / totalWalkthrough) * 100)
+                : 0;
+            const ringColor =
+              totalWalkthrough > 0 && completed === totalWalkthrough
+                ? "#95E1B0"
+                : "#5B8DEF";
+            return (
+              <div
+                className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium tabular-nums text-[#646B82]"
+                title={`${completed} de ${totalWalkthrough} itens do roteiro concluídos`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="relative flex size-4 items-center justify-center rounded-full"
+                  style={{
+                    background: `conic-gradient(${ringColor} ${pct}%, #E5E0D5 0)`,
+                  }}
+                >
+                  <span className="size-2.5 rounded-full bg-[#FFFDF8]" />
+                </span>
+                <span>
+                  Roteiro {completed}/{totalWalkthrough}
+                </span>
+              </div>
+            );
+          })()}
+        </div>
+
+        {onClose && !embedded && (
+          <button
+            type="button"
+            aria-label="Fechar painel da Bee"
+            onClick={onClose}
+            className="flex size-7 items-center justify-center rounded-lg text-[#646B82] transition-colors hover:bg-[#F3EFE6] hover:text-[#2D3142] cursor-pointer"
+          >
+            <Xmark className="size-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Corpo: Zero-state ou Histórico de Mensagens */}
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 py-3"
+      >
+        {messages.length === 0 ? (
+          <div className="my-auto flex flex-col gap-3.5 py-4">
+            <div className="space-y-1.5">
+              <MascotBee pose="curious" className="h-14 w-16" />
+              <h3 className="font-display text-lg font-medium leading-snug text-[#2D3142]">
+                Ficou alguma dúvida neste passo?
+              </h3>
+              <p className="text-[13px] leading-relaxed text-[#646B82]">
+                A Bee conhece seu plano, o conteúdo ao lado e em qual item do roteiro você está.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-start gap-1.5">
+              {prompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => void sendMessage(prompt)}
+                  className="rounded-xl border border-[#2D3142]/8 bg-[#FFFDF8] px-3 py-2 text-left text-xs font-medium text-[#2D3142]/85 transition-colors hover:border-[#5B8DEF]/35 hover:bg-[#E8F0FE] hover:text-[#3E6FD6] cursor-pointer"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-auto space-y-3 py-1">
+            {messages.map((msg) => {
+              if (msg.role === "user") {
+                return (
+                  <div key={msg.id} className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl bg-[#E8F0FE] px-3.5 py-2.5 text-[0.85rem] leading-[1.6] text-[#2D3142]">
+                      {msg.content}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={msg.id} className="min-w-0 space-y-1.5">
+                  <div className="min-w-0 py-2.5 text-[0.85rem] px-1 leading-[1.6] text-[#2D3142]">
+                    {msg.sources && msg.sources.length > 0 && (
+                      <SourcesDropdown sources={msg.sources} />
+                    )}
+
+                    {msg.isSearching && !msg.content && (
+                      <div className="flex items-center gap-2 text-[0.75rem]">
+                        <MascotBee pose="focus" className="h-10 w-11 shrink-0" />
+                        <span className="bee-shimmer-text">
+                          Pesquisando referências na web...
+                        </span>
+                      </div>
+                    )}
+
+                    {!msg.isSearching && !msg.content && (
+                      <div className="flex items-center gap-2 text-[0.75rem]">
+                        <MascotBee pose="focus" className="h-10 w-11 shrink-0" />
+                        <span className="bee-shimmer-text">
+                          {msg.thinkingPhrase ?? "Pensando..."}
+                        </span>
+                      </div>
+                    )}
+
+                    {msg.content && (
+                      <div className="space-y-2 text-[0.85rem] [&_p]:leading-[1.6] [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-4 [&_strong]:font-semibold [&_strong]:text-[#2D3142]">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            code({ className, children }) {
+                              if (className) {
+                                return (
+                                  <code className="block overflow-x-auto rounded-xl bg-[#F3EFE6]/70 p-2.5 font-mono text-xs leading-relaxed text-[#2D3142]">
+                                    {children}
+                                  </code>
+                                );
+                              }
+                              return (
+                                <code className="rounded bg-[#F3EFE6]/80 px-1 py-0.5 font-mono text-xs text-[#2D3142]">
+                                  {children}
+                                </code>
+                              );
+                            },
+                            a({ href, children }) {
+                              return (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-[#3E6FD6] underline decoration-[#3E6FD6]/30 underline-offset-2 hover:decoration-[#3E6FD6] cursor-pointer"
+                                >
+                                  {children}
+                                </a>
+                              );
+                            },
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Container de texto colado na base */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void sendMessage(input);
+        }}
+        className="shrink-0 px-4 pt-2 pb-3"
+      >
+        <div className="flex items-end gap-1.5 rounded-xl border border-[#2D3142]/12 bg-white py-1.5 pr-1.5 pl-3 transition-colors focus-within:border-[#5B8DEF]">
+          <textarea
+            rows={1}
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 112)}px`;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void sendMessage(input);
+              }
+            }}
+            disabled={isStreaming}
+            placeholder="Pergunte sobre este passo..."
+            className="min-w-0 max-h-28 flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-[0.8rem] leading-[1.45] text-[#2D3142] placeholder:text-[#646B82]/50 focus:outline-none disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={!hasInput}
+            aria-label="Enviar pergunta"
+            className={`mb-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors ${
+              hasInput
+                ? "bg-[#5B8DEF] text-white hover:bg-[#4A7DE0] cursor-pointer"
+                : "bg-transparent text-[#646B82]/35 cursor-default"
+            }`}
+          >
+            <ArrowUp className="size-3.5" />
+          </button>
+        </div>
+      </form>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <section
+        aria-label="Tirar dúvida com a Bee"
+        className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white"
+      >
+        {panelBody}
+      </section>
+    );
+  }
+
   return (
     <>
       {/* Backdrop mobile */}
@@ -319,226 +552,14 @@ export function BeeHelperPanel({
         }`}
       />
 
-      {/* Container saindo de baixo (bottom-0, rounded-t-3xl), cobrindo tudo até o menu superior */}
+      {/* Container saindo de baixo (bottom-0, rounded-t-3xl) */}
       <section
         aria-label="Tirar dúvida com a Bee"
         className={`fixed inset-x-0 bottom-0 z-50 flex h-[78dvh] pb-2 flex-col overflow-hidden rounded-t-3xl border border-b-0 border-[#2D3142]/10 bg-[#FFFDF8] shadow-[0_-12px_36px_-10px_rgba(45,49,66,0.16)] transition-transform duration-300 ease-out lg:top-[4.75rem] lg:right-3 lg:left-[calc(50%+23.25rem)] lg:h-auto ${
           mounted ? "translate-y-0" : "translate-y-full"
         }`}
       >
-        {/* Barra superior: Nova sessão + indicador circular de step à esquerda | Fechar à direita */}
-        <div className="flex shrink-0 items-center justify-between gap-2 px-5 pt-3.5">
-          <div className="flex items-center gap-2.5 pb-2">
-            <button
-              type="button"
-              onClick={() => {
-                abortControllerRef.current?.abort();
-                setIsStreaming(false);
-                onMessagesChange([]);
-                setInput("");
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3EFE6] px-2.5 py-1 text-[0.7rem] font-medium text-[#646B82] transition-colors hover:bg-[#EAE4D7] hover:text-[#2D3142] cursor-pointer"
-            >
-              <Plus className="size-3 shrink-0" />
-              <span>Nova sessão</span>
-            </button>
-
-            {(() => {
-              const completed = checkedWalkthroughIndices.length;
-              const pct =
-                totalWalkthrough > 0
-                  ? Math.round((completed / totalWalkthrough) * 100)
-                  : 0;
-              const ringColor =
-                totalWalkthrough > 0 && completed === totalWalkthrough
-                  ? "#95E1B0"
-                  : "#5B8DEF";
-              return (
-                <div
-                  className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium tabular-nums text-[#646B82]"
-                  title={`${completed} de ${totalWalkthrough} itens concluídos`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="relative flex size-4 items-center justify-center rounded-full"
-                    style={{
-                      background: `conic-gradient(${ringColor} ${pct}%, #E5E0D5 0)`,
-                    }}
-                  >
-                    <span className="size-2.5 rounded-full bg-[#FFFDF8]" />
-                  </span>
-                  <span>
-                    {completed}/{totalWalkthrough}
-                  </span>
-                </div>
-              );
-            })()}
-          </div>
-
-          <button
-            type="button"
-            aria-label="Fechar painel da Bee"
-            onClick={onClose}
-            className="flex size-7 items-center justify-center rounded-lg text-[#646B82] transition-colors hover:bg-[#F3EFE6] hover:text-[#2D3142] cursor-pointer"
-          >
-            <Xmark className="size-4" />
-          </button>
-        </div>
-
-        {/* Corpo: Zero-state ou Histórico de Mensagens */}
-        <div
-          ref={scrollContainerRef}
-          className="flex flex-1 flex-col overflow-y-auto px-5 py-2"
-        >
-          {messages.length === 0 ? (
-            <div className="mt-auto flex flex-col gap-3.5">
-              <div className="space-y-1.5">
-                <MascotBee pose="curious" className="h-14 w-16" />
-                <h3 className="font-display text-lg font-medium leading-snug text-[#2D3142]">
-                  Ficou alguma dúvida neste passo?
-                </h3>
-                <p className="text-[13px] leading-relaxed text-[#646B82]">
-                  Escolha um atalho ou pergunte abaixo
-                </p>
-              </div>
-
-              <div className="flex flex-col items-start gap-1.5">
-                {prompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => void sendMessage(prompt)}
-                    className="rounded-full bg-[#ffffff]/50 px-3 py-2 text-left text-xs text-[#2D3142]/75 transition-colors hover:bg-[#E8F0FE] hover:text-[#3E6FD6] cursor-pointer"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="mt-auto space-y-3 py-1">
-              {messages.map((msg) => {
-                if (msg.role === "user") {
-                  return (
-                    <div key={msg.id} className="flex justify-end">
-                      <div className="max-w-[85%] rounded-2xl bg-[#E8F0FE] px-3.5 py-2.5 text-[0.85rem] leading-[1.6] text-[#2D3142]">
-                        {msg.content}
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={msg.id} className="min-w-0 space-y-1.5">
-                    <div className="min-w-0 py-2.5 text-[0.85rem] px-2 leading-[1.6] text-[#2D3142]">
-                      {msg.sources && msg.sources.length > 0 && (
-                        <SourcesDropdown sources={msg.sources} />
-                      )}
-
-                      {msg.isSearching && !msg.content && (
-                        <div className="flex items-center gap-2 text-[0.75rem]">
-                          <MascotBee pose="focus" className="h-10 w-11 shrink-0" />
-                          <span className="bee-shimmer-text">
-                            Pesquisando referências na web...
-                          </span>
-                        </div>
-                      )}
-
-                      {!msg.isSearching && !msg.content && (
-                        <div className="flex items-center gap-2 text-[0.75rem]">
-                          <MascotBee pose="focus" className="h-10 w-11 shrink-0" />
-                          <span className="bee-shimmer-text">
-                            {msg.thinkingPhrase ?? "Pensando..."}
-                          </span>
-                        </div>
-                      )}
-
-                      {msg.content && (
-                        <div className="space-y-2 text-[0.85rem] [&_p]:leading-[1.6] [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-4 [&_strong]:font-semibold [&_strong]:text-[#2D3142]">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              code({ className, children }) {
-                                if (className) {
-                                  return (
-                                    <code className="block overflow-x-auto rounded-xl bg-[#F3EFE6]/70 p-2.5 font-mono text-xs leading-relaxed text-[#2D3142]">
-                                      {children}
-                                    </code>
-                                  );
-                                }
-                                return (
-                                  <code className="rounded bg-[#F3EFE6]/80 px-1 py-0.5 font-mono text-xs text-[#2D3142]">
-                                    {children}
-                                  </code>
-                                );
-                              },
-                              a({ href, children }) {
-                                return (
-                                  <a
-                                    href={href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-medium text-[#3E6FD6] underline decoration-[#3E6FD6]/30 underline-offset-2 hover:decoration-[#3E6FD6] cursor-pointer"
-                                  >
-                                    {children}
-                                  </a>
-                                );
-                              },
-                            }}
-                          >
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Container de texto leve colado na base */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void sendMessage(input);
-          }}
-          className="shrink-0 px-5 pt-2 pb-3"
-        >
-          <div className="flex items-end gap-1.5 rounded-xl border border-gray-200 bg-[#ffffff]/60 py-1.5 pr-1.5 pl-3 transition-colors focus-within:bg-[#ffffff]">
-            <textarea
-              rows={1}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                e.target.style.height = "auto";
-                e.target.style.height = `${Math.min(e.target.scrollHeight, 112)}px`;
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void sendMessage(input);
-                }
-              }}
-              disabled={isStreaming}
-              placeholder="Pergunte sobre este passo"
-              className="min-w-0 max-h-28 flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-[0.8rem] leading-[1.45] text-[#2D3142] placeholder:text-[#646B82]/50 focus:outline-none disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={!hasInput}
-              aria-label="Enviar pergunta"
-              className={`mb-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                hasInput
-                  ? "bg-[#5B8DEF] text-white hover:bg-[#4A7DE0] cursor-pointer"
-                  : "bg-transparent text-[#646B82]/35 cursor-default"
-              }`}
-            >
-              <ArrowUp className="size-3.5" />
-            </button>
-          </div>
-        </form>
+        {panelBody}
       </section>
     </>
   );

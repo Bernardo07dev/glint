@@ -96,7 +96,7 @@ function CodeBlock({
 
 export function RichMarkdown({ markdown }: { markdown: string }) {
   return (
-    <div className="rich-markdown max-w-[70ch] space-y-4 font-sans text-sm leading-[1.7] text-[#2D3142]/90">
+    <div className="rich-markdown w-full space-y-4 font-sans text-sm leading-[1.7] text-[#2D3142]/90">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[[rehypeHighlight, { detect: false }], rehypeKatex]}
@@ -140,25 +140,25 @@ export function RichMarkdown({ markdown }: { markdown: string }) {
             );
           },
           p({ children }) {
-            return <p className="leading-[1.7]">{children}</p>;
+            return <p className="max-w-[78ch] leading-[1.7]">{children}</p>;
           },
           ul({ children }) {
             return (
-              <ul className="list-disc space-y-2 pl-5 marker:text-[#5B8DEF]">
+              <ul className="max-w-[78ch] list-disc space-y-2 pl-5 marker:text-[#5B8DEF]">
                 {children}
               </ul>
             );
           },
           ol({ children }) {
             return (
-              <ol className="list-decimal space-y-2 pl-5 marker:font-semibold marker:text-[#5B8DEF]">
+              <ol className="max-w-[78ch] list-decimal space-y-2 pl-5 marker:font-semibold marker:text-[#5B8DEF]">
                 {children}
               </ol>
             );
           },
           blockquote({ children }) {
             return (
-              <blockquote className="my-4 rounded-r-2xl border-l-[3px] border-[#FF9B85] bg-[#FFF0E5]/75 px-4 py-3.5 text-[13px] leading-[1.65] text-[#2D3142]/90">
+              <blockquote className="my-4 max-w-[78ch] rounded-r-2xl border-l-[3px] border-[#FF9B85] bg-[#FFF0E5]/75 px-4 py-3.5 text-[13px] leading-[1.65] text-[#2D3142]/90">
                 {children}
               </blockquote>
             );
