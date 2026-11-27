@@ -233,7 +233,7 @@
     background-position: 100% 0;
   }
   100% {
-    background-position: -100% 0;
+    background-position: 0% 0;
   }
 }
 
@@ -242,16 +242,15 @@
   background-image: linear-gradient(
     90deg,
     #646B82 0%,
-    #646B82 35%,
-    #E6EAF4 50%,
-    #646B82 65%,
+    #646B82 38%,
+    #C5CCDE 50%,
+    #646B82 62%,
     #646B82 100%
   );
-  background-size: 250% 100%;
-  background-repeat: no-repeat;
+  background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  animation: beeShimmer 1.8s linear infinite;
+  animation: beeShimmer 2s linear infinite;
 }

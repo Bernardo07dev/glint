@@ -90,9 +90,12 @@ export function VideoToolPlayer({
   const seekTo = useCallback(
     (seconds: number, autoPlay = false) => {
       const clamped = Math.min(Math.max(seconds, clipStart), clipEnd);
-      playerRef.current?.seekTo(clamped, true);
-      if (autoPlay) {
-        playerRef.current?.playVideo();
+      const player = playerRef.current;
+      if (typeof player?.seekTo === "function") {
+        player.seekTo(clamped, true);
+      }
+      if (autoPlay && typeof player?.playVideo === "function") {
+        player.playVideo();
       }
       setCurrent(clamped);
     },
@@ -101,12 +104,12 @@ export function VideoToolPlayer({
 
   const togglePlayPause = useCallback(() => {
     const player = playerRef.current;
-    if (!player) return;
+    if (!player || typeof player.playVideo !== "function") return;
     if (playing) {
-      player.pauseVideo();
+      player.pauseVideo?.();
     } else {
       if (current >= clipEnd - 0.5) {
-        player.seekTo(clipStart, true);
+        player.seekTo?.(clipStart, true);
         setCurrent(clipStart);
       }
       player.playVideo();
@@ -131,12 +134,26 @@ export function VideoToolPlayer({
           playsinline: 1,
         },
         events: {
+          onReady: () => {
+            if (!mounted || interval) return;
+            interval = setInterval(() => {
+              const fn = playerRef.current?.getCurrentTime;
+              if (typeof fn === "function") {
+                const t = fn.call(playerRef.current);
+                if (typeof t === "number") setCurrent(t);
+              }
+            }, 400);
+          },
           onStateChange: (e) => {
             const state = e.data;
             if (state === 1) setPlaying(true);
             if (state === 2 || state === 0) setPlaying(false);
-            if (state === 0 || e.target.getCurrentTime() >= clipEnd) {
-              e.target.pauseVideo();
+            const currentTime =
+              typeof e.target.getCurrentTime === "function"
+                ? e.target.getCurrentTime()
+                : 0;
+            if (state === 0 || currentTime >= clipEnd) {
+              e.target.pauseVideo?.();
               if (!endedRef.current) {
                 endedRef.current = true;
                 setFinished(true);
@@ -146,17 +163,14 @@ export function VideoToolPlayer({
           },
         },
       });
-
-      interval = setInterval(() => {
-        const t = playerRef.current?.getCurrentTime();
-        if (typeof t === "number") setCurrent(t);
-      }, 400);
     });
 
     return () => {
       mounted = false;
       if (interval) clearInterval(interval);
-      playerRef.current?.destroy();
+      if (typeof playerRef.current?.destroy === "function") {
+        playerRef.current.destroy();
+      }
       playerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

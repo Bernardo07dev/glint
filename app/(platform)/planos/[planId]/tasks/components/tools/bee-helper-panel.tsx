@@ -322,7 +322,7 @@ export function BeeHelperPanel({
       {/* Container saindo de baixo (bottom-0, rounded-t-3xl), cobrindo tudo até o menu superior */}
       <section
         aria-label="Tirar dúvida com a Bee"
-        className={`fixed inset-x-0 bottom-0 z-50 flex h-[78dvh] pb-2 flex-col overflow-hidden rounded-t-3xl border border-b-0 border-[#2D3142]/10 bg-[linear-gradient(0deg,#FFF0E5_0%,#FFF7EC_24%,#FFFDF8_60%)] shadow-[0_-12px_36px_-10px_rgba(45,49,66,0.16)] transition-transform duration-300 ease-out lg:top-[4.75rem] lg:right-3 lg:left-[calc(50%+23.25rem)] lg:h-auto ${
+        className={`fixed inset-x-0 bottom-0 z-50 flex h-[78dvh] pb-2 flex-col overflow-hidden rounded-t-3xl border border-b-0 border-[#2D3142]/10 bg-[#FFFDF8] shadow-[0_-12px_36px_-10px_rgba(45,49,66,0.16)] transition-transform duration-300 ease-out lg:top-[4.75rem] lg:right-3 lg:left-[calc(50%+23.25rem)] lg:h-auto ${
           mounted ? "translate-y-0" : "translate-y-full"
         }`}
       >
@@ -437,7 +437,7 @@ export function BeeHelperPanel({
 
                       {msg.isSearching && !msg.content && (
                         <div className="flex items-center gap-2 text-[0.75rem]">
-                          <MascotBee pose="focus" className="h-8 w-9 shrink-0" />
+                          <MascotBee pose="focus" className="h-10 w-11 shrink-0" />
                           <span className="bee-shimmer-text">
                             Pesquisando referências na web...
                           </span>
@@ -446,7 +446,7 @@ export function BeeHelperPanel({
 
                       {!msg.isSearching && !msg.content && (
                         <div className="flex items-center gap-2 text-[0.75rem]">
-                          <MascotBee pose="focus" className="h-5 w-6 shrink-0" />
+                          <MascotBee pose="focus" className="h-10 w-11 shrink-0" />
                           <span className="bee-shimmer-text">
                             {msg.thinkingPhrase ?? "Pensando..."}
                           </span>
@@ -506,7 +506,7 @@ export function BeeHelperPanel({
           }}
           className="shrink-0 px-5 pt-2 pb-3"
         >
-          <div className="flex items-end gap-1.5 rounded-xl bg-[#ffffff]/60 py-1.5 pr-1.5 pl-3 transition-colors focus-within:bg-[#ffffff]">
+          <div className="flex items-end gap-1.5 rounded-xl border border-gray-200 bg-[#ffffff]/60 py-1.5 pr-1.5 pl-3 transition-colors focus-within:bg-[#ffffff]">
             <textarea
               rows={1}
               value={input}
