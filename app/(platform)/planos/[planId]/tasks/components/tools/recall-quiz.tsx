@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   ArrowRotateLeft,
@@ -13,14 +13,22 @@ import type { RecallQuizData, QuizQuestion } from "./types";
 
 type Phase = "answering" | "confirmed";
 
+export interface LiveQuizState {
+  activeQuestionId: string;
+  phase: Phase;
+  selectedOptionId: string | null;
+}
+
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"];
 
 export function RecallQuiz({
   quiz,
   onComplete,
+  onStateChange,
 }: {
   quiz: RecallQuizData;
   onComplete?: (result: { correct: number; total: number }) => void;
+  onStateChange?: (state: LiveQuizState) => void;
 }) {
   const questions = useMemo(() => quiz.questions ?? [], [quiz]);
   const [index, setIndex] = useState(0);
@@ -34,6 +42,16 @@ export function RecallQuiz({
 
   const total = activeQuestions.length;
   const question = activeQuestions[index];
+
+  useEffect(() => {
+    if (question) {
+      onStateChange?.({
+        activeQuestionId: question.id,
+        phase,
+        selectedOptionId: selected,
+      });
+    }
+  }, [question, phase, selected, onStateChange]);
 
   if (!question && !done) return null;
 

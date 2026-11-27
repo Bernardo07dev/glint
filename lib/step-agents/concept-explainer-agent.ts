@@ -14,115 +14,18 @@ import {
   type StepBlueprintItem,
 } from "./types";
 
+import {
+  getHostnameLabel,
+  normalizeHttpUrl,
+  searchWebWithFirecrawlV2,
+} from "@/lib/infra/firecrawl";
+
 const ConceptExplainerLlmSchema = z.object({
   title: z.string().min(1),
   estimatedReadMinutes: z.number().int().positive(),
   markdown: z.string().min(1),
   usedSourceUrls: z.array(z.string()),
 });
-
-interface FirecrawlScrapedDoc extends ConceptExplainerSource {
-  markdown: string;
-}
-
-function normalizeHttpUrl(rawUrl: unknown): string | null {
-  if (typeof rawUrl !== "string" || !rawUrl.trim()) return null;
-  try {
-    const parsed = new URL(rawUrl.trim());
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-    return parsed.toString();
-  } catch {
-    return null;
-  }
-}
-
-function getHostnameLabel(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "Referência";
-  }
-}
-
-async function searchWebWithFirecrawlV2(
-  query: string,
-): Promise<FirecrawlScrapedDoc[]> {
-  const apiKey = process.env.FIRECRAWL_API_KEY;
-  if (!apiKey) {
-    console.warn("[concept-explainer-agent] FIRECRAWL_API_KEY ausente; usando fallback sem busca web.");
-    return [];
-  }
-
-  try {
-    const res = await fetch("https://api.firecrawl.dev/v2/search", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query,
-        sources: [{ type: "web" }],
-        limit: 3,
-        scrapeOptions: {
-          formats: ["markdown"],
-          onlyMainContent: true,
-        },
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn(
-        `[concept-explainer-agent] Firecrawl /v2/search retornou ${res.status}: ${errText.slice(0, 200)}`,
-      );
-      return [];
-    }
-
-    const json = (await res.json()) as {
-      data?: { web?: unknown[] } | unknown[];
-    };
-
-    const rawItems = Array.isArray((json.data as { web?: unknown[] } | undefined)?.web)
-      ? ((json.data as { web: unknown[] }).web)
-      : Array.isArray(json.data)
-        ? json.data
-        : [];
-
-    const docs: FirecrawlScrapedDoc[] = [];
-    for (const item of rawItems) {
-      if (!item || typeof item !== "object") continue;
-      const record = item as Record<string, unknown>;
-      const validUrl = normalizeHttpUrl(record.url);
-      if (!validUrl) continue;
-
-      const rawTitle =
-        typeof record.title === "string" && record.title.trim().length > 0
-          ? record.title.trim()
-          : getHostnameLabel(validUrl);
-      const rawMarkdown =
-        typeof record.markdown === "string" && record.markdown.trim().length > 0
-          ? record.markdown.trim()
-          : typeof record.description === "string"
-            ? record.description.trim()
-            : "";
-
-      if (!rawMarkdown) continue;
-
-      docs.push({
-        title: rawTitle,
-        url: validUrl,
-        markdown: rawMarkdown.slice(0, 10000),
-      });
-    }
-
-    return docs;
-  } catch (error) {
-    console.warn("[concept-explainer-agent] Falha ao consultar Firecrawl v2:", error);
-    return [];
-  }
-}
 
 /**
  * Tool 2 (`concept_explainer`): researches up-to-date docs via Firecrawl v2

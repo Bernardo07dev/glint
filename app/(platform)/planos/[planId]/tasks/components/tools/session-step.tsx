@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,6 +15,8 @@ import {
   Xmark,
 } from "@gravity-ui/icons";
 import { MascotBee } from "@/app/components/mascot-bee";
+import { BeeHelperPanel, type BeeMessage } from "./bee-helper-panel";
+import type { LiveQuizState } from "./recall-quiz";
 import type { SessionStepData, ToolId } from "./types";
 
 const TOOL_META: Record<ToolId, { label: string; icon: typeof Video }> = {
@@ -28,12 +30,15 @@ const PHASE_LABEL: Record<SessionStepData["phase"], string> = {
   practice: "Prática",
 };
 
-type WidgetId = "walkthrough" | "objective";
+type WidgetId = "walkthrough" | "objective" | "bee";
 
 interface SessionStepProps {
+  planId: string;
+  taskKey: string;
   step: SessionStepData;
   stepIndex: number;
   totalSteps: number;
+  quizState?: LiveQuizState;
   children: ReactNode;
   onSelectStep?: (index: number) => void;
   onBack?: () => void;
@@ -212,9 +217,12 @@ function formatWalkthroughItem(text: string): ReactNode {
 }
 
 export function SessionStep({
+  planId,
+  taskKey,
   step,
   stepIndex,
   totalSteps,
+  quizState,
   children,
   onSelectStep,
   onBack,
@@ -224,6 +232,30 @@ export function SessionStep({
 }: SessionStepProps) {
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [openWidget, setOpenWidget] = useState<WidgetId | null>(null);
+  const [beeMessages, setBeeMessages] = useState<BeeMessage[]>([]);
+  const [showMobileBee, setShowMobileBee] = useState(true);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollYRef.current;
+
+      if (currentY <= 32) {
+        setShowMobileBee(true);
+      } else if (delta > 6) {
+        setShowMobileBee(false);
+      } else if (delta < -6) {
+        setShowMobileBee(true);
+      }
+
+      lastScrollYRef.current = currentY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const tool = TOOL_META[step.toolRef];
   const ToolIcon = tool?.icon;
@@ -288,6 +320,30 @@ export function SessionStep({
           className={widgetClass("objective")}
         >
           <Target className="size-5" />
+        </button>
+
+        <button
+          type="button"
+          aria-label="Tirar dúvida com a Bee"
+          aria-expanded={openWidget === "bee"}
+          title="Tirar dúvida com a Bee"
+          onClick={() =>
+            setOpenWidget((w) => (w === "bee" ? null : "bee"))
+          }
+          className={`fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex size-14 items-center justify-center rounded-full border-2 shadow-[0_8px_24px_-6px_rgba(45,49,66,0.22)] transition-all duration-200 ease-out cursor-pointer lg:static lg:size-12 lg:shadow-none lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto ${
+            openWidget === "bee"
+              ? "border-[#5B8DEF] bg-[#E8F0FE]"
+              : "border-[#5B8DEF]/10 bg-white border-1 hover:bg-[#E8F0FE]"
+          } ${
+            showMobileBee || openWidget === "bee"
+              ? "translate-y-0 opacity-100"
+              : "translate-y-4 opacity-0 pointer-events-none"
+          }`}
+        >
+          <MascotBee
+            pose={openWidget === "bee" ? "focus" : "curious"}
+            className="h-10 w-11 lg:h-9 lg:w-10"
+          />
         </button>
 
         {openWidget === "walkthrough" && (
@@ -371,6 +427,20 @@ export function SessionStep({
               </div>
             </div>
           </SidePanel>
+        )}
+        {openWidget === "bee" && (
+          <BeeHelperPanel
+            planId={planId}
+            taskKey={taskKey}
+            stepId={step.id}
+            totalWalkthrough={totalWalkthrough}
+            toolRef={step.toolRef}
+            checkedWalkthroughIndices={Array.from(checked)}
+            quizState={quizState}
+            messages={beeMessages}
+            onMessagesChange={setBeeMessages}
+            onClose={() => setOpenWidget(null)}
+          />
         )}
       </aside>
 

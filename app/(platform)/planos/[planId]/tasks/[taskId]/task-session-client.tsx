@@ -17,6 +17,7 @@ import {
 } from "@/app/actions/session";
 import { BeeLoader } from "@/app/components/bee-loader";
 import { MascotBee } from "@/app/components/mascot-bee";
+import type { LiveQuizState } from "@/app/(platform)/planos/[planId]/tasks/components/tools/recall-quiz";
 import { SessionStep } from "@/app/(platform)/planos/[planId]/tasks/components/tools/session-step";
 import { StepStage } from "@/app/(platform)/planos/[planId]/tasks/components/tools/step-stage";
 import { resolveSteps, type TaskContent } from "@/lib/tasks/task-content";
@@ -74,6 +75,7 @@ export function TaskSessionClient({
     firstUnfinishedIdx >= 0 ? firstUnfinishedIdx : 0,
   );
   const [quizDone, setQuizDone] = useState(false);
+  const [quizState, setQuizState] = useState<LiveQuizState | undefined>(undefined);
   const [finished, setFinished] = useState(initialTaskStatus === "COMPLETED");
 
   const [difficulty, setDifficulty] = useState<DifficultyOption>("just_right");
@@ -156,9 +158,9 @@ export function TaskSessionClient({
               className="inline-flex mb-2 items-center gap-1.5 text-xs font-medium text-[#646B82] hover:text-[#2D3142] cursor-pointer"
             >
               <ArrowLeft className="size-3.5" />
-              <span className="truncate max-w-[46ch]">{planTitle}</span>
+              <span className="truncate max-w-[46ch]">Voltar para planos</span>
             </Link>
-            <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight text-[#2D3142]">
+            <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-[#2D3142]">
               {title}
             </h1>
           </div>
@@ -306,9 +308,12 @@ export function TaskSessionClient({
           /* Estado 3: Sessão Ativa (Stepper Tool -> Walkthrough) */
           <SessionStep
             key={resolved.step.id}
+            planId={planId}
+            taskKey={taskKey}
             step={resolved.step}
             stepIndex={stepIndex}
             totalSteps={steps.length}
+            quizState={quizState}
             onSelectStep={setStepIndex}
             onBack={
               stepIndex > 0 ? () => setStepIndex(stepIndex - 1) : undefined
@@ -326,6 +331,7 @@ export function TaskSessionClient({
             <StepStage
               resolved={resolved}
               onQuizComplete={() => setQuizDone(true)}
+              onQuizStateChange={setQuizState}
             />
           </SessionStep>
         )}
