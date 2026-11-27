@@ -7,13 +7,14 @@ import { parseTaskContent } from "@/lib/tasks/task-content";
 import { TaskSessionClient } from "./task-session-client";
 
 async function TaskSessionContent({
-  planId,
-  taskId,
+  params,
 }: {
-  planId: string;
-  taskId: string;
+  params: Promise<{ planId: string; taskId: string }>;
 }) {
-  const user = await requireSessionUser();
+  const [{ planId, taskId }, user] = await Promise.all([
+    params,
+    requireSessionUser(),
+  ]);
 
   const plan = await prisma.learningPlan.findFirst({
     where: { id: planId, userId: user.id },
@@ -62,13 +63,11 @@ async function TaskSessionContent({
   );
 }
 
-export default async function TaskSessionPage({
+export default function TaskSessionPage({
   params,
 }: {
   params: Promise<{ planId: string; taskId: string }>;
 }) {
-  const { planId, taskId } = await params;
-
   return (
     <Suspense
       fallback={
@@ -77,7 +76,7 @@ export default async function TaskSessionPage({
         </div>
       }
     >
-      <TaskSessionContent planId={planId} taskId={taskId} />
+      <TaskSessionContent params={params} />
     </Suspense>
   );
 }
