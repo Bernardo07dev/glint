@@ -213,8 +213,18 @@ function PlanSection({
                 {isMenuOpen && (
                   <div
                     role="menu"
-                    className="absolute right-0 top-full mt-1.5 z-30 min-w-[168px] rounded-2xl bg-white border border-[#2D3142]/10 shadow-lg p-1.5"
+                    className="absolute right-0 top-full mt-1.5 z-30 min-w-[180px] rounded-2xl bg-white border border-[#2D3142]/10 shadow-lg p-1.5 space-y-0.5"
                   >
+                    {!isCreating && (
+                      <Link
+                        href={`/planos/${item.id}/replan`}
+                        role="menuitem"
+                        className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-[#2D3142] hover:bg-[#E8F0FE] hover:text-[#3E6FD6] transition-colors cursor-pointer"
+                      >
+                        <Calendar className="size-3.5 shrink-0" />
+                        <span>Ajustar plano</span>
+                      </Link>
+                    )}
                     <button
                       type="button"
                       role="menuitem"

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Calendar,
   Check,
   ChevronDown,
   CircleCheck,
@@ -134,6 +135,14 @@ export function PlanTrail({
                   />
                 </button>
               )}
+
+              <Link
+                href={`/planos/${planId}/replan`}
+                className="inline-flex h-8 items-center gap-1.5 border border-[#dad7cf]/50 whitespace-nowrap rounded-full bg-[#F3EFE6] px-2.5 sm:px-3.5 text-[11px] sm:text-xs font-medium text-[#2D3142] transition-colors hover:bg-[#E8F0FE] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#646B82]"
+              >
+                <Calendar className="size-3.5 text-[#646B82] shrink-0" aria-hidden="true" />
+                <span>Ajustar plano</span>
+              </Link>
             </div>
 
             {routineContract && scheduleOpen && (

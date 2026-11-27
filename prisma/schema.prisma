@@ -61,6 +61,7 @@ model LearningPlan {
   completedTasks Int           @default(0)
   messages       PlanMessage[]
   tasks          PlanTask[]
+  replans        PlanReplan[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -138,4 +139,25 @@ model PlanMessage {
   createdAt DateTime     @default(now())
 
   @@index([planId, stage, stepId, createdAt])
+}
+
+enum ReplanStrategy {
+  SCHEDULE_ONLY
+  PARTIAL_REPLAN
+  GOAL_PIVOT
+}
+
+model PlanReplan {
+  id            String         @id @default(uuid())
+  planId        String
+  plan          LearningPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  version       Int
+  strategy      ReplanStrategy
+  reasonSummary String
+  oldPlan       Json
+  newPlan       Json
+  createdAt     DateTime       @default(now())
+
+  @@unique([planId, version])
+  @@index([planId, createdAt])
 }
