@@ -21,6 +21,7 @@ import {
   enrichTaskNowAction,
   finishTaskSessionAction,
   flushStepTimeAction,
+  getTaskEnrichmentStatusAction,
   recordQuizAnswerAction,
   recordStepProgressAction,
   selectStepAction,
@@ -69,6 +70,7 @@ const DIFFICULTY_OPTIONS: Array<{
 
 const INACTIVITY_CAP_MS = 3 * 60 * 1000;
 const CHECKLIST_DEBOUNCE_MS = 350;
+const ENRICHMENT_POLL_INTERVAL_MS = 3000;
 
 export function TaskSessionClient({
   planId,
@@ -227,6 +229,72 @@ export function TaskSessionClient({
       Object.values(timers).forEach((id) => window.clearTimeout(id));
     };
   }, []);
+
+  // Polling leve quando a sessão já abriu em GENERATING (ex.: usuário saiu e voltou)
+  useEffect(() => {
+    if (content || isEnriching || enrichmentStatus !== "GENERATING") return;
+
+    let cancelled = false;
+    let inFlight = false;
+
+    const poll = async () => {
+      if (cancelled || inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
+      try {
+        const res = await getTaskEnrichmentStatusAction({
+          planId,
+          taskIdentifier: taskKey,
+        });
+        if (cancelled || !res.success) return;
+
+        if (res.enrichmentStatus === "READY" && res.content) {
+          setContent(res.content);
+          if (res.stepProgress) {
+            const nextChecked: Record<string, number[]> = {};
+            const nextQuiz: Record<string, StepQuizProgress | null> = {};
+            for (const item of res.stepProgress) {
+              nextChecked[item.stepId] = item.checkedItems;
+              if (item.quizData) nextQuiz[item.stepId] = item.quizData;
+            }
+            setCheckedByStep(nextChecked);
+            setQuizProgressByStep(nextQuiz);
+          }
+          setEnrichmentStatus("READY");
+          setStepIndex(0);
+          router.refresh();
+          return;
+        }
+
+        if (res.enrichmentStatus && res.enrichmentStatus !== "GENERATING") {
+          setEnrichmentStatus(res.enrichmentStatus);
+          if (res.enrichmentStatus === "FAILED") {
+            setEnrichError(
+              res.error ?? "Não foi possível preparar sua sessão agora.",
+            );
+          }
+        }
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void poll();
+    }, ENRICHMENT_POLL_INTERVAL_MS);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void poll();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [content, isEnriching, enrichmentStatus, planId, taskKey, router]);
 
   const isStepReadyToAdvance = useCallback(
     (idx: number): { ready: boolean; reason?: "checklist" | "quiz"; message?: string } => {
@@ -542,7 +610,7 @@ export function TaskSessionClient({
 
         {!content || !resolved ? (
           <section className="flex flex-col items-center gap-6 rounded-3xl border border-[#5B8DEF]/20 bg-white px-6 py-10 text-center sm:px-10">
-            {isEnriching ? (
+            {isEnriching || enrichmentStatus === "GENERATING" ? (
               <BeeLoader label="Montando vídeo, guia e quiz sob medida, isso pode demorar" />
             ) : (
               <>

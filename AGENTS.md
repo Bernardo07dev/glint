@@ -69,8 +69,9 @@ As especificações detalhadas de interface, marca e movimento ficam documentada
 - **Ícones e Componentes (HeroUI):**
   - Siga [`steering/DESIGN.md`](./steering/DESIGN.md) para todas as decisões visuais e de interação.
   - **Sempre utilize ícones do ecossistema HeroUI** (`@gravity-ui/icons` / `@heroicons/react`) em toda a interface; nunca crie `<svg>` manuais/improvisados para ícones de UI (SVGs customizados são exclusivos do logo e da mascote Abelhinha).
-- **Playbook de Animações (`steering/ANIMATIONS.md`):**
-  - Documenta a animação de assinatura (abelhinha voando e desenhando o `g`) e as **6 poses oficiais da abelhinha de perfil**: *1. Perfil Padrão*, *2. Modo Foco (Óculos + Livro)*, *3. Voo Rápido (Streak)*, *4. Comemorando*, *5. Curiosa (`?`)* e *6. Sonolenta (`zZ`)*.
+- **Playbook de Animações (`steering/ANIMATIONS.md`) e Animações Full-Screen Dinâmicas (`steering/DYNAMIC_ANIMATIONS.md`):**
+  - `steering/ANIMATIONS.md` documenta a animação de assinatura (abelhinha voando e desenhando o `g`) e as **6 poses oficiais da abelhinha de perfil**: *1. Perfil Padrão*, *2. Modo Foco (Óculos + Livro)*, *3. Voo Rápido (Streak)*, *4. Comemorando*, *5. Curiosa (`?`)* e *6. Sonolenta (`zZ`)*.
+  - `steering/DYNAMIC_ANIMATIONS.md` documenta o plano de **Animações Full-Screen (`100dvh`) & Loaders Dinâmicos com IA**: tomadas de tela inteira ricas na paleta Aquarela Viva (para mobile e desktop) combinadas com frases grandes em `Fraunces` totalmente personalizadas e pré-computadas por seção (`FIRST_ACCESS`, `HOME_SPLASH`, `PLAN_CREATION`, `TASK_ENTRY`, `PLANS_HUB`) a partir do contexto real do usuário.
 
 ---
 

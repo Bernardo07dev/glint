@@ -311,6 +311,82 @@ export async function enrichTaskNowAction(input: {
   }
 }
 
+export async function getTaskEnrichmentStatusAction(input: {
+  planId: string;
+  taskIdentifier: string;
+}): Promise<{
+  success: boolean;
+  enrichmentStatus?: string;
+  content?: TaskContent;
+  stepProgress?: ClientStepProgressItem[];
+  currentStepId?: string | null;
+  error?: string;
+}> {
+  const user = await getSessionUser();
+  if (!user) return { success: false, error: "Sessão expirada" };
+
+  const statusRow = await prisma.planTask.findFirst({
+    where: {
+      planId: input.planId,
+      plan: { userId: user.id },
+      OR: [{ id: input.taskIdentifier }, { taskKey: input.taskIdentifier }],
+    },
+    select: {
+      id: true,
+      enrichmentStatus: true,
+    },
+  });
+
+  if (!statusRow) {
+    return { success: false, error: "Sessão não encontrada no plano" };
+  }
+
+  if (statusRow.enrichmentStatus !== "READY") {
+    return {
+      success: true,
+      enrichmentStatus: statusRow.enrichmentStatus,
+    };
+  }
+
+  const fullTask = await prisma.planTask.findUnique({
+    where: { id: statusRow.id },
+    select: {
+      id: true,
+      content: true,
+      completedSteps: true,
+      currentStepId: true,
+      stepProgress: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+
+  const parsed = parseTaskContent(fullTask?.content);
+  if (!fullTask || !parsed) {
+    return {
+      success: true,
+      enrichmentStatus: "FAILED",
+      error: "Conteúdo da sessão indisponível.",
+    };
+  }
+
+  const ensured = await ensureTaskStepProgress({
+    taskId: fullTask.id,
+    content: parsed,
+    completedSteps: fullTask.completedSteps,
+    currentStepId: fullTask.currentStepId,
+    existingRows: fullTask.stepProgress,
+  });
+
+  return {
+    success: true,
+    enrichmentStatus: "READY",
+    content: parsed,
+    stepProgress: serializeStepProgress(ensured.rows),
+    currentStepId: ensured.currentStepId,
+  };
+}
+
 export async function selectStepAction(input: {
   planId: string;
   taskIdentifier: string;
