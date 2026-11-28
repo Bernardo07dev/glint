@@ -9,6 +9,7 @@ import {
   Xmark,
 } from "@gravity-ui/icons";
 import { MascotBee } from "@/app/components/mascot-bee";
+import type { StepQuizAttempt, StepQuizProgress } from "@/lib/tasks/step-progress";
 import type { RecallQuizData, QuizQuestion } from "./types";
 
 type Phase = "answering" | "confirmed";
@@ -21,24 +22,163 @@ export interface LiveQuizState {
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"];
 
+interface HydratedQuizState {
+  activeQuestions: QuizQuestion[];
+  index: number;
+  selected: string | null;
+  phase: Phase;
+  wrongIds: Set<string>;
+  isRetry: boolean;
+  done: boolean;
+  firstAttemptScore?: { correct: number; total: number };
+  firstAttemptWrongQuestionIds: string[];
+  attempts: StepQuizAttempt[];
+}
+
+function hydrateQuizState(
+  questions: QuizQuestion[],
+  initialProgress?: StepQuizProgress | null,
+): HydratedQuizState {
+  if (!initialProgress || questions.length === 0) {
+    return {
+      activeQuestions: questions,
+      index: 0,
+      selected: null,
+      phase: "answering",
+      wrongIds: new Set(),
+      isRetry: false,
+      done: false,
+      firstAttemptScore: undefined,
+      firstAttemptWrongQuestionIds: [],
+      attempts: [],
+    };
+  }
+
+  const questionById = new Map(questions.map((q) => [q.id, q]));
+
+  // Reconstrói a fila de questões da rodada salva (ou usa fallback determinístico)
+  const queueFromIds = (initialProgress.questionQueueIds ?? [])
+    .map((id) => questionById.get(id))
+    .filter((q): q is QuizQuestion => Boolean(q));
+
+  const fallbackRetryQueue = initialProgress.isRetryRound
+    ? (initialProgress.firstAttemptWrongQuestionIds ?? [])
+        .map((id) => questionById.get(id))
+        .filter((q): q is QuizQuestion => Boolean(q))
+    : [];
+
+  const resolvedQueue =
+    queueFromIds.length > 0
+      ? queueFromIds
+      : fallbackRetryQueue.length > 0
+        ? fallbackRetryQueue
+        : questions;
+
+  const foundIndex = initialProgress.activeQuestionId
+    ? resolvedQueue.findIndex((q) => q.id === initialProgress.activeQuestionId)
+    : 0;
+  const resolvedIndex =
+    foundIndex >= 0
+      ? foundIndex
+      : initialProgress.completed
+        ? Math.max(0, resolvedQueue.length - 1)
+        : 0;
+
+  // Reconstrói wrongIds da rodada atual
+  let roundWrongIds = new Set<string>(
+    (initialProgress.currentRoundWrongQuestionIds ?? []).filter((id) =>
+      questionById.has(id),
+    ),
+  );
+
+  if (
+    roundWrongIds.size === 0 &&
+    !initialProgress.isRetryRound &&
+    initialProgress.firstAttemptWrongQuestionIds?.length
+  ) {
+    const upToIdx =
+      initialProgress.phase === "confirmed" || initialProgress.completed
+        ? resolvedIndex
+        : resolvedIndex - 1;
+    const answeredIdSet = new Set(
+      resolvedQueue.slice(0, Math.max(0, upToIdx + 1)).map((q) => q.id),
+    );
+    roundWrongIds = new Set(
+      initialProgress.firstAttemptWrongQuestionIds.filter((id) =>
+        answeredIdSet.has(id),
+      ),
+    );
+  }
+
+  const currentQuestion = resolvedQueue[resolvedIndex];
+  const validSelected =
+    currentQuestion &&
+    initialProgress.selectedOptionId &&
+    currentQuestion.options.some(
+      (opt) => opt.id === initialProgress.selectedOptionId,
+    )
+      ? initialProgress.selectedOptionId
+      : null;
+
+  const resolvedPhase: Phase =
+    initialProgress.phase === "confirmed" && validSelected
+      ? "confirmed"
+      : "answering";
+
+  return {
+    activeQuestions: resolvedQueue,
+    index: resolvedIndex,
+    selected: validSelected,
+    phase: resolvedPhase,
+    wrongIds: roundWrongIds,
+    isRetry: Boolean(initialProgress.isRetryRound),
+    done: Boolean(initialProgress.completed),
+    firstAttemptScore: initialProgress.firstAttemptScore,
+    firstAttemptWrongQuestionIds:
+      initialProgress.firstAttemptWrongQuestionIds ?? [],
+    attempts: initialProgress.attempts ?? [],
+  };
+}
+
 export function RecallQuiz({
   quiz,
+  initialProgress,
   onComplete,
   onStateChange,
+  onProgressChange,
 }: {
   quiz: RecallQuizData;
+  initialProgress?: StepQuizProgress | null;
   onComplete?: (result: { correct: number; total: number }) => void;
   onStateChange?: (state: LiveQuizState) => void;
+  onProgressChange?: (progress: StepQuizProgress) => void;
 }) {
   const questions = useMemo(() => quiz.questions ?? [], [quiz]);
-  const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("answering");
-  const [wrongIds, setWrongIds] = useState<Set<string>>(new Set());
-  const [activeQuestions, setActiveQuestions] =
-    useState<QuizQuestion[]>(questions);
-  const [isRetry, setIsRetry] = useState(false);
-  const [done, setDone] = useState(false);
+  const hydrated = useMemo(
+    () => hydrateQuizState(questions, initialProgress),
+    // Reidrata apenas na montagem do step
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [questions],
+  );
+
+  const [activeQuestions, setActiveQuestions] = useState<QuizQuestion[]>(
+    hydrated.activeQuestions,
+  );
+  const [index, setIndex] = useState(hydrated.index);
+  const [selected, setSelected] = useState<string | null>(hydrated.selected);
+  const [phase, setPhase] = useState<Phase>(hydrated.phase);
+  const [wrongIds, setWrongIds] = useState<Set<string>>(hydrated.wrongIds);
+  const [isRetry, setIsRetry] = useState(hydrated.isRetry);
+  const [done, setDone] = useState(hydrated.done);
+  const [firstAttemptScore, setFirstAttemptScore] = useState<
+    { correct: number; total: number } | undefined
+  >(hydrated.firstAttemptScore);
+  const [firstAttemptWrongIds, setFirstAttemptWrongIds] = useState<string[]>(
+    hydrated.firstAttemptWrongQuestionIds,
+  );
+  const [attempts, setAttempts] = useState<StepQuizAttempt[]>(
+    hydrated.attempts,
+  );
 
   const total = activeQuestions.length;
   const question = activeQuestions[index];
@@ -55,33 +195,163 @@ export function RecallQuiz({
 
   if (!question && !done) return null;
 
+  const emitProgress = (nextState: {
+    activeQuestionId: string | null;
+    selectedOptionId: string | null;
+    phase: Phase;
+    isRetryRound: boolean;
+    completed: boolean;
+    questionQueue: QuizQuestion[];
+    roundWrongSet: Set<string>;
+    firstScore?: { correct: number; total: number };
+    firstWrongIds: string[];
+    attemptsList: StepQuizAttempt[];
+  }) => {
+    onProgressChange?.({
+      activeQuestionId: nextState.activeQuestionId,
+      selectedOptionId: nextState.selectedOptionId,
+      phase: nextState.phase,
+      isRetryRound: nextState.isRetryRound,
+      completed: nextState.completed,
+      questionQueueIds: nextState.questionQueue.map((q) => q.id),
+      currentRoundWrongQuestionIds: Array.from(nextState.roundWrongSet),
+      ...(nextState.firstScore
+        ? { firstAttemptScore: nextState.firstScore }
+        : {}),
+      firstAttemptWrongQuestionIds: nextState.firstWrongIds,
+      attempts: nextState.attemptsList,
+    });
+  };
+
+  const handleSelectOption = (optionId: string) => {
+    if (phase === "confirmed" || !question) return;
+    setSelected(optionId);
+    emitProgress({
+      activeQuestionId: question.id,
+      selectedOptionId: optionId,
+      phase: "answering",
+      isRetryRound: isRetry,
+      completed: done,
+      questionQueue: activeQuestions,
+      roundWrongSet: wrongIds,
+      firstScore: firstAttemptScore,
+      firstWrongIds: firstAttemptWrongIds,
+      attemptsList: attempts,
+    });
+  };
+
   const confirm = () => {
-    if (!selected) return;
-    setPhase("confirmed");
-    if (selected !== question.correctOptionId) {
-      setWrongIds((prev) => new Set(prev).add(question.id));
+    if (!selected || !question) return;
+    const isCorrect = selected === question.correctOptionId;
+    const nextWrongIds = new Set(wrongIds);
+    if (!isCorrect) {
+      nextWrongIds.add(question.id);
     }
+
+    const nextFirstWrongIds =
+      !isRetry && !isCorrect && !firstAttemptWrongIds.includes(question.id)
+        ? [...firstAttemptWrongIds, question.id]
+        : firstAttemptWrongIds;
+
+    const newAttempt: StepQuizAttempt = {
+      questionId: question.id,
+      selectedOptionId: selected,
+      isCorrect,
+      isRetry,
+      answeredAt: new Date().toISOString(),
+    };
+    const nextAttempts = [...attempts, newAttempt];
+
+    setPhase("confirmed");
+    setWrongIds(nextWrongIds);
+    setFirstAttemptWrongIds(nextFirstWrongIds);
+    setAttempts(nextAttempts);
+
+    emitProgress({
+      activeQuestionId: question.id,
+      selectedOptionId: selected,
+      phase: "confirmed",
+      isRetryRound: isRetry,
+      completed: done,
+      questionQueue: activeQuestions,
+      roundWrongSet: nextWrongIds,
+      firstScore: firstAttemptScore,
+      firstWrongIds: nextFirstWrongIds,
+      attemptsList: nextAttempts,
+    });
   };
 
   const next = () => {
     if (index + 1 < total) {
-      setIndex(index + 1);
+      const nextIndex = index + 1;
+      const nextQuestion = activeQuestions[nextIndex];
+      setIndex(nextIndex);
       setSelected(null);
       setPhase("answering");
+
+      emitProgress({
+        activeQuestionId: nextQuestion?.id ?? null,
+        selectedOptionId: null,
+        phase: "answering",
+        isRetryRound: isRetry,
+        completed: done,
+        questionQueue: activeQuestions,
+        roundWrongSet: wrongIds,
+        firstScore: firstAttemptScore,
+        firstWrongIds: firstAttemptWrongIds,
+        attemptsList: attempts,
+      });
     } else {
+      const roundScore = { correct: total - wrongIds.size, total };
+      const resolvedFirstScore =
+        firstAttemptScore ?? (!isRetry ? roundScore : undefined);
+
       setDone(true);
-      onComplete?.({ correct: total - wrongIds.size, total });
+      if (resolvedFirstScore && !firstAttemptScore) {
+        setFirstAttemptScore(resolvedFirstScore);
+      }
+      onComplete?.(roundScore);
+
+      emitProgress({
+        activeQuestionId: null,
+        selectedOptionId: null,
+        phase: "confirmed",
+        isRetryRound: isRetry,
+        completed: true,
+        questionQueue: activeQuestions,
+        roundWrongSet: wrongIds,
+        firstScore: resolvedFirstScore,
+        firstWrongIds: firstAttemptWrongIds,
+        attemptsList: attempts,
+      });
     }
   };
 
   const retryWrong = () => {
-    setActiveQuestions(questions.filter((q) => wrongIds.has(q.id)));
-    setWrongIds(new Set());
+    const retryQueue = questions.filter((q) => wrongIds.has(q.id));
+    if (retryQueue.length === 0) return;
+
+    const emptySet = new Set<string>();
+    setActiveQuestions(retryQueue);
+    setWrongIds(emptySet);
     setIsRetry(true);
     setDone(false);
     setIndex(0);
     setSelected(null);
     setPhase("answering");
+
+    emitProgress({
+      activeQuestionId: retryQueue[0]?.id ?? null,
+      selectedOptionId: null,
+      phase: "answering",
+      isRetryRound: true,
+      completed: false,
+      questionQueue: retryQueue,
+      roundWrongSet: emptySet,
+      firstScore: firstAttemptScore,
+      firstWrongIds: firstAttemptWrongIds,
+      attemptsList: attempts,
+    });
   };
 
   if (done) {
@@ -206,7 +476,7 @@ export function RecallQuiz({
               key={option.id}
               type="button"
               disabled={showState}
-              onClick={() => setSelected(option.id)}
+              onClick={() => handleSelectOption(option.id)}
               className={`group w-full rounded-2xl border p-4 text-left transition-colors cursor-pointer disabled:cursor-default ${cardClass}`}
             >
               <div className="flex items-start gap-3.5">

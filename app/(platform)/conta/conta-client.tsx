@@ -1,9 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import {
   ArrowRightFromSquare,
   Calendar,
+  ChevronRight,
   CircleCheck,
   Sparkles,
 } from "@gravity-ui/icons";
@@ -44,6 +46,15 @@ const TIMEZONE_OPTIONS = [
 
 const INITIAL_STATE: UpdateProfileState = {};
 
+function formatMinutes(minutes: number): string {
+  const rounded = Math.round(minutes);
+  const h = Math.floor(rounded / 60);
+  const m = rounded % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h${String(m).padStart(2, "0")}`;
+}
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "G";
@@ -65,171 +76,196 @@ export function ContaClient({ user, routines }: ContaClientProps) {
     : null;
 
   return (
-    <div className="max-w-[760px] mx-auto px-4 sm:px-6 pt-6 sm:pt-9 space-y-6">
-      <h1 className="font-display text-3xl font-medium text-[#2D3142]">
+    <div className="max-w-[720px] mx-auto px-4 sm:px-6 pt-6 sm:pt-10 space-y-7">
+      <h1 className="font-display text-xl sm:text-2xl font-medium text-[#2D3142]">
         Conta
       </h1>
 
       {/* 1. Perfil */}
-      <section className="rounded-3xl bg-white border border-[#F3EFE6] p-6 space-y-5">
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-[#5B8DEF] text-white font-semibold text-base flex items-center justify-center shrink-0">
+      <form
+        action={formAction}
+        className="rounded-2xl bg-white border border-[#2D3142]/8 divide-y divide-[#2D3142]/6 overflow-hidden"
+      >
+        <div className="flex items-center justify-between gap-4 px-5 py-3 sm:px-6">
+          <span className="text-[13px] font-medium text-[#2D3142]">Perfil</span>
+          <div className="size-8 rounded-full bg-[#5B8DEF] text-white font-semibold text-xs flex items-center justify-center shrink-0">
             {initials}
           </div>
-          <div className="min-w-0">
-            <h2 className="font-display text-lg font-medium text-[#2D3142]">
-              Perfil
-            </h2>
-            <p className="text-xs text-[#646B82] truncate">{user.email}</p>
-          </div>
         </div>
 
-        <form action={formAction} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-[#646B82]">Nome</span>
-              <input
-                type="text"
-                name="name"
-                defaultValue={user.name}
-                required
-                className="w-full rounded-xl bg-[#FFFDF8] border border-[#F3EFE6] focus:border-[#5B8DEF] focus:outline-none px-3.5 py-2.5 text-sm text-[#2D3142]"
-              />
-            </label>
+        <div className="flex items-center justify-between gap-4 px-5 py-3 sm:px-6">
+          <span className="text-[13px] font-medium text-[#2D3142]">E-mail</span>
+          <span className="text-[13px] text-[#646B82] truncate">{user.email}</span>
+        </div>
 
-            <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-[#646B82]">E-mail</span>
-              <input
-                type="email"
-                value={user.email}
-                readOnly
-                disabled
-                className="w-full rounded-xl bg-[#F3EFE6]/60 border border-[#F3EFE6] px-3.5 py-2.5 text-sm text-[#646B82] cursor-not-allowed"
-              />
-            </label>
-          </div>
+        <label className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 px-5 py-3 sm:px-6">
+          <span className="text-[13px] font-medium text-[#2D3142]">Nome</span>
+          <input
+            type="text"
+            name="name"
+            defaultValue={user.name}
+            required
+            className="w-full sm:w-64 h-8 rounded-xl bg-[#FFFDF8] border border-[#2D3142]/12 focus:border-[#5B8DEF] focus:outline-none px-3 text-xs text-[#2D3142] transition-colors"
+          />
+        </label>
 
-          <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-[#646B82]">
+        <label className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 px-5 py-3 sm:px-6">
+          <div className="space-y-0.5">
+            <span className="block text-[13px] font-medium text-[#2D3142]">
               Fuso horário
             </span>
-            <select
-              name="timezone"
-              defaultValue={user.timezone || "America/Sao_Paulo"}
-              className="w-full rounded-xl bg-[#FFFDF8] border border-[#F3EFE6] focus:border-[#5B8DEF] focus:outline-none px-3.5 py-2.5 text-sm text-[#2D3142] cursor-pointer"
-            >
-              {TIMEZONE_OPTIONS.map((tz) => (
-                <option key={tz.value} value={tz.value}>
-                  {tz.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {state.error && (
-            <p className="text-xs text-red-600">{state.error}</p>
-          )}
-          {state.success && (
-            <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2B6E47]">
-              <CircleCheck className="size-4" />
-              <span>Alterações salvas</span>
-            </p>
-          )}
-
-          <div className="pt-1">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-2xl bg-[#5B8DEF] hover:bg-[#4b7de0] text-white font-semibold text-sm px-5 py-2.5 transition-colors cursor-pointer disabled:opacity-60"
-            >
-              {isPending ? "Salvando..." : "Salvar perfil"}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* 2. Assinatura */}
-      <section className="rounded-3xl bg-[#F3EFE6]/70 border border-[#F3EFE6] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-[#5B8DEF]" />
-            <h2 className="font-display text-lg font-medium text-[#2D3142]">
-              Assinatura
-            </h2>
-            <span
-              className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                user.plan === "PRO"
-                  ? "bg-[#FFE07D] text-[#2D3142]"
-                  : "bg-white text-[#646B82]"
-              }`}
-            >
-              {user.plan}
+            <span className="block text-[11px] text-[#646B82]">
+              Usado para agendar suas sessões
             </span>
           </div>
-          <p className="text-xs text-[#646B82]">
-            {user.plan === "PRO" && expiresLabel
-              ? `Plano PRO ativo até ${expiresLabel}.`
-              : "Você está usando o plano gratuito do Glint."}
-          </p>
+          <select
+            name="timezone"
+            defaultValue={user.timezone || "America/Sao_Paulo"}
+            className="w-full sm:w-64 h-8 rounded-xl bg-[#FFFDF8] border border-[#2D3142]/12 focus:border-[#5B8DEF] focus:outline-none px-3 text-xs text-[#2D3142] transition-colors cursor-pointer shrink-0"
+          >
+            {TIMEZONE_OPTIONS.map((tz) => (
+              <option key={tz.value} value={tz.value}>
+                {tz.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="flex items-center justify-between gap-4 px-5 py-3 sm:px-6">
+          <div className="min-h-5 flex items-center">
+            {state.error && (
+              <p className="text-xs font-medium text-red-600">{state.error}</p>
+            )}
+            {state.success && !state.error && (
+              <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2B6E47]">
+                <CircleCheck className="size-3.5" />
+                <span>Alterações salvas</span>
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="rounded-xl bg-[#5B8DEF] hover:bg-[#4b7de0] text-white font-semibold text-xs px-4 py-2 transition-colors cursor-pointer disabled:opacity-60 shrink-0"
+          >
+            {isPending ? "Salvando..." : "Salvar"}
+          </button>
+        </div>
+      </form>
+
+      {/* 2. Assinatura */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-[1rem] font-medium text-[#2D3142]">Assinatura</h2>
+        <div className="rounded-2xl bg-white border border-[#2D3142]/8 px-5 py-3 sm:px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Sparkles className="size-3.5 text-[#5B8DEF] shrink-0" />
+            <span className="text-[0.8rem] text-[#646B82] font-medium truncate">
+              {user.plan === "PRO" && expiresLabel
+                ? `Plano PRO ativo até ${expiresLabel}`
+                : "Plano gratuito ativo"}
+            </span>
+          </div>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0 ${
+              user.plan === "PRO"
+                ? "bg-[#FFE07D] text-[#2D3142]"
+                : "bg-[#F3EFE6] text-[#646B82]"
+            }`}
+          >
+            {user.plan === "PRO" ? "PRO" : "Gratuito"}
+          </span>
         </div>
       </section>
 
-      {/* 3. Sua Rotina & Estudo */}
-      <section className="rounded-3xl bg-white border border-[#F3EFE6] p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="size-4 text-[#5B8DEF]" />
-          <h2 className="font-display text-lg font-medium text-[#2D3142]">
-            Sua rotina & estudo
+      {/* 3. Rotina de estudo */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-[1rem] font-medium text-[#2D3142]">
+            Rotina de estudo
           </h2>
+          {routines.length > 0 && (
+            <span className="text-[11px] text-[#646B82] tabular-nums">
+              {formatMinutes(
+                routines.reduce((sum, r) => sum + r.weeklyHours * 60, 0),
+              )}
+              /sem
+            </span>
+          )}
         </div>
 
         {routines.length === 0 ? (
-          <p className="text-sm text-[#646B82]">
-            Assim que você ativar um plano, seus horários de estudo combinados com o Glint aparecerão aqui.
-          </p>
+          <div className="rounded-2xl bg-white border border-[#2D3142]/8 px-5 py-3 sm:px-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Calendar className="size-3.5 text-[#646B82] shrink-0" />
+              <p className="text-[13px] text-[#646B82]">
+                Seus horários combinados aparecerão aqui quando você ativar um plano.
+              </p>
+            </div>
+            <Link
+              href="/planos"
+              className="text-xs font-semibold text-[#5B8DEF] hover:underline shrink-0 cursor-pointer"
+            >
+              Ver planos
+            </Link>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {routines.map((routine) => (
-              <div
-                key={routine.planId}
-                className="rounded-2xl bg-[#FFFDF8] border border-[#F3EFE6] p-4 space-y-2.5"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-sm font-semibold text-[#2D3142] truncate">
-                    {routine.planTitle}
-                  </p>
-                  <span className="text-xs text-[#646B82] tabular-nums shrink-0">
-                    {routine.weeklyHours}h/semana
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {routine.slots.map((slot, idx) => (
-                    <span
-                      key={idx}
-                      className="rounded-xl bg-[#E8F0FE]/70 text-[#2D3142] px-3 py-1 text-xs font-medium tabular-nums"
-                    >
-                      {DAY_NAME_PT[slot.dayOfWeek.toLowerCase()] ?? slot.dayOfWeek}{" "}
-                      · {slot.startTime} ({slot.maxMinutes} min)
+          <div className="divide-y divide-[#2D3142]/6 rounded-2xl bg-white border border-[#2D3142]/8 overflow-hidden">
+            {routines.map((routine) => {
+              const scheduleSummary = routine.slots
+                .map((slot) => {
+                  const day =
+                    DAY_NAME_PT[slot.dayOfWeek.toLowerCase()] ?? slot.dayOfWeek;
+                  return `${day}, ${slot.startTime}`;
+                })
+                .join(" · ");
+
+              return (
+                <Link
+                  key={routine.planId}
+                  href={`/planos/${routine.planId}`}
+                  className="group flex items-center justify-between gap-4 px-5 py-3.5 sm:px-6 hover:bg-[#FFFDF8] transition-colors cursor-pointer"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-[13px] font-medium text-[#2D3142] group-hover:text-[#5B8DEF] transition-colors truncate">
+                      {routine.planTitle}
+                    </p>
+                    <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#646B82] tabular-nums max-w-full">
+                      <Calendar className="size-3.5 text-[#5B8DEF] shrink-0" />
+                      <span className="truncate">{scheduleSummary}</span>
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="rounded-full bg-[#F3EFE6] px-2.5 py-0.5 text-[11px] font-medium text-[#2D3142] tabular-nums">
+                      {formatMinutes(routine.weeklyHours * 60)}/sem
                     </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+                    <ChevronRight className="size-3.5 text-[#646B82]/50 group-hover:text-[#5B8DEF] group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
 
       {/* 4. Sessão */}
-      <section className="pt-2">
-        <form action={logoutAction}>
-          <button
-            type="submit"
-            className="inline-flex items-center gap-2 rounded-2xl border border-[#F3EFE6] bg-white hover:bg-[#FFF0E5]/60 text-sm font-medium text-[#646B82] hover:text-[#2D3142] px-5 py-3 transition-colors cursor-pointer"
-          >
-            <ArrowRightFromSquare className="size-4" />
-            <span>Sair da conta</span>
-          </button>
-        </form>
+      <section className="space-y-2">
+        <h2 className="px-1 text-[1rem] font-medium text-[#2D3142]">Sessão</h2>
+        <div className="rounded-2xl bg-white border border-[#2D3142]/8 px-5 py-3 sm:px-6 flex items-center justify-between gap-4">
+          <span className="text-[13px] text-[#646B82]">
+            Encerrar sua sessão neste dispositivo
+          </span>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#646B82] hover:text-[#2D3142] transition-colors cursor-pointer"
+            >
+              <ArrowRightFromSquare className="size-3.5" />
+              <span>Sair da conta</span>
+            </button>
+          </form>
+        </div>
       </section>
     </div>
   );

@@ -3,6 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { BeeLoader } from "@/app/components/bee-loader";
 import { prisma } from "@/lib/infra/prisma";
 import { requireSessionUser } from "@/lib/auth/session";
+import {
+  ensureTaskStepProgress,
+  serializeStepProgress,
+} from "@/lib/tasks/step-progress";
 import { parseTaskContent } from "@/lib/tasks/task-content";
 import { TaskSessionClient } from "./task-session-client";
 
@@ -39,6 +43,11 @@ async function TaskSessionContent({
       planId: plan.id,
       OR: [{ id: taskId }, { taskKey: taskId }],
     },
+    include: {
+      stepProgress: {
+        orderBy: { order: "asc" },
+      },
+    },
   });
 
   if (!planTask) {
@@ -46,6 +55,21 @@ async function TaskSessionContent({
   }
 
   const parsedContent = parseTaskContent(planTask.content);
+
+  let initialStepProgress = serializeStepProgress(planTask.stepProgress);
+  let initialCurrentStepId = planTask.currentStepId;
+
+  if (parsedContent) {
+    const ensured = await ensureTaskStepProgress({
+      taskId: planTask.id,
+      content: parsedContent,
+      completedSteps: planTask.completedSteps,
+      currentStepId: planTask.currentStepId,
+      existingRows: planTask.stepProgress,
+    });
+    initialStepProgress = serializeStepProgress(ensured.rows);
+    initialCurrentStepId = ensured.currentStepId;
+  }
 
   return (
     <TaskSessionClient
@@ -59,6 +83,8 @@ async function TaskSessionContent({
       initialTaskStatus={planTask.status}
       initialContent={parsedContent}
       initialCompletedSteps={planTask.completedSteps}
+      initialStepProgress={initialStepProgress}
+      initialCurrentStepId={initialCurrentStepId}
     />
   );
 }

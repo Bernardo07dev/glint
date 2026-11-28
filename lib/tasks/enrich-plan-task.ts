@@ -5,7 +5,15 @@ import {
   runEnrichTaskPipeline,
   type StepAgentTaskContext,
 } from "@/lib/step-agents";
-import { TaskContentSchema, type TaskContent } from "@/lib/tasks/task-content";
+import {
+  buildInitialStepProgressCreateManyInput,
+  parseStepQuizProgress,
+} from "@/lib/tasks/step-progress";
+import {
+  parseTaskContent,
+  TaskContentSchema,
+  type TaskContent,
+} from "@/lib/tasks/task-content";
 
 export interface EnrichPlanTaskDirectResult {
   skipped: boolean;
@@ -58,11 +66,78 @@ export async function enrichPlanTaskDirect(
             },
             select: {
               title: true,
+              durationMinutes: true,
               difficultyRating: true,
               userNotes: true,
+              content: true,
+              stepProgress: {
+                orderBy: { order: "asc" },
+              },
             },
           })
         : null;
+
+    const previousTaskTelemetry = (() => {
+      if (!previousTask) return null;
+
+      const prevContent = parseTaskContent(previousTask.content);
+      const quizQuestionsById = new Map(
+        (prevContent?.tools.active_recall_quiz?.questions ?? []).map((q) => [
+          q.id,
+          q.question,
+        ]),
+      );
+
+      let actualTimeSpentSeconds = 0;
+      let checklistCompletedItems = 0;
+      let checklistTotalItems = 0;
+      let quizFirstAttemptScore: { correct: number; total: number } | null =
+        null;
+      const quizWrongQuestions: string[] = [];
+
+      const stepTelemetry = previousTask.stepProgress.map((sp) => {
+        actualTimeSpentSeconds += sp.timeSpentSeconds;
+        checklistCompletedItems += sp.checkedItems.length;
+        checklistTotalItems += sp.totalChecklistItems;
+
+        if (sp.toolType === "active_recall_quiz" && sp.quizData) {
+          const parsedQuiz = parseStepQuizProgress(sp.quizData);
+          if (parsedQuiz?.firstAttemptScore) {
+            quizFirstAttemptScore = parsedQuiz.firstAttemptScore;
+          }
+          for (const qId of parsedQuiz?.firstAttemptWrongQuestionIds ?? []) {
+            const qText = quizQuestionsById.get(qId) ?? qId;
+            if (!quizWrongQuestions.includes(qText)) {
+              quizWrongQuestions.push(qText);
+            }
+          }
+        }
+
+        return {
+          stepId: sp.stepId,
+          title: sp.title,
+          toolType: sp.toolType,
+          estimatedMinutes: sp.estimatedMinutes,
+          timeSpentSeconds: sp.timeSpentSeconds,
+          checkedCount: sp.checkedItems.length,
+          totalChecklistItems: sp.totalChecklistItems,
+          status: sp.status,
+        };
+      });
+
+      return {
+        previousTaskTitle: previousTask.title,
+        difficultyRating: previousTask.difficultyRating,
+        userNotes: previousTask.userNotes,
+        estimatedDurationMinutes: previousTask.durationMinutes,
+        actualTimeSpentSeconds,
+        checklistCompletedItems,
+        checklistTotalItems,
+        quizFirstAttemptScore,
+        quizWrongQuestions,
+        stepTelemetry,
+      };
+    })();
 
     const context: StepAgentTaskContext = {
       planId: planTask.planId,
@@ -83,13 +158,7 @@ export async function enrichPlanTaskDirect(
         typeof planTask.plan.executableMeta === "object"
           ? (planTask.plan.executableMeta as Record<string, unknown>)
           : null,
-      previousFeedback: previousTask
-        ? {
-            previousTaskTitle: previousTask.title,
-            difficultyRating: previousTask.difficultyRating,
-            userNotes: previousTask.userNotes,
-          }
-        : null,
+      previousFeedback: previousTaskTelemetry,
     };
 
     const result = await runEnrichTaskPipeline(context, {
@@ -136,7 +205,27 @@ export async function enrichPlanTaskDirect(
         }
       : null;
 
+    const sortedSteps = [...validatedContent.steps].sort(
+      (a, b) => a.order - b.order,
+    );
+    const firstStepId = sortedSteps[0]?.id ?? null;
+    const stepProgressPayload = buildInitialStepProgressCreateManyInput(
+      planTask.id,
+      validatedContent,
+      [],
+    );
+
     await prisma.$transaction([
+      prisma.planTaskStepProgress.deleteMany({
+        where: { taskId: planTask.id },
+      }),
+      ...(stepProgressPayload.length > 0
+        ? [
+            prisma.planTaskStepProgress.createMany({
+              data: stepProgressPayload,
+            }),
+          ]
+        : []),
       prisma.planTask.update({
         where: { id: planTask.id },
         data: {
@@ -145,6 +234,7 @@ export async function enrichPlanTaskDirect(
           jevAlignmentScore: result.jevAlignmentScore,
           enrichmentStatus: "READY",
           enrichedAt: new Date(),
+          currentStepId: firstStepId,
         },
       }),
       ...(updatedStructure

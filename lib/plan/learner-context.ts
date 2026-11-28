@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { ExecutableMeta } from "@/lib/agents/types";
 import { models } from "@/lib/infra/llm";
 import { prisma } from "@/lib/infra/prisma";
+import { parseStepQuizProgress } from "@/lib/tasks/step-progress";
 
 const MAX_CONTEXT_CHARS = 2000;
 
@@ -47,6 +48,23 @@ export async function rebuildLearnerContext(userId: string): Promise<void> {
       refinedGoal: true,
       stage: true,
       executableMeta: true,
+      tasks: {
+        where: {
+          status: { in: ["COMPLETED", "IN_PROGRESS"] },
+        },
+        orderBy: { order: "asc" },
+        select: {
+          order: true,
+          title: true,
+          status: true,
+          durationMinutes: true,
+          difficultyRating: true,
+          userNotes: true,
+          stepProgress: {
+            orderBy: { order: "asc" },
+          },
+        },
+      },
     },
   });
 
@@ -70,6 +88,75 @@ export async function rebuildLearnerContext(userId: string): Promise<void> {
           .join("\n")
       : "";
 
+    let totalEstimatedMin = 0;
+    let totalActualSec = 0;
+    let totalChecklistDone = 0;
+    let totalChecklistMax = 0;
+    let totalQuizCorrect = 0;
+    let totalQuizQuestions = 0;
+    const recentSessionLines: string[] = [];
+
+    for (const task of plan.tasks) {
+      let taskSec = 0;
+      let taskChecked = 0;
+      let taskTotalItems = 0;
+      let taskQuizTag = "";
+
+      for (const sp of task.stepProgress) {
+        taskSec += sp.timeSpentSeconds;
+        taskChecked += sp.checkedItems.length;
+        taskTotalItems += sp.totalChecklistItems;
+
+        if (sp.toolType === "active_recall_quiz" && sp.quizData) {
+          const parsedQuiz = parseStepQuizProgress(sp.quizData);
+          if (parsedQuiz?.firstAttemptScore) {
+            totalQuizCorrect += parsedQuiz.firstAttemptScore.correct;
+            totalQuizQuestions += parsedQuiz.firstAttemptScore.total;
+            taskQuizTag = ` | quiz 1ª tent.: ${parsedQuiz.firstAttemptScore.correct}/${parsedQuiz.firstAttemptScore.total}`;
+          }
+        }
+      }
+
+      if (taskSec > 0) {
+        totalEstimatedMin += task.durationMinutes;
+        totalActualSec += taskSec;
+      }
+      totalChecklistDone += taskChecked;
+      totalChecklistMax += taskTotalItems;
+
+      const spentMin = (taskSec / 60).toFixed(1);
+      recentSessionLines.push(
+        `- Sessão #${task.order} "${task.title}" (${task.status}): tempo real ${spentMin}m/${task.durationMinutes}m est. | checklist ${taskChecked}/${taskTotalItems}${taskQuizTag}${
+          task.difficultyRating ? ` | dificuldade: ${task.difficultyRating}` : ""
+        }${task.userNotes ? ` | nota: "${task.userNotes}"` : ""}`,
+      );
+    }
+
+    const telemetryLines: string[] = [];
+    if (totalActualSec > 0 && totalEstimatedMin > 0) {
+      const actualMin = Math.round(totalActualSec / 60);
+      telemetryLines.push(
+        `- Ritmo real acumulado: ${actualMin} min reais vs. ${totalEstimatedMin} min estimados`,
+      );
+    }
+    if (totalChecklistMax > 0) {
+      const pct = Math.round((totalChecklistDone / totalChecklistMax) * 100);
+      telemetryLines.push(
+        `- Aderência aos checklists práticos: ${totalChecklistDone}/${totalChecklistMax} (${pct}%)`,
+      );
+    }
+    if (totalQuizQuestions > 0) {
+      const pct = Math.round((totalQuizCorrect / totalQuizQuestions) * 100);
+      telemetryLines.push(
+        `- Taxa de acerto de 1ª tentativa nos quizzes: ${totalQuizCorrect}/${totalQuizQuestions} (${pct}%)`,
+      );
+    }
+    if (recentSessionLines.length > 0) {
+      telemetryLines.push(
+        `Histórico recente de execução:\n${recentSessionLines.slice(-5).join("\n")}`,
+      );
+    }
+
     const lines = [
       `### Plano ${index + 1} (${plan.stage})`,
       `Pedido inicial: "${plan.rawInput}"`,
@@ -77,6 +164,9 @@ export async function rebuildLearnerContext(userId: string): Promise<void> {
     ];
     if (answeredSteps) {
       lines.push(`Respostas da entrevista:\n${answeredSteps}`);
+    }
+    if (telemetryLines.length > 0) {
+      lines.push(`Telemetria real de estudo:\n${telemetryLines.join("\n")}`);
     }
     return lines.join("\n");
   });

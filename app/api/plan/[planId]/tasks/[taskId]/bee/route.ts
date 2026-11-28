@@ -1,9 +1,11 @@
+import type { PlanTaskStepProgress } from "@prisma/client";
 import { stepCountIs, streamText, tool } from "ai";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth/session";
 import { searchWebWithFirecrawlV2 } from "@/lib/infra/firecrawl";
 import { models } from "@/lib/infra/llm";
 import { prisma } from "@/lib/infra/prisma";
+import { parseStepQuizProgress } from "@/lib/tasks/step-progress";
 import { parseTaskContent, type TaskContent } from "@/lib/tasks/task-content";
 
 export const maxDuration = 60;
@@ -142,6 +144,7 @@ function buildBeeSystemPrompt({
   currentStepId,
   checkedWalkthroughIndices,
   quizState,
+  stepProgressRows,
 }: {
   firstName: string;
   knowledgeGraph: string | null;
@@ -160,22 +163,52 @@ function buildBeeSystemPrompt({
     phase: "answering" | "confirmed";
     selectedOptionId?: string | null;
   };
+  stepProgressRows: PlanTaskStepProgress[];
 }): string {
   const step = content.steps.find((s) => s.id === currentStepId) ?? content.steps[0];
-  const checkedSet = new Set(checkedWalkthroughIndices);
+  const progressByStepId = new Map(
+    stepProgressRows.map((row) => [row.stepId, row]),
+  );
+  const currentStepRow = step ? progressByStepId.get(step.id) : undefined;
+
+  const effectiveCheckedIndices =
+    checkedWalkthroughIndices.length > 0
+      ? checkedWalkthroughIndices
+      : (currentStepRow?.checkedItems ?? []);
+  const checkedSet = new Set(effectiveCheckedIndices);
 
   const stepsOverview = content.steps
-    .map(
-      (s) =>
-        `- Passo ${s.order}: "${s.title}" (${s.phase}, tool: ${s.toolRef})${
-          s.id === step?.id ? " <-- [PASSO ATUAL]" : ""
-        }`,
-    )
+    .map((s) => {
+      const row = progressByStepId.get(s.id);
+      const timeMin = row ? Math.round(row.timeSpentSeconds / 60) : 0;
+      const telemetryTag = row
+        ? ` [status: ${row.status}, checklist: ${row.checkedItems.length}/${row.totalChecklistItems}, tempo real: ${timeMin}m/${s.estimatedMinutes}m]`
+        : "";
+      return `- Passo ${s.order}: "${s.title}" (${s.phase}, tool: ${s.toolRef})${telemetryTag}${
+        s.id === step?.id ? " <-- [PASSO ATUAL]" : ""
+      }`;
+    })
     .join("\n");
 
   const walkthroughLines = (step?.walkthrough ?? [])
     .map((item, idx) => `  ${checkedSet.has(idx) ? "[x]" : "[ ]"} ${idx + 1}. ${item}`)
     .join("\n");
+
+  const currentSpentSeconds = currentStepRow?.timeSpentSeconds ?? 0;
+  const currentSpentMinutes = (currentSpentSeconds / 60).toFixed(1);
+  const parsedQuizProgress = parseStepQuizProgress(currentStepRow?.quizData);
+  const quizTelemetryBlock =
+    parsedQuizProgress && parsedQuizProgress.attempts.length > 0
+      ? `\n- Telemetria do Quiz neste passo: ${parsedQuizProgress.attempts.length} tentativa(s) registrada(s)${
+          parsedQuizProgress.firstAttemptScore
+            ? ` | Placar 1ª tentativa: ${parsedQuizProgress.firstAttemptScore.correct}/${parsedQuizProgress.firstAttemptScore.total}`
+            : ""
+        }${
+          parsedQuizProgress.firstAttemptWrongQuestionIds.length > 0
+            ? ` | Questões com erro na 1ª tentativa: ${parsedQuizProgress.firstAttemptWrongQuestionIds.join(", ")}`
+            : ""
+        }`
+      : "";
 
   const activeToolBlock = buildActiveToolContext(content, currentStepId, quizState);
 
@@ -213,6 +246,8 @@ ${stepsOverview}
 [CONTEXTO NÍVEL 3 — PASSO ATUAL NA TELA]
 - Passo ${step?.order ?? 1}: ${step?.title ?? ""}
 - Fase: ${step?.phase ?? ""} | Ferramenta: ${step?.toolRef ?? ""}
+- Tempo dedicado neste passo até agora: ${currentSpentMinutes} min (estimado: ${step?.estimatedMinutes ?? 0} min)
+- Progresso do Passo a Passo: ${checkedSet.size}/${step?.walkthrough.length ?? 0} itens concluídos${quizTelemetryBlock}
 - Objetivo do passo: ${step?.objective ?? ""}
 - Entregável esperado ao concluir: ${step?.deliverable ?? ""}
 - Roteiro passo a passo (itens marcados com [x] já foram feitos pelo aluno):
@@ -256,6 +291,9 @@ export async function POST(
       OR: [{ id: taskId }, { taskKey: taskId }],
     },
     include: {
+      stepProgress: {
+        orderBy: { order: "asc" },
+      },
       plan: {
         select: {
           refinedGoal: true,
@@ -299,6 +337,7 @@ export async function POST(
     currentStepId: liveStepContext.currentStepId,
     checkedWalkthroughIndices: liveStepContext.checkedWalkthroughIndices,
     quizState: liveStepContext.quizState,
+    stepProgressRows: planTask.stepProgress,
   });
 
   const encoder = new TextEncoder();

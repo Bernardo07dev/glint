@@ -135,7 +135,14 @@ export async function POST(
     where: { id: planId, userId: user.id },
     include: {
       user: { select: { timezone: true } },
-      tasks: { orderBy: { order: "asc" } },
+      tasks: {
+        orderBy: { order: "asc" },
+        include: {
+          stepProgress: {
+            orderBy: { order: "asc" },
+          },
+        },
+      },
     },
   });
 

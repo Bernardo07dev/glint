@@ -313,7 +313,7 @@ export function BeeHelperPanel({
   const panelBody = (
     <>
       {/* Barra superior: Nova conversa + indicador circular de step à esquerda | Fechar (se flutuante) à direita */}
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#2D3142]/8 bg-[#FFFDF8] px-4 py-2.5">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-4 py-2 lg:px-6">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
@@ -351,7 +351,11 @@ export function BeeHelperPanel({
                     background: `conic-gradient(${ringColor} ${pct}%, #E5E0D5 0)`,
                   }}
                 >
-                  <span className="size-2.5 rounded-full bg-[#FFFDF8]" />
+                  <span
+                    className={`size-2.5 rounded-full ${
+                      embedded ? "bg-white" : "bg-[#FFFDF8]"
+                    }`}
+                  />
                 </span>
                 <span>
                   Roteiro {completed}/{totalWalkthrough}
@@ -376,7 +380,7 @@ export function BeeHelperPanel({
       {/* Corpo: Zero-state ou Histórico de Mensagens */}
       <div
         ref={scrollContainerRef}
-        className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 py-3"
+        className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 py-3 lg:px-6"
       >
         {messages.length === 0 ? (
           <div className="my-auto flex flex-col gap-3.5 py-4">
@@ -492,7 +496,7 @@ export function BeeHelperPanel({
           e.preventDefault();
           void sendMessage(input);
         }}
-        className="shrink-0 px-4 pt-2 pb-3"
+        className="shrink-0 px-4 pt-2 pb-3 lg:px-6 lg:pb-4"
       >
         <div className="flex items-end gap-1.5 rounded-xl border border-[#2D3142]/12 bg-white py-1.5 pr-1.5 pl-3 transition-colors focus-within:border-[#5B8DEF]">
           <textarea

@@ -14,7 +14,14 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function hasLatestSchema(client: PrismaClient | undefined): client is PrismaClient {
+  if (!client) return false;
+  return "planTaskStepProgress" in client;
+}
+
+export const prisma = hasLatestSchema(globalForPrisma.prisma)
+  ? globalForPrisma.prisma
+  : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

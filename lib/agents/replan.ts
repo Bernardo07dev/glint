@@ -1,6 +1,10 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import type { PlanTask, ReplanStrategy } from "@prisma/client";
+import type {
+  PlanTask,
+  PlanTaskStepProgress,
+  ReplanStrategy,
+} from "@prisma/client";
 import type { QuestionPayload, ScheduleSlot } from "@/app/components/ai/types";
 import { checkWithJev, models } from "@/lib/infra/llm";
 import {
@@ -11,7 +15,12 @@ import {
 } from "@/lib/plan/plan-structure";
 import type { OccupiedSlot } from "@/lib/schedule/occupied-slots";
 import { parseTimeHHmm, zonedDateTimeToUtc } from "@/lib/schedule/task-schedule";
+import { parseStepQuizProgress } from "@/lib/tasks/step-progress";
 import { BASE_SYSTEM_PROMPT } from "./prompts";
+
+export type PlanTaskWithStepProgress = PlanTask & {
+  stepProgress?: PlanTaskStepProgress[];
+};
 
 const JEV_REPLAN_THRESHOLD = 0.72;
 const MAX_REPLAN_TURNS = 3;
@@ -90,15 +99,17 @@ const DAY_INDEX_MAP: Record<string, number> = {
   sat: 6,
 };
 
-export function partitionPlanTasks(dbTasks: PlanTask[]): {
-  frozenTasks: PlanTask[];
-  mutableTasks: PlanTask[];
+export function partitionPlanTasks<T extends PlanTaskWithStepProgress>(
+  dbTasks: T[],
+): {
+  frozenTasks: T[];
+  mutableTasks: T[];
   nextOrderStart: number;
 } {
   const sorted = [...dbTasks].sort((a, b) => a.order - b.order);
   const frozenSet = new Set<string>();
-  const frozenTasks: PlanTask[] = [];
-  const mutableTasks: PlanTask[] = [];
+  const frozenTasks: T[] = [];
+  const mutableTasks: T[] = [];
 
   for (const task of sorted) {
     if (
@@ -295,8 +306,8 @@ export interface RunReplanTurnInput {
   planTitle: string;
   rawInput: string;
   currentStructure: PlanStructure;
-  frozenTasks: PlanTask[];
-  mutableTasks: PlanTask[];
+  frozenTasks: PlanTaskWithStepProgress[];
+  mutableTasks: PlanTaskWithStepProgress[];
   nextOrderStart: number;
   occupiedSlots: OccupiedSlot[];
   todayIso: string;
@@ -339,10 +350,41 @@ export async function runReplanTurn(
   const frozenSummary =
     frozenTasks.length > 0
       ? frozenTasks
-          .map(
-            (t) =>
-              `- #${t.order} ${t.title} (${t.status}${t.difficultyRating ? `, dificuldade: ${t.difficultyRating}` : ""}${t.userNotes ? `, nota: "${t.userNotes}"` : ""})`,
-          )
+          .map((t) => {
+            const rows = t.stepProgress ?? [];
+            const spentSec = rows.reduce((acc, r) => acc + r.timeSpentSeconds, 0);
+            const checkedCount = rows.reduce(
+              (acc, r) => acc + r.checkedItems.length,
+              0,
+            );
+            const totalChecklist = rows.reduce(
+              (acc, r) => acc + r.totalChecklistItems,
+              0,
+            );
+            const quizRow = rows.find(
+              (r) => r.toolType === "active_recall_quiz" && r.quizData,
+            );
+            const parsedQuiz = quizRow
+              ? parseStepQuizProgress(quizRow.quizData)
+              : null;
+            const timeTag =
+              spentSec > 0
+                ? `, tempo real: ${(spentSec / 60).toFixed(1)}m/${t.durationMinutes}m`
+                : "";
+            const checklistTag =
+              totalChecklist > 0
+                ? `, checklist: ${checkedCount}/${totalChecklist}`
+                : "";
+            const quizTag = parsedQuiz?.firstAttemptScore
+              ? `, quiz 1ª tent.: ${parsedQuiz.firstAttemptScore.correct}/${parsedQuiz.firstAttemptScore.total}`
+              : "";
+
+            return `- #${t.order} ${t.title} (${t.status}${
+              t.difficultyRating ? `, dificuldade: ${t.difficultyRating}` : ""
+            }${timeTag}${checklistTag}${quizTag}${
+              t.userNotes ? `, nota: "${t.userNotes}"` : ""
+            })`;
+          })
           .join("\n")
       : "Nenhuma sessão concluída ainda.";
 

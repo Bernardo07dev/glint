@@ -45,6 +45,14 @@ Como o Glint conhece seu perfil, seus horários livres e o que está previsto pa
 
 ---
 
+## 🧠 Arquitetura de Criação do Plano
+
+<p align="center">
+  <img src="./public/plan-creation-flow.png" alt="Fluxo de criação do plano no Glint" width="100%" />
+</p>
+
+---
+
 <p align="center">
   <br />
   <img src="./public/mascot-bee.svg" alt="Mascote Abelhinha do Glint" width="72" />

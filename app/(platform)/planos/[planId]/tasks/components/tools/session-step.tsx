@@ -20,6 +20,7 @@ import {
   Compass,
   Flag,
   LayoutSideContentLeft,
+  ListCheck,
   Target,
   Video,
 } from "@gravity-ui/icons";
@@ -42,6 +43,12 @@ const PHASE_LABEL: Record<SessionStepData["phase"], string> = {
 type LeftTab = "roadmap" | "bee";
 type MobilePane = "content" | "roadmap";
 
+export interface GateNotice {
+  type: "checklist" | "quiz";
+  message: string;
+  key: number;
+}
+
 interface SessionStepProps {
   planId: string;
   taskKey: string;
@@ -49,6 +56,9 @@ interface SessionStepProps {
   step: SessionStepData;
   stepIndex: number;
   totalSteps: number;
+  checkedIndices: number[];
+  onToggleChecklistItem: (itemIndex: number) => void;
+  gateNotice?: GateNotice | null;
   quizState?: LiveQuizState;
   children: ReactNode;
   onSelectStep?: (index: number) => void;
@@ -222,6 +232,9 @@ export function SessionStep({
   step,
   stepIndex,
   totalSteps,
+  checkedIndices,
+  onToggleChecklistItem,
+  gateNotice,
   quizState,
   children,
   onSelectStep,
@@ -230,14 +243,13 @@ export function SessionStep({
   nextLabel = "Próximo passo",
   nextPrimary = true,
 }: SessionStepProps) {
-  const [checkedByStep, setCheckedByStep] = useState<
-    Record<string, Set<number>>
-  >({});
-  const checked = checkedByStep[step.id] ?? new Set<number>();
+  const checked = new Set<number>(checkedIndices);
   const [leftTab, setLeftTab] = useState<LeftTab>("roadmap");
   const [mobilePane, setMobilePane] = useState<MobilePane>("content");
   const [mobileBeeOpen, setMobileBeeOpen] = useState(false);
   const [beeMessages, setBeeMessages] = useState<BeeMessage[]>([]);
+  const [checklistPulse, setChecklistPulse] = useState(false);
+  const walkthroughRef = useRef<HTMLDivElement | null>(null);
 
   // Largura redimensionável do painel esquerdo (%) + colapso / modo tela cheia
   const [leftWidthPct, setLeftWidthPct] = useState(38);
@@ -247,6 +259,9 @@ export function SessionStep({
   const [browserFullscreen, setBrowserFullscreen] = useState(false);
 
   const splitContainerRef = useRef<HTMLDivElement | null>(null);
+  const leftAsideRef = useRef<HTMLElement | null>(null);
+  const leftWidthPctRef = useRef(leftWidthPct);
+  leftWidthPctRef.current = leftWidthPct;
 
   const tool = TOOL_META[step.toolRef];
   const ToolIcon = tool?.icon;
@@ -256,36 +271,84 @@ export function SessionStep({
   const allWalkthroughDone =
     totalWalkthrough > 0 && completedWalkthrough === totalWalkthrough;
 
-  const toggle = (i: number) =>
-    setCheckedByStep((prev) => {
-      const current = new Set(prev[step.id] ?? []);
-      if (current.has(i)) current.delete(i);
-      else current.add(i);
-      return { ...prev, [step.id]: current };
-    });
+  // Limpa imediatamente o pulse ao trocar de step ou quando o aviso do gate for limpo
+  useEffect(() => {
+    setChecklistPulse(false);
+  }, [step.id]);
 
-  // Drag handle estilo LeetCode para redimensionar as colunas
+  // Quando o Gate de Progressão bloquear o avanço, foca automaticamente o painel correspondente
+  useEffect(() => {
+    if (!gateNotice) {
+      setChecklistPulse(false);
+      return;
+    }
+
+    if (gateNotice.type === "checklist") {
+      setContentFullscreen(false);
+      setLeftCollapsed(false);
+      setLeftTab("roadmap");
+      setMobilePane("roadmap");
+      setChecklistPulse(true);
+      requestAnimationFrame(() => {
+        walkthroughRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      });
+      const timer = window.setTimeout(() => setChecklistPulse(false), 1400);
+      return () => window.clearTimeout(timer);
+    }
+
+    if (gateNotice.type === "quiz") {
+      setMobilePane("content");
+    }
+  }, [gateNotice]);
+
+  // Drag handle estilo LeetCode para redimensionar as colunas em 60fps direto no DOM
   useEffect(() => {
     if (!isDragging) return;
 
+    let rafId: number | null = null;
+
     const handleMouseMove = (e: MouseEvent) => {
-      const container = splitContainerRef.current;
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const rawPct = ((e.clientX - rect.left) / rect.width) * 100;
-      const clamped = Math.min(62, Math.max(24, rawPct));
-      setLeftWidthPct(clamped);
+      if ((e.buttons & 1) === 0) {
+        setLeftWidthPct(leftWidthPctRef.current);
+        setIsDragging(false);
+        return;
+      }
+
+      if (rafId !== null) return;
+      const clientX = e.clientX;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        const container = splitContainerRef.current;
+        const aside = leftAsideRef.current;
+        if (!container || !aside) return;
+        const rect = container.getBoundingClientRect();
+        const rawPct = ((clientX - rect.left) / rect.width) * 100;
+        const clamped = Math.min(62, Math.max(24, rawPct));
+        leftWidthPctRef.current = clamped;
+        aside.style.width = `${clamped}%`;
+      });
     };
 
-    const handleMouseUp = () => {
+    const stopDragging = () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      setLeftWidthPct(leftWidthPctRef.current);
       setIsDragging(false);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseup", stopDragging);
+    window.addEventListener("blur", stopDragging);
     return () => {
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseup", stopDragging);
+      window.removeEventListener("blur", stopDragging);
     };
   }, [isDragging]);
 
@@ -316,15 +379,6 @@ export function SessionStep({
       {/* Cabeçalho do passo dentro dos assets */}
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          {ToolIcon && (
-            <span
-              title={tool?.label}
-              aria-label={tool?.label}
-              className="inline-flex size-6 items-center justify-center rounded-lg bg-[#F3EFE6] text-[#646B82]"
-            >
-              <ToolIcon className="size-3.5" />
-            </span>
-          )}
           <span className="rounded-lg bg-[#F3EFE6] px-2.5 py-1 text-xs font-medium text-[#646B82]">
             {PHASE_LABEL[step.phase]}
           </span>
@@ -362,7 +416,7 @@ export function SessionStep({
       </div>
 
       {/* Checklist do Passo a Passo */}
-      <div className="space-y-2.5">
+      <div ref={walkthroughRef} className="space-y-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Compass
@@ -403,6 +457,17 @@ export function SessionStep({
           })()}
         </div>
 
+        {gateNotice &&
+          gateNotice.type === "checklist" &&
+          !allWalkthroughDone && (
+            <p
+              key={gateNotice.key}
+              className="text-xs font-normal text-[#C85A54]/85 transition-opacity duration-300"
+            >
+              {gateNotice.message}
+            </p>
+          )}
+
         <ol className="space-y-1">
           {step.walkthrough.map((item, i) => {
             const isChecked = checked.has(i);
@@ -410,7 +475,7 @@ export function SessionStep({
               <li key={i}>
                 <button
                   type="button"
-                  onClick={() => toggle(i)}
+                  onClick={() => onToggleChecklistItem(i)}
                   className={`group flex w-full items-start gap-2.5 rounded-xl px-2 py-2 text-left transition-colors cursor-pointer ${
                     isChecked
                       ? "opacity-75 hover:bg-[#F3EFE6]/40"
@@ -606,7 +671,7 @@ export function SessionStep({
           className={`hidden lg:flex flex-col items-center gap-2 self-start rounded-2xl border border-[#2D3142]/10 bg-white/95 p-1.5 shadow-[0_8px_24px_-10px_rgba(45,49,66,0.18)] backdrop-blur transition-all duration-300 ease-out ${
             showLeftColumn
               ? "w-0 overflow-hidden border-0 p-0 opacity-0 pointer-events-none mr-0"
-              : "w-12 opacity-100 mr-2.5"
+              : "w-13 opacity-100 mr-2.5"
           }`}
         >
           <button
@@ -618,7 +683,7 @@ export function SessionStep({
             }}
             title={`Abrir Objetivo e Passo a Passo (${completedWalkthrough}/${totalWalkthrough})`}
             aria-label="Abrir Objetivo e Passo a Passo"
-            className="relative flex size-9 items-center justify-center rounded-xl text-[#646B82] transition-colors hover:bg-[#E8F0FE] hover:text-[#3E6FD6] cursor-pointer"
+            className="relative flex size-9.5 items-center justify-center rounded-xl text-[#646B82] transition-colors hover:bg-[#E8F0FE] hover:text-[#3E6FD6] cursor-pointer"
           >
             <Compass className="size-4.5" />
             <span className="absolute inset-x-2 bottom-1 h-0.5 overflow-hidden rounded-full bg-[#2D3142]/10">
@@ -646,9 +711,9 @@ export function SessionStep({
             }}
             title="Abrir Bee IA"
             aria-label="Abrir Bee IA"
-            className="relative flex size-9 items-center justify-center rounded-full border border-[#2D3142]/10 bg-[#FFFDF8] transition-colors hover:border-[#5B8DEF]/40 hover:bg-[#E8F0FE]/60 cursor-pointer"
+            className="relative flex size-9.5 items-center justify-center rounded-full border border-[#2D3142]/10 bg-[#FFFDF8] transition-colors hover:border-[#5B8DEF]/40 hover:bg-[#E8F0FE]/60 cursor-pointer"
           >
-            <MascotBee pose="curious" className="h-5 w-6 shrink-0" />
+            <MascotBee pose="curious" className="h-7 w-8 shrink-0" />
             {beeMessages.length > 0 && (
               <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-[#5B8DEF]" />
             )}
@@ -657,37 +722,62 @@ export function SessionStep({
 
         {/* PAINEL ESQUERDO: ASSETS (GOALS, METAS, ROTEIRO) + BEE IA */}
         <aside
+          ref={leftAsideRef}
           aria-label="Metas, roteiro e Bee IA"
           aria-hidden={!showLeftColumn}
-          style={{ width: showLeftColumn ? `${leftWidthPct}%` : "0%" }}
-          className={`flex-col overflow-hidden rounded-2xl bg-white ${
+          style={{
+            width: showLeftColumn ? `${leftWidthPct}%` : "0%",
+          }}
+          className={`relative shrink-0 flex-col overflow-hidden rounded-2xl bg-white max-lg:w-full! ${
             isDragging
               ? ""
               : "transition-[width,min-width,max-width,opacity,border-width] duration-300 ease-out"
           } ${
             showLeftColumn
-              ? "border border-[#2D3142]/10 shadow-2xs lg:min-w-[320px] lg:max-w-[640px] lg:opacity-100"
+              ? "border border-[#2D3142]/10 shadow-2xs lg:min-w-[260px] lg:max-w-[680px] lg:opacity-100"
               : "lg:min-w-0 lg:max-w-0 lg:border-0 lg:opacity-0 lg:pointer-events-none"
           } ${
-            mobilePane === "roadmap"
-              ? "flex w-full! lg:w-auto!"
-              : "hidden lg:flex"
+            mobilePane === "roadmap" ? "flex" : "hidden lg:flex"
           }`}
         >
+          {/* Animação circular de borda via SVG leve (zero layout/mask impact) */}
+          {checklistPulse && gateNotice?.type === "checklist" && !allWalkthroughDone && (
+            <svg
+              key={gateNotice.key}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-30 h-full w-full overflow-visible"
+            >
+              <rect
+                x="1"
+                y="1"
+                width="calc(100% - 2px)"
+                height="calc(100% - 2px)"
+                rx="15"
+                ry="15"
+                fill="none"
+                stroke="#FF9B85"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                pathLength={100}
+                strokeDasharray="28 72"
+                className="animate-gate-border-stroke"
+              />
+            </svg>
+          )}
             {/* Header de Abas do Painel Esquerdo */}
-            <div className="hidden lg:flex h-11 shrink-0 items-center gap-2.5 border-b border-[#2D3142]/8 bg-[#FFFDF8] px-3.5">
+            <div className="hidden lg:flex h-12 shrink-0 items-center gap-2.5 px-4 pt-1">
               <button
                 type="button"
                 onClick={() => setLeftTab("roadmap")}
-                title="Objetivo e Passo a Passo"
+                title="Resumo e Passo a Passo"
                 className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   leftTab === "roadmap"
                     ? "bg-[#E8F0FE] text-[#3E6FD6]"
                     : "text-[#646B82] hover:bg-[#F3EFE6]/70 hover:text-[#2D3142]"
                 }`}
               >
-                <Compass className="size-3.5" />
-                <span>Objetivo e Passo a Passo</span>
+                <ListCheck className="size-3.5" />
+                <span>Resumo</span>
               </button>
 
               <button
@@ -745,12 +835,20 @@ export function SessionStep({
           role="separator"
           aria-orientation="vertical"
           aria-label="Redimensionar painéis"
-          onMouseDown={() => showLeftColumn && setIsDragging(true)}
-          onDoubleClick={() => showLeftColumn && setLeftWidthPct(38)}
+          onMouseDown={(e) => {
+            if (!showLeftColumn) return;
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDoubleClick={() => {
+            if (!showLeftColumn) return;
+            leftWidthPctRef.current = 38;
+            setLeftWidthPct(38);
+          }}
           title="Arraste para redimensionar (duplo clique para resetar)"
-          className={`group hidden lg:flex shrink-0 items-center justify-center transition-[width,opacity] duration-300 ease-out ${
+          className={`group hidden lg:flex shrink-0 items-center justify-center select-none transition-[width,opacity] duration-300 ease-out ${
             showLeftColumn
-              ? "w-2.5 cursor-col-resize opacity-100"
+              ? "w-3.5 cursor-col-resize opacity-100"
               : "w-0 opacity-0 pointer-events-none"
           }`}
         >
@@ -762,6 +860,14 @@ export function SessionStep({
             }`}
           />
         </div>
+
+        {/* Overlay invisível durante o drag para o iframe do YouTube nunca engolir o mouse */}
+        {isDragging && (
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 z-50 cursor-col-resize"
+          />
+        )}
 
         {/* PAINEL DIREITO: CONTEÚDO PRINCIPAL (VÍDEO, GUIA OU QUIZ) */}
         <section
@@ -791,7 +897,21 @@ export function SessionStep({
           {/* Palco com scroll na extrema direita e StepTrail vertical sempre visível */}
           <div className="relative flex-1 min-h-0">
             <div className="h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-7 md:pr-16 lg:px-10 lg:pr-18">
-              <div className="mx-auto w-full max-w-5xl">{children}</div>
+              <div className="mx-auto w-full max-w-5xl space-y-4">
+                {gateNotice && gateNotice.type === "quiz" && (
+                  <div
+                    key={gateNotice.key}
+                    className="relative pl-3 text-xs font-normal text-[#C85A54]/85"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-y-0 left-0 w-[3px] rounded-full bg-[#FF9B85] animate-pulse"
+                    />
+                    {gateNotice.message}
+                  </div>
+                )}
+                {children}
+              </div>
             </div>
 
             <div className="pointer-events-none hidden md:flex absolute right-4 top-1/2 z-20 -translate-y-1/2 items-center">

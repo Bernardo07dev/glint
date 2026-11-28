@@ -201,7 +201,7 @@ export function VideoToolPlayer({
   return (
     <section className="space-y-5">
       {/* Player principal */}
-      <div className="overflow-hidden rounded-2xl border border-[#2D3142]/10 bg-[#1F2330] shadow-xs">
+      <div className="mx-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-[#2D3142]/10 bg-[#1F2330] shadow-xs">
         <div className="aspect-video w-full" ref={containerRef} />
       </div>
 

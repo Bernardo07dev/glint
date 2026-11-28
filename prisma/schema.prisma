@@ -113,19 +113,59 @@ model PlanTask {
   stepsPlan         Json?
   content           Json?
 
-  status            TaskStatus           @default(LOCKED)
-  completedSteps    String[]             @default([])
+  status            TaskStatus             @default(LOCKED)
+  currentStepId     String?
+  completedSteps    String[]               @default([])
   completedAt       DateTime?
   difficultyRating  String?
   userNotes         String?
+  stepProgress      PlanTaskStepProgress[]
 
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
 
   @@unique([planId, order])
   @@index([planId, scheduledDate])
   @@index([planId, status])
   @@index([triggerAt])
+}
+
+enum StepProgressStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model PlanTaskStepProgress {
+  id                  String             @id @default(uuid())
+  taskId              String
+  task                PlanTask           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  stepId              String
+  order               Int
+  phase               String
+  toolType            String
+  title               String
+  estimatedMinutes    Int
+
+  status              StepProgressStatus @default(PENDING)
+
+  totalChecklistItems Int                @default(0)
+  checkedItems        Int[]              @default([])
+
+  timeSpentSeconds    Int                @default(0)
+  startedAt           DateTime?
+  completedAt         DateTime?
+  lastInteractionAt   DateTime?
+
+  quizData            Json?
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@unique([taskId, stepId])
+  @@index([taskId, order])
+  @@index([taskId, status])
 }
 
 model PlanMessage {

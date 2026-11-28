@@ -27,10 +27,31 @@ export const StepsPlanSchema = z.object({
 export type StepBlueprintItem = z.infer<typeof StepBlueprintItemSchema>;
 export type StepsPlan = z.infer<typeof StepsPlanSchema>;
 
+export interface PreviousStepTelemetryItem {
+  stepId: string;
+  title: string;
+  toolType: string;
+  estimatedMinutes: number;
+  timeSpentSeconds: number;
+  checkedCount: number;
+  totalChecklistItems: number;
+  status: string;
+}
+
 export interface PreviousTaskFeedback {
   previousTaskTitle?: string;
   difficultyRating?: string | null;
   userNotes?: string | null;
+  estimatedDurationMinutes?: number;
+  actualTimeSpentSeconds?: number;
+  checklistCompletedItems?: number;
+  checklistTotalItems?: number;
+  quizFirstAttemptScore?: {
+    correct: number;
+    total: number;
+  } | null;
+  quizWrongQuestions?: string[];
+  stepTelemetry?: PreviousStepTelemetryItem[];
 }
 
 export interface StepAgentTaskContext {
@@ -98,7 +119,7 @@ export function formatLearnerProfileSummary(
   return lines.length > 0 ? lines.join("\n") : "Perfil do aluno não detalhado.";
 }
 
-/** Formats feedback from the immediately preceding session, if present. */
+/** Formats feedback and step telemetry from the immediately preceding session, if present. */
 export function formatPreviousFeedbackSummary(
   previousFeedback?: PreviousTaskFeedback | null,
 ): string {
@@ -113,6 +134,55 @@ export function formatPreviousFeedbackSummary(
   }
   if (previousFeedback.userNotes?.trim()) {
     parts.push(`Notas/dúvidas do aluno: "${previousFeedback.userNotes.trim()}"`);
+  }
+
+  if (
+    typeof previousFeedback.actualTimeSpentSeconds === "number" &&
+    previousFeedback.actualTimeSpentSeconds > 0
+  ) {
+    const actualMin = (previousFeedback.actualTimeSpentSeconds / 60).toFixed(1);
+    const estMin = previousFeedback.estimatedDurationMinutes ?? "?";
+    parts.push(
+      `Ritmo real na sessão anterior: ${actualMin} min gastos vs. ${estMin} min estimados`,
+    );
+  }
+
+  if (
+    typeof previousFeedback.checklistTotalItems === "number" &&
+    previousFeedback.checklistTotalItems > 0
+  ) {
+    parts.push(
+      `Aderência ao checklist prático: ${previousFeedback.checklistCompletedItems ?? 0}/${previousFeedback.checklistTotalItems} itens concluídos`,
+    );
+  }
+
+  if (previousFeedback.quizFirstAttemptScore) {
+    const { correct, total } = previousFeedback.quizFirstAttemptScore;
+    parts.push(
+      `Desempenho no quiz (1ª tentativa): ${correct}/${total} acertos`,
+    );
+  }
+
+  if (
+    previousFeedback.quizWrongQuestions &&
+    previousFeedback.quizWrongQuestions.length > 0
+  ) {
+    parts.push(
+      `Conceitos/questões que o aluno errou na 1ª tentativa e precisam de reforço:\n${previousFeedback.quizWrongQuestions
+        .map((q) => `  - "${q}"`)
+        .join("\n")}`,
+    );
+  }
+
+  if (
+    previousFeedback.stepTelemetry &&
+    previousFeedback.stepTelemetry.length > 0
+  ) {
+    const stepLines = previousFeedback.stepTelemetry.map((st) => {
+      const spentMin = (st.timeSpentSeconds / 60).toFixed(1);
+      return `  - [${st.toolType}] "${st.title}": ${spentMin}m gastos / ${st.estimatedMinutes}m est. | checklist ${st.checkedCount}/${st.totalChecklistItems} (${st.status})`;
+    });
+    parts.push(`Telemetria por step:\n${stepLines.join("\n")}`);
   }
 
   return parts.length > 0
