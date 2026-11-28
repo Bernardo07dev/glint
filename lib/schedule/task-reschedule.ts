@@ -20,6 +20,7 @@ import { reschedulePlanTaskRuns } from "@/lib/infra/trigger-jobs";
 
 export interface RescheduleJobDelta {
   taskId: string;
+  planId?: string;
   taskKey: string;
   previousTriggerRunId: string | null;
   nextTriggerAt: Date;
@@ -225,7 +226,9 @@ export async function reschedulePlanTasks(input: {
     }
 
     if (jobsToReschedule.length > 0) {
-      await reschedulePlanTaskRuns(jobsToReschedule);
+      await reschedulePlanTaskRuns(
+        jobsToReschedule.map((job) => ({ ...job, planId: input.planId })),
+      );
     }
 
     return {

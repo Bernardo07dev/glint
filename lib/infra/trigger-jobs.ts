@@ -9,12 +9,65 @@ export interface ScheduledTaskTriggerResult {
   triggerRunId: string | null;
 }
 
+function buildTaskTags(
+  planId: string | undefined,
+  taskKey: string,
+): string[] {
+  const tags = [`task:${taskKey}`];
+  if (planId) {
+    tags.unshift(`plan:${planId}`);
+  }
+  return tags;
+}
+
+function buildTaskMetadata(
+  planTaskId: string,
+  planId: string | undefined,
+  taskKey: string,
+): Record<string, string> {
+  return {
+    planTaskId,
+    taskKey,
+    ...(planId ? { planId } : {}),
+  };
+}
+
+/**
+ * Cancels Trigger.dev runs in best-effort mode (ignoring null/duplicates).
+ */
+export async function cancelTriggerRuns(
+  runIds: Array<string | null | undefined>,
+): Promise<void> {
+  const uniqueIds = Array.from(
+    new Set(runIds.filter((id): id is string => Boolean(id))),
+  );
+  if (uniqueIds.length === 0) return;
+
+  const settled = await Promise.allSettled(
+    uniqueIds.map((runId) => runs.cancel(runId)),
+  );
+
+  settled.forEach((entry, idx) => {
+    if (entry.status === "rejected") {
+      console.error(
+        `[trigger-jobs] Falha ao cancelar run ${uniqueIds[idx]}:`,
+        entry.reason,
+      );
+    }
+  });
+}
+
 /**
  * Schedules `enrich-plan-task` runs for every newly created `PlanTask` on `accept_plan`.
  * Tasks whose `triggerAt` is already due fire immediately without delay.
  */
 export async function schedulePlanTasksOnAccept(
-  createdTasks: Array<{ id: string; taskKey: string; triggerAt: Date }>,
+  createdTasks: Array<{
+    id: string;
+    planId?: string;
+    taskKey: string;
+    triggerAt: Date;
+  }>,
 ): Promise<ScheduledTaskTriggerResult[]> {
   if (createdTasks.length === 0) return [];
 
@@ -23,14 +76,27 @@ export async function schedulePlanTasksOnAccept(
   const settled = await Promise.allSettled(
     createdTasks.map(async (taskItem) => {
       const isDueNow = taskItem.triggerAt.getTime() <= nowMs;
+      const tags = buildTaskTags(taskItem.planId, taskItem.taskKey);
+      const metadata = buildTaskMetadata(
+        taskItem.id,
+        taskItem.planId,
+        taskItem.taskKey,
+      );
+      const payload = {
+        planTaskId: taskItem.id,
+        ...(taskItem.planId ? { planId: taskItem.planId } : {}),
+        taskKey: taskItem.taskKey,
+      };
       const handle = isDueNow
-        ? await tasks.trigger<typeof enrichPlanTask>("enrich-plan-task", {
-            planTaskId: taskItem.id,
-          })
+        ? await tasks.trigger<typeof enrichPlanTask>(
+            "enrich-plan-task",
+            payload,
+            { tags, metadata },
+          )
         : await tasks.trigger<typeof enrichPlanTask>(
             "enrich-plan-task",
-            { planTaskId: taskItem.id },
-            { delay: taskItem.triggerAt },
+            payload,
+            { delay: taskItem.triggerAt, tags, metadata },
           );
 
       await prisma.planTask.update({
@@ -90,18 +156,31 @@ export async function reschedulePlanTaskRuns(
       }
 
       if (!nextRunId) {
-        if (delta.previousTriggerRunId && isDueNow) {
+        if (delta.previousTriggerRunId) {
           await runs.cancel(delta.previousTriggerRunId).catch(() => null);
         }
 
+        const tags = buildTaskTags(delta.planId, delta.taskKey);
+        const metadata = buildTaskMetadata(
+          delta.taskId,
+          delta.planId,
+          delta.taskKey,
+        );
+        const payload = {
+          planTaskId: delta.taskId,
+          ...(delta.planId ? { planId: delta.planId } : {}),
+          taskKey: delta.taskKey,
+        };
         const handle = isDueNow
-          ? await tasks.trigger<typeof enrichPlanTask>("enrich-plan-task", {
-              planTaskId: delta.taskId,
-            })
+          ? await tasks.trigger<typeof enrichPlanTask>(
+              "enrich-plan-task",
+              payload,
+              { tags, metadata },
+            )
           : await tasks.trigger<typeof enrichPlanTask>(
               "enrich-plan-task",
-              { planTaskId: delta.taskId },
-              { delay: delta.nextTriggerAt },
+              payload,
+              { delay: delta.nextTriggerAt, tags, metadata },
             );
         nextRunId = handle.id;
       }
@@ -148,6 +227,8 @@ export async function triggerTaskOnDemand(planTaskId: string): Promise<{
     where: { id: planTaskId },
     select: {
       id: true,
+      planId: true,
+      taskKey: true,
       enrichmentStatus: true,
       triggerRunId: true,
     },
@@ -174,7 +255,19 @@ export async function triggerTaskOnDemand(planTaskId: string): Promise<{
 
   const handle = await tasks.trigger<typeof enrichPlanTask>(
     "enrich-plan-task",
-    { planTaskId: planTask.id },
+    {
+      planTaskId: planTask.id,
+      planId: planTask.planId,
+      taskKey: planTask.taskKey,
+    },
+    {
+      tags: buildTaskTags(planTask.planId, planTask.taskKey),
+      metadata: buildTaskMetadata(
+        planTask.id,
+        planTask.planId,
+        planTask.taskKey,
+      ),
+    },
   );
 
   await prisma.planTask.update({

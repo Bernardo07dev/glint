@@ -11,7 +11,12 @@ import {
 import { BeeLoader } from "@/app/components/bee-loader";
 import { PlanTrail } from "./plan-trail";
 
-async function PlanDetailContent({ planId }: { planId: string }) {
+async function PlanDetailContent({
+  params,
+}: {
+  params: Promise<{ planId: string }>;
+}) {
+  const { planId } = await params;
   const user = await requireSessionUser();
 
   const plan = await prisma.learningPlan.findUnique({
@@ -47,13 +52,11 @@ async function PlanDetailContent({ planId }: { planId: string }) {
   );
 }
 
-export default async function PlanDetailPage({
+export default function PlanDetailPage({
   params,
 }: {
   params: Promise<{ planId: string }>;
 }) {
-  const { planId } = await params;
-
   return (
     <Suspense
       fallback={
@@ -62,7 +65,7 @@ export default async function PlanDetailPage({
         </div>
       }
     >
-      <PlanDetailContent planId={planId} />
+      <PlanDetailContent params={params} />
     </Suspense>
   );
 }

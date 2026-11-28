@@ -3,6 +3,8 @@ import { enrichPlanTaskDirect } from "@/lib/tasks/enrich-plan-task";
 
 export interface EnrichPlanTaskPayload {
   planTaskId: string;
+  planId?: string;
+  taskKey?: string;
 }
 
 export const enrichPlanTask = task({

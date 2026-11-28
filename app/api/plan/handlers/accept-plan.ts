@@ -12,7 +12,10 @@ import {
   normalizeTimeZone,
   resolveInitialTaskStatus,
 } from "@/lib/schedule/task-schedule";
-import { schedulePlanTasksOnAccept } from "@/lib/infra/trigger-jobs";
+import {
+  cancelTriggerRuns,
+  schedulePlanTasksOnAccept,
+} from "@/lib/infra/trigger-jobs";
 import { hasPlanStructure } from "./generating-tasks";
 
 export function buildPlanTaskRows(
@@ -103,6 +106,14 @@ export async function handleAcceptPlanStage(input: {
     todayIso,
   );
 
+  const previousTasksWithRuns = await prisma.planTask.findMany({
+    where: {
+      planId: input.planId,
+      triggerRunId: { not: null },
+    },
+    select: { triggerRunId: true },
+  });
+
   const [, , , createdTasks] = await prisma.$transaction([
     prisma.planTask.deleteMany({
       where: { planId: input.planId },
@@ -123,12 +134,14 @@ export async function handleAcceptPlanStage(input: {
       orderBy: { order: "asc" },
       select: {
         id: true,
+        planId: true,
         taskKey: true,
         triggerAt: true,
       },
     }),
   ]);
 
+  await cancelTriggerRuns(previousTasksWithRuns.map((t) => t.triggerRunId));
   await schedulePlanTasksOnAccept(createdTasks);
 
   return {

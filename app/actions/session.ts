@@ -216,6 +216,7 @@ export async function enrichTaskNowAction(input: {
       id: true,
       taskKey: true,
       enrichmentStatus: true,
+      triggerRunId: true,
       content: true,
       completedSteps: true,
       currentStepId: true,
@@ -251,6 +252,14 @@ export async function enrichTaskNowAction(input: {
 
   try {
     const result = await enrichPlanTaskDirect(planTask.id);
+
+    if (planTask.triggerRunId) {
+      await runs.cancel(planTask.triggerRunId).catch(() => null);
+      await prisma.planTask.update({
+        where: { id: planTask.id },
+        data: { triggerRunId: null },
+      });
+    }
 
     revalidatePath("/home");
     revalidatePath(`/planos/${plan.id}`);

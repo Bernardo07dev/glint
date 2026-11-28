@@ -91,14 +91,14 @@ export function PlatformShell({ userName, children }: PlatformShellProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full pb-24 md:pb-12">{children}</main>
+      <main className="flex-1 w-full pb-28 md:pb-12">{children}</main>
 
-      {/* Bottom Tab Bar (Mobile < md) */}
+      {/* Bottom Tab Bar Flutuante (Mobile < md) */}
       <nav
         aria-label="Navegação mobile"
-        className="md:hidden  py-2 fixed bottom-0 inset-x-0 z-30 bg-[#FFFDF8]/95 backdrop-blur border-t border-[#F3EFE6] pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30 bg-[#FFFDF8]/95 backdrop-blur-md border border-[#E7E0D3]/90 rounded-full shadow-[0_12px_32px_-4px_rgba(45,49,66,0.18),0_4px_12px_-2px_rgba(45,49,66,0.08)] px-5 py-[3px]"
       >
-        <div className="grid grid-cols-3 h-16 max-w-md mx-auto px-3 items-center">
+        <div className="flex items-center gap-3">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -107,7 +107,7 @@ export function PlatformShell({ userName, children }: PlatformShellProps) {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className="flex flex-col items-center justify-center gap-0.5 cursor-pointer"
+                className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 cursor-pointer"
               >
                 <span
                   className={`inline-flex items-center justify-center rounded-full transition-colors ${

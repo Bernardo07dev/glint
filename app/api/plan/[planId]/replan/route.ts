@@ -315,9 +315,15 @@ export async function POST(
       },
     });
 
-    let createdForTrigger: Array<{ id: string; taskKey: string; triggerAt: Date }> = [];
+    let createdForTrigger: Array<{
+      id: string;
+      planId: string;
+      taskKey: string;
+      triggerAt: Date;
+    }> = [];
     const rescheduledDeltas: Array<{
       taskId: string;
+      planId: string;
       taskKey: string;
       previousTriggerRunId: string | null;
       nextTriggerAt: Date;
@@ -365,6 +371,7 @@ export async function POST(
         ) {
           rescheduledDeltas.push({
             taskId: existing.id,
+            planId: plan.id,
             taskKey: existing.taskKey,
             previousTriggerRunId: existing.triggerRunId,
             nextTriggerAt: triggerAt,
@@ -418,7 +425,7 @@ export async function POST(
       if (rowsToCreate.length > 0) {
         createdForTrigger = await tx.planTask.createManyAndReturn({
           data: rowsToCreate,
-          select: { id: true, taskKey: true, triggerAt: true },
+          select: { id: true, planId: true, taskKey: true, triggerAt: true },
         });
       }
     }

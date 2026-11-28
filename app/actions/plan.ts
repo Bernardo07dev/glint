@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { decrypt } from "@/lib/auth/auth";
 import { rebuildLearnerContext } from "@/lib/plan/learner-context";
 import { prisma } from "@/lib/infra/prisma";
+import { cancelTriggerRuns } from "@/lib/infra/trigger-jobs";
 import { getSessionUser } from "@/lib/auth/session";
 
 export type CreatePlanState = {
@@ -90,6 +91,15 @@ export async function deletePlanAction(
   }
 
   try {
+    const tasksWithRuns = await prisma.planTask.findMany({
+      where: {
+        planId,
+        plan: { userId: user.id },
+        triggerRunId: { not: null },
+      },
+      select: { triggerRunId: true },
+    });
+
     const deleted = await prisma.learningPlan.deleteMany({
       where: { id: planId, userId: user.id },
     });
@@ -97,6 +107,8 @@ export async function deletePlanAction(
     if (deleted.count === 0) {
       return { success: false, error: "Plano não encontrado" };
     }
+
+    await cancelTriggerRuns(tasksWithRuns.map((t) => t.triggerRunId));
 
     try {
       await rebuildLearnerContext(user.id);
