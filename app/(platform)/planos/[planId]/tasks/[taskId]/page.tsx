@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { BeeLoader } from "@/app/components/bee-loader";
+import { getUserAnimationPhrase } from "@/lib/animations/phrases";
 import { prisma } from "@/lib/infra/prisma";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
@@ -20,15 +21,18 @@ async function TaskSessionContent({
     requireSessionUser(),
   ]);
 
-  const plan = await prisma.learningPlan.findFirst({
-    where: { id: planId, userId: user.id },
-    select: {
-      id: true,
-      complete: true,
-      refinedGoal: true,
-      rawInput: true,
-    },
-  });
+  const [plan, waitingHeadline] = await Promise.all([
+    prisma.learningPlan.findFirst({
+      where: { id: planId, userId: user.id },
+      select: {
+        id: true,
+        complete: true,
+        refinedGoal: true,
+        rawInput: true,
+      },
+    }),
+    getUserAnimationPhrase(user.id, "waitingFrontTap", user.name),
+  ]);
 
   if (!plan) {
     notFound();
@@ -85,6 +89,7 @@ async function TaskSessionContent({
       initialCompletedSteps={planTask.completedSteps}
       initialStepProgress={initialStepProgress}
       initialCurrentStepId={initialCurrentStepId}
+      waitingHeadline={waitingHeadline}
     />
   );
 }

@@ -12,11 +12,12 @@ import {
 import { Button } from "@heroui/react";
 import { ArrowRight } from "@gravity-ui/icons";
 import { createPlanAction } from "../actions/plan";
+import { PlanCreationAnimation } from "../components/animations";
 import { MascotBee } from "../components/mascot-bee";
-import { BeeLoader } from "../components/bee-loader";
 
 type PrimeiroPlanoFormProps = {
   userName?: string | null;
+  planCreationHeadline?: string;
 };
 
 const GOAL_SUGGESTIONS = [
@@ -26,7 +27,10 @@ const GOAL_SUGGESTIONS = [
   "Correr meus primeiros 5 km com constância",
 ];
 
-export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
+export function PrimeiroPlanoForm({
+  userName,
+  planCreationHeadline,
+}: PrimeiroPlanoFormProps) {
   const [goal, setGoal] = useState("");
   const [clientError, setClientError] = useState<string | null>(null);
   const [showTip, setShowTip] = useState(false);
@@ -90,11 +94,12 @@ export function PrimeiroPlanoForm({ userName }: PrimeiroPlanoFormProps) {
 
   if (isPending) {
     return (
-      <div className="my-auto py-12 w-full max-w-[620px] mx-auto flex flex-col items-center justify-center">
-        <BeeLoader
-          size="lg"
-          label="Analisando seu objetivo"
-          sublabel="Estou preparando as primeiras perguntas para desenhar seu plano"
+      <div className="fixed inset-0 z-50">
+        <PlanCreationAnimation
+          headline={
+            planCreationHeadline ??
+            `Conectando seus objetivos e horários${firstName ? `, ${firstName}` : ""} para montar um plano que cabe na sua rotina...`
+          }
         />
       </div>
     );

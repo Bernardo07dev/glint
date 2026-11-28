@@ -27,8 +27,27 @@ model User {
   onboardingCompleted Boolean        @default(false)
   lastActiveAt        DateTime?
   learningPlans       LearningPlan[]
+  animation           UserAnimation?
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
+}
+
+model UserAnimation {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstAccess      String?
+  waitingFrontTap  String?
+  homeSplashReady  String?
+  homeSplashStreak String?
+  homeSplashReturn String?
+  homeSplashRest   String?
+  planCreation     String?
+  plansHub         String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 enum PlanStage {

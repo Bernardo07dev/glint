@@ -3,6 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "@gravity-ui/icons";
+import {
+  HomeSplashAnimation,
+  SplashGate,
+  type HomeSplashVariant,
+} from "@/app/components/animations";
 import type {
   ResolvedNextTask,
   WeekStripWeek,
@@ -24,6 +29,11 @@ interface HomeClientProps {
   completedToday: boolean;
   weeks: WeekStripWeek[];
   rhythm: WeeklyRhythm;
+  splash: {
+    variant: HomeSplashVariant;
+    headline: string;
+    dateKey: string;
+  };
 }
 
 export function HomeClient({
@@ -32,23 +42,35 @@ export function HomeClient({
   completedToday,
   weeks,
   rhythm,
+  splash,
 }: HomeClientProps) {
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
 
   return (
-    <div className="max-w-[1120px] mx-auto px-4 sm:px-6 pt-5 sm:pt-8">
+    <SplashGate
+      storageKey={`glint:home-splash:${splash.dateKey}`}
+      durationMs={2600}
+      renderAnimation={(isExiting) => (
+        <HomeSplashAnimation
+          variant={splash.variant}
+          headline={splash.headline}
+          isExiting={isExiting}
+        />
+      )}
+    >
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 pt-5 sm:pt-8">
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 lg:gap-8 items-start">
         {/* Coluna Esquerda */}
         <div className="space-y-6 sm:space-y-8 min-w-0">
           {inCreationPlan && (
-            <div className="rounded-2xl bg-[#E8F0FE]/70 border border-[#5B8DEF]/25 px-4 py-3 flex items-center justify-between gap-3">
-              <p className="text-xs sm:text-sm text-[#2D3142] truncate">
+            <div className="rounded-2xl bg-[#E8F0FE]/70 border border-[#5B8DEF]/25 px-3.5 py-2.5 flex items-center justify-between gap-3">
+              <p className="text-[11.5px] sm:text-[12.5px] text-[#2D3142] truncate">
                 Você tem um plano esperando sua entrevista:{" "}
                 <strong className="font-semibold">{inCreationPlan.rawInput}</strong>
               </p>
               <Link
                 href={`/criacao-plano/${inCreationPlan.id}`}
-                className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-[#5B8DEF] hover:underline shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11.5px] sm:text-[12.5px] font-semibold text-[#5B8DEF] hover:underline shrink-0 cursor-pointer"
               >
                 <span>Continuar</span>
                 <ArrowRight className="size-3.5" />
@@ -96,6 +118,7 @@ export function HomeClient({
           onClose={() => setIsRescheduleOpen(false)}
         />
       )}
-    </div>
+      </div>
+    </SplashGate>
   );
 }

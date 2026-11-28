@@ -227,7 +227,7 @@ export function ReplanClient({ planId, planTitle }: ReplanClientProps) {
         );
       }
 
-      router.push(`/planos/${planId}`);
+      router.push(`/planos/${planId}?replanned=1`);
       router.refresh();
     } catch (err) {
       setError(

@@ -18,6 +18,7 @@ import {
 import type { PlanStage } from "@prisma/client";
 import { getLoaderPhrases } from "@/app/api/plan/random-loaders";
 import { AnimatedLogo } from "@/app/components/animated-logo";
+import { PlanCreationAnimation } from "@/app/components/animations";
 import { HoneycombLoader } from "@/app/components/honeycomb-loader";
 import { MascotBee } from "@/app/components/mascot-bee";
 import { QuestionRenderer } from "@/app/components/ai/question-renderer";
@@ -38,6 +39,10 @@ interface CriacaoPlanoClientProps {
     stage: PlanStage;
     rawInput: string;
     refinedGoal: string | null;
+  };
+  loaderHeadlines: {
+    planCreation: string;
+    waitingFrontTap: string;
   };
 }
 
@@ -102,7 +107,10 @@ function formatDateShort(isoDate: string): string {
   return `${parts[2]}/${parts[1]}`;
 }
 
-export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
+export function CriacaoPlanoClient({
+  plan,
+  loaderHeadlines,
+}: CriacaoPlanoClientProps) {
   const router = useRouter();
   const [question, setQuestion] = useState<QuestionPayload | null>(null);
   const [stage, setStage] = useState<PlanStage>(plan.stage);
@@ -422,6 +430,17 @@ export function CriacaoPlanoClient({ plan }: CriacaoPlanoClientProps) {
   );
 
   if (isLoading || isSubmitting) {
+    const isInitialNewPlanLoad =
+      isLoading && !isSubmitting && stage === "REFINING_GOAL";
+
+    if (isInitialNewPlanLoad) {
+      return (
+        <div className="fixed inset-0 z-50">
+          <PlanCreationAnimation headline={loaderHeadlines.planCreation} />
+        </div>
+      );
+    }
+
     return (
       <>
         {header}

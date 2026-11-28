@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import { ArrowRight } from "@gravity-ui/icons";
 import { AnimatedLogo } from "@/app/components/animated-logo";
 import { BeeLoader } from "@/app/components/bee-loader";
+import {
+  getFallbackAnimationHeadline,
+  getUserAnimationPhrases,
+} from "@/lib/animations/phrases";
 import { decrypt } from "@/lib/auth/auth";
 import { prisma } from "@/lib/infra/prisma";
 import { CriacaoPlanoClient } from "./criacao-plano-client";
@@ -37,19 +41,26 @@ async function CriacaoPlanoSession({ params }: CriacaoPlanoPageProps) {
 
   const { "plan-id": planId } = await params;
 
-  const plan = await prisma.learningPlan.findFirst({
-    where: {
-      id: planId,
-      userId,
-    },
-    select: {
-      id: true,
-      complete: true,
-      stage: true,
-      rawInput: true,
-      refinedGoal: true,
-    },
-  });
+  const [plan, user, phrases] = await Promise.all([
+    prisma.learningPlan.findFirst({
+      where: {
+        id: planId,
+        userId,
+      },
+      select: {
+        id: true,
+        complete: true,
+        stage: true,
+        rawInput: true,
+        refinedGoal: true,
+      },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true },
+    }),
+    getUserAnimationPhrases(userId),
+  ]);
 
   if (!plan) {
     redirect("/primeiro-plano");
@@ -59,7 +70,16 @@ async function CriacaoPlanoSession({ params }: CriacaoPlanoPageProps) {
     redirect(`/planos/${plan.id}`);
   }
 
-  return <CriacaoPlanoClient plan={plan} />;
+  const loaderHeadlines = {
+    planCreation:
+      phrases.planCreation?.trim() ||
+      getFallbackAnimationHeadline("planCreation", user?.name),
+    waitingFrontTap:
+      phrases.waitingFrontTap?.trim() ||
+      getFallbackAnimationHeadline("waitingFrontTap", user?.name),
+  };
+
+  return <CriacaoPlanoClient plan={plan} loaderHeadlines={loaderHeadlines} />;
 }
 
 export default function CriacaoPlanoPage({ params }: CriacaoPlanoPageProps) {

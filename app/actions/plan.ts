@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { decrypt } from "@/lib/auth/auth";
+import { refreshUserAnimationPhrases } from "@/lib/animations/phrases";
 import { rebuildLearnerContext } from "@/lib/plan/learner-context";
 import { prisma } from "@/lib/infra/prisma";
 import { cancelTriggerRuns } from "@/lib/infra/trigger-jobs";
@@ -67,6 +69,15 @@ export async function createPlanAction(
     });
 
     planId = plan.id;
+
+    after(() =>
+      refreshUserAnimationPhrases({
+        userId,
+        columns: ["planCreation", "waitingFrontTap"],
+        event: "create_plan",
+        context: `Objetivo inicial: ${goal}`,
+      }),
+    );
   } catch (error) {
     console.error("Erro ao criar plano:", error);
     return {

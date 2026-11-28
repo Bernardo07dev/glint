@@ -5,7 +5,10 @@ import { redirect } from "next/navigation";
 import { ArrowRight } from "@gravity-ui/icons";
 import { AnimatedLogo } from "../components/animated-logo";
 import { decrypt } from "@/lib/auth/auth";
+import { prisma } from "@/lib/infra/prisma";
+import { getUserAnimationPhrase } from "@/lib/animations/phrases";
 import { BeeLoader } from "../components/bee-loader";
+import { FirstAccessGate } from "./first-access-gate";
 import { PrimeiroPlanoForm } from "./primeiro-plano-form";
 
 async function PrimeiroPlanoSession() {
@@ -16,16 +19,45 @@ async function PrimeiroPlanoSession() {
     redirect("/login");
   }
 
-  let userName: string | null = null;
-
+  let userId: string | null = null;
   try {
     const session = await decrypt(sessionCookie);
-    userName = session.name ?? null;
+    if (typeof session?.userId === "string" && session.userId) {
+      userId = session.userId;
+    }
   } catch {
+    userId = null;
+  }
+
+  if (!userId) {
     redirect("/login");
   }
 
-  return <PrimeiroPlanoForm userName={userName} />;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, onboardingCompleted: true },
+  });
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const showSplash = !user.onboardingCompleted;
+  const [headline, planCreationHeadline] = await Promise.all([
+    showSplash
+      ? getUserAnimationPhrase(user.id, "firstAccess", user.name)
+      : Promise.resolve(""),
+    getUserAnimationPhrase(user.id, "planCreation", user.name),
+  ]);
+
+  return (
+    <FirstAccessGate showSplash={showSplash} headline={headline}>
+      <PrimeiroPlanoForm
+        userName={user.name}
+        planCreationHeadline={planCreationHeadline}
+      />
+    </FirstAccessGate>
+  );
 }
 
 export default function PrimeiroPlanoPage() {

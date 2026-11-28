@@ -13,8 +13,8 @@ import Link from "next/link";
 import { Button } from "@heroui/react";
 import { ArrowRight, ChevronDown, Layers, Sparkles } from "@gravity-ui/icons";
 import { createPlanAction } from "@/app/actions/plan";
+import { PlanCreationAnimation } from "@/app/components/animations";
 import { MascotBee } from "@/app/components/mascot-bee";
-import { BeeLoader } from "@/app/components/bee-loader";
 import type { PlanCreationPrompts } from "@/lib/plan/learner-context";
 
 type ExistingPlanSummary = {
@@ -30,6 +30,7 @@ type NovoPlanoFormProps = {
   userName?: string | null;
   existingPlans?: ExistingPlanSummary[];
   personalization?: PlanCreationPrompts | null;
+  planCreationHeadline?: string;
 };
 
 const GOAL_SUGGESTIONS = [
@@ -43,6 +44,7 @@ export function NovoPlanoForm({
   userName,
   existingPlans = [],
   personalization = null,
+  planCreationHeadline,
 }: NovoPlanoFormProps) {
   const [goal, setGoal] = useState("");
   const [clientError, setClientError] = useState<string | null>(null);
@@ -103,11 +105,12 @@ export function NovoPlanoForm({
 
   if (isPending) {
     return (
-      <div className="my-auto py-12 w-full max-w-[620px] mx-auto flex flex-col items-center justify-center">
-        <BeeLoader
-          size="lg"
-          label="Analisando seu objetivo"
-          sublabel="Estou preparando as primeiras perguntas para desenhar seu plano"
+      <div className="fixed inset-0 z-50">
+        <PlanCreationAnimation
+          headline={
+            planCreationHeadline ??
+            `Conectando seus objetivos e horários${firstName ? `, ${firstName}` : ""} para montar um plano que cabe na sua rotina...`
+          }
         />
       </div>
     );

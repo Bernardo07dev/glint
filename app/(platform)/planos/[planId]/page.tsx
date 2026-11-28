@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/infra/prisma";
+import { getUserAnimationPhrase } from "@/lib/animations/phrases";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   getPlanDisplayTitle,
@@ -9,14 +10,17 @@ import {
   parsePlanStructure,
 } from "@/lib/plan/plan-structure";
 import { BeeLoader } from "@/app/components/bee-loader";
+import { PlansHubSplash } from "./plans-hub-splash";
 import { PlanTrail } from "./plan-trail";
 
 async function PlanDetailContent({
   params,
+  searchParams,
 }: {
   params: Promise<{ planId: string }>;
+  searchParams: Promise<{ replanned?: string }>;
 }) {
-  const { planId } = await params;
+  const [{ planId }, { replanned }] = await Promise.all([params, searchParams]);
   const user = await requireSessionUser();
 
   const plan = await prisma.learningPlan.findUnique({
@@ -40,22 +44,31 @@ async function PlanDetailContent({
     routineContract?.timezone || user.timezone,
   );
 
+  const showReplannedSplash = replanned === "1";
+  const plansHubHeadline = showReplannedSplash
+    ? await getUserAnimationPhrase(user.id, "plansHub", user.name)
+    : "";
+
   return (
-    <PlanTrail
-      planId={plan.id}
-      title={title}
-      successCriteria={successCriteria}
-      routineContract={routineContract}
-      weeks={weeks}
-      todayIso={todayIso}
-    />
+    <PlansHubSplash showSplash={showReplannedSplash} headline={plansHubHeadline}>
+      <PlanTrail
+        planId={plan.id}
+        title={title}
+        successCriteria={successCriteria}
+        routineContract={routineContract}
+        weeks={weeks}
+        todayIso={todayIso}
+      />
+    </PlansHubSplash>
   );
 }
 
 export default function PlanDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ planId: string }>;
+  searchParams: Promise<{ replanned?: string }>;
 }) {
   return (
     <Suspense
@@ -65,7 +78,7 @@ export default function PlanDetailPage({
         </div>
       }
     >
-      <PlanDetailContent params={params} />
+      <PlanDetailContent params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

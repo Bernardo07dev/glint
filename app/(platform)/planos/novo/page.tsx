@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 import { decrypt } from "@/lib/auth/auth";
 import { prisma } from "@/lib/infra/prisma";
 import { parsePlanCreationPrompts } from "@/lib/plan/learner-context";
+import {
+  getFallbackAnimationHeadline,
+  getUserAnimationPhrase,
+} from "@/lib/animations/phrases";
 import { BeeLoader } from "@/app/components/bee-loader";
 import { NovoPlanoForm } from "./novo-plano-form";
 
@@ -26,7 +30,7 @@ async function NovoPlanoSession() {
     redirect("/login");
   }
 
-  const [existingPlans, userRecord] = userId
+  const [existingPlans, userRecord, planCreationHeadline] = userId
     ? await Promise.all([
         prisma.learningPlan.findMany({
           where: { userId },
@@ -44,8 +48,9 @@ async function NovoPlanoSession() {
           where: { id: userId },
           select: { planCreationPrompts: true },
         }),
+        getUserAnimationPhrase(userId, "planCreation", userName),
       ])
-    : [[], null];
+    : [[], null, getFallbackAnimationHeadline("planCreation", userName)];
 
   const personalization = parsePlanCreationPrompts(
     userRecord?.planCreationPrompts,
@@ -56,6 +61,7 @@ async function NovoPlanoSession() {
       userName={userName}
       existingPlans={existingPlans}
       personalization={personalization}
+      planCreationHeadline={planCreationHeadline}
     />
   );
 }

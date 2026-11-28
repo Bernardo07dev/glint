@@ -3,8 +3,15 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { prisma } from "@/lib/infra/prisma";
 import { encrypt } from "@/lib/auth/auth";
+import { getSessionUser } from "@/lib/auth/session";
+import {
+  buildFirstAccessHeadline,
+  refreshUserAnimationPhrases,
+  setUserAnimationPhrases,
+} from "@/lib/animations/phrases";
 
 export async function checkEmailExistsAction(
   email: string,
@@ -63,6 +70,14 @@ export async function registerAction(prevState: any, formData: FormData) {
       },
     });
 
+    after(() =>
+      setUserAnimationPhrases(newUser.id, {
+        firstAccess: buildFirstAccessHeadline(newUser.name),
+      }).catch((err) =>
+        console.error("[auth] Erro ao salvar frase firstAccess:", err),
+      ),
+    );
+
     const sessionToken = await encrypt({
       userId: newUser.id,
       name: newUser.name,
@@ -107,10 +122,25 @@ export async function loginAction(prevState: any, formData: FormData) {
       return { success: false, error: "E-mail ou senha incorretos" };
     }
 
+    const daysSinceLastActive = user.lastActiveAt
+      ? (Date.now() - user.lastActiveAt.getTime()) / (1000 * 60 * 60 * 24)
+      : 0;
+
     await prisma.user.update({
       where: { id: user.id },
       data: { lastActiveAt: new Date() },
     });
+
+    if (daysSinceLastActive > 3) {
+      after(() =>
+        refreshUserAnimationPhrases({
+          userId: user.id,
+          columns: ["homeSplashReturn"],
+          event: "login_return",
+          context: `Aluno retornou após ${Math.floor(daysSinceLastActive)} dias sem acessar.`,
+        }),
+      );
+    }
 
     const sessionToken = await encrypt({
       userId: user.id,
@@ -148,5 +178,15 @@ export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete("glint-session");
   redirect("/login");
+}
+
+export async function markOnboardingCompletedAction(): Promise<void> {
+  const user = await getSessionUser();
+  if (!user) return;
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { onboardingCompleted: true },
+  });
 }
 

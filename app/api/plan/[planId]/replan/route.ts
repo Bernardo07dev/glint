@@ -1,5 +1,7 @@
+import { after } from "next/server";
 import { runs } from "@trigger.dev/sdk/v3";
 import type { Prisma } from "@prisma/client";
+import { refreshUserAnimationPhrases } from "@/lib/animations/phrases";
 import { z } from "zod";
 import {
   partitionPlanTasks,
@@ -468,6 +470,15 @@ export async function POST(
       console.error("[replan] Falha ao atualizar knowledgeGraph:", err),
     );
   }
+
+  after(() =>
+    refreshUserAnimationPhrases({
+      userId: user.id,
+      columns: ["plansHub", "homeSplashReady"],
+      event: "replan_applied",
+      context: `Estratégia ${preview.strategy}: ${preview.reasonSummary}`,
+    }),
+  );
 
   return Response.json({
     success: true,

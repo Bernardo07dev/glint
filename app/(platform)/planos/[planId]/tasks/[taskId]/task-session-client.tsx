@@ -27,7 +27,7 @@ import {
   selectStepAction,
   updateStepChecklistAction,
 } from "@/app/actions/session";
-import { BeeLoader } from "@/app/components/bee-loader";
+import { WaitingFrontTapAnimation } from "@/app/components/animations";
 import { MascotBee } from "@/app/components/mascot-bee";
 import type { LiveQuizState } from "@/app/(platform)/planos/[planId]/tasks/components/tools/recall-quiz";
 import {
@@ -54,6 +54,7 @@ interface TaskSessionClientProps {
   initialCompletedSteps: string[];
   initialStepProgress?: ClientStepProgressItem[];
   initialCurrentStepId?: string | null;
+  waitingHeadline: string;
 }
 
 type DifficultyOption = "too_easy" | "just_right" | "too_hard";
@@ -83,6 +84,7 @@ export function TaskSessionClient({
   initialCompletedSteps,
   initialStepProgress = [],
   initialCurrentStepId = null,
+  waitingHeadline,
 }: TaskSessionClientProps) {
   const router = useRouter();
   const [content, setContent] = useState<TaskContent | null>(initialContent);
@@ -581,6 +583,19 @@ export function TaskSessionClient({
     );
   }
 
+  /* Estado 1B: Enriquecimento em andamento (Polling + Abelhinha batendo o pé + Voltar) */
+  if ((!content || !resolved) && (isEnriching || enrichmentStatus === "GENERATING")) {
+    return (
+      <div className="fixed inset-0 z-50">
+        <WaitingFrontTapAnimation
+          headline={waitingHeadline}
+          backHref={`/planos/${planId}`}
+          backLabel="Voltar para planos"
+        />
+      </div>
+    );
+  }
+
   /* Estados 1 e 2: Preparação sob demanda ou Fechamento da Sessão */
   return (
     <main className="min-h-dvh bg-[#FFFDF8]">
@@ -610,11 +625,8 @@ export function TaskSessionClient({
 
         {!content || !resolved ? (
           <section className="flex flex-col items-center gap-6 rounded-3xl border border-[#5B8DEF]/20 bg-white px-6 py-10 text-center sm:px-10">
-            {isEnriching || enrichmentStatus === "GENERATING" ? (
-              <BeeLoader label="Montando vídeo, guia e quiz sob medida, isso pode demorar" />
-            ) : (
-              <>
-                <MascotBee
+            <>
+              <MascotBee
                   pose={enrichmentStatus === "FAILED" ? "curious" : "focus"}
                   className="h-24 w-28"
                 />
@@ -653,7 +665,6 @@ export function TaskSessionClient({
                   )}
                 </button>
               </>
-            )}
           </section>
         ) : (
           <section className="mx-auto flex w-full max-w-xl flex-col items-center gap-7 py-6 text-center sm:py-8">

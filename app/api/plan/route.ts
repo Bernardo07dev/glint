@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { PlanApiRequestSchema } from "@/lib/agents/types";
 import { decrypt } from "@/lib/auth/auth";
+import { refreshUserAnimationPhrases } from "@/lib/animations/phrases";
 import { updateLearnerContext } from "@/lib/plan/learner-context";
 import { getOccupiedSlots } from "@/lib/schedule/occupied-slots";
 import { prisma } from "@/lib/infra/prisma";
@@ -92,6 +93,15 @@ export async function POST(request: NextRequest) {
           { status: result.status },
         );
       }
+
+      after(() =>
+        refreshUserAnimationPhrases({
+          userId,
+          columns: ["homeSplashReady", "plansHub", "waitingFrontTap", "planCreation"],
+          event: "accept_plan",
+          context: `Plano aceito: ${plan.refinedGoal ?? plan.rawInput}`,
+        }),
+      );
 
       return NextResponse.json({
         stage: result.stage,

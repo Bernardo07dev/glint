@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { Prisma } from "@prisma/client";
 import { runs } from "@trigger.dev/sdk/v3";
+import { refreshUserAnimationPhrases } from "@/lib/animations/phrases";
 import { prisma } from "@/lib/infra/prisma";
 import { getSessionUser } from "@/lib/auth/session";
 import {
@@ -142,6 +144,15 @@ export async function completeSessionAction(input: {
     }),
   ]);
 
+  after(() =>
+    refreshUserAnimationPhrases({
+      userId: user.id,
+      columns: ["homeSplashReady", "homeSplashStreak", "homeSplashRest", "plansHub", "waitingFrontTap"],
+      event: "finish_session",
+      context: `Sessão "${structure.tasks[taskIdx].title}" concluída (${completedTasks}/${totalTasks}, feedback: ${input.feedback}).`,
+    }),
+  );
+
   revalidatePath("/home");
   revalidatePath("/planos");
   revalidatePath(`/planos/${plan.id}`);
@@ -175,6 +186,15 @@ export async function rescheduleTodayAction(input: {
     planStructure: structure,
     userTimezone: user.timezone,
   });
+
+  after(() =>
+    refreshUserAnimationPhrases({
+      userId: user.id,
+      columns: ["homeSplashReady", "plansHub"],
+      event: "reschedule_today",
+      context: `Aluno reagendou a sessão de hoje no plano "${plan.refinedGoal ?? plan.rawInput}".`,
+    }),
+  );
 
   revalidatePath("/home");
   revalidatePath("/planos");
@@ -895,6 +915,15 @@ export async function finishTaskSessionAction(input: {
   // Atualiza o Knowledge Graph do aluno em background com a telemetria real da sessão concluída
   void rebuildLearnerContext(user.id).catch((err) =>
     console.error("[session] Falha ao atualizar knowledgeGraph pós-sessão:", err),
+  );
+
+  after(() =>
+    refreshUserAnimationPhrases({
+      userId: user.id,
+      columns: ["homeSplashReady", "homeSplashStreak", "homeSplashRest", "plansHub", "waitingFrontTap"],
+      event: "finish_session",
+      context: `Sessão "${planTask.title}" concluída (${completedTasks}/${totalTasks}, dificuldade: ${input.difficultyRating}).`,
+    }),
   );
 
   revalidatePath("/home");
